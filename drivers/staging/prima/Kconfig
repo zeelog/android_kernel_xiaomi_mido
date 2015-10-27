@@ -53,4 +53,8 @@ config WLAN_OFFLOAD_PACKETS
 	bool "Enable offload packets feature"
 	default n
 
+config WLAN_FEATURE_HOLD_RX_WAKELOCK
+	bool "Enable hold RX wake lock feature"
+	default n
+
 endif # PRIMA_WLAN || PRONTO_WLAN
