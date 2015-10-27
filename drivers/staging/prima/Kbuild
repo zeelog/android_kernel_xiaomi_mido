@@ -63,6 +63,9 @@ CONFIG_WLAN_FEATURE_HOLD_RX_WAKELOCK := n
 # Flag to enable AP Find feature
 CONFIG_WLAN_FEATURE_AP_FIND := y
 
+#Flag to enable hold RX wake lock feature
+CONFIG_WLAN_FEATURE_HOLD_RX_WAKELOCK := n
+
 # Flag to enable feature Software AP Authentication Offload
 SAP_AUTH_OFFLOAD := y
 
