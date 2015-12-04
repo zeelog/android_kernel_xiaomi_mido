@@ -349,6 +349,8 @@ int sdio_add_func(struct sdio_func *func)
 		sdio_func_set_present(func);
 
 	return ret;
+
+	device_enable_async_suspend(&func->dev);
 }
 
 /*
