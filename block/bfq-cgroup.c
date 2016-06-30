@@ -163,8 +163,6 @@ static struct bfq_group *blkg_to_bfqg(struct blkcg_gq *blkg)
 {
 	struct blkg_policy_data *pd = blkg_to_pd(blkg, &blkcg_policy_bfq);
 
-	BUG_ON(!pd);
-
 	return pd_to_bfqg(pd);
 }
 
