@@ -4369,8 +4369,6 @@ static void bfq_exit_queue(struct elevator_queue *e)
 
 	bfq_shutdown_timer_wq(bfqd);
 
-	synchronize_rcu();
-
 	BUG_ON(timer_pending(&bfqd->idle_slice_timer));
 
 #ifdef CONFIG_BFQ_GROUP_IOSCHED
