@@ -4491,7 +4491,6 @@ static int bfq_init_queue(struct request_queue *q, struct elevator_type *e)
 					      * video.
 					      */
 	bfqd->wr_busy_queues = 0;
-	bfqd->busy_in_flight_queues = 0;
 
 	/*
 	 * Begin by assuming, optimistically, that the device is a
