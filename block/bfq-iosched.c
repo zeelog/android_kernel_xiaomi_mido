@@ -193,10 +193,7 @@ static void bfq_schedule_dispatch(struct bfq_data *bfqd);
  */
 static int bfq_bio_sync(struct bio *bio)
 {
-	if (bio_data_dir(bio) == READ || (bio->bi_rw & REQ_SYNC))
-		return 1;
-
-	return 0;
+	return bio_data_dir(bio) == READ || (bio->bi_opf & REQ_SYNC);
 }
 
 /*
@@ -1536,7 +1533,7 @@ static int bfq_merge(struct request_queue *q, struct request **req,
 	struct request *__rq;
 
 	__rq = bfq_find_rq_fmerge(bfqd, bio);
-	if (__rq && elv_rq_merge_ok(__rq, bio)) {
+	if (__rq && elv_bio_merge_ok(__rq, bio)) {
 		*req = __rq;
 		return ELEVATOR_FRONT_MERGE;
 	}
@@ -1602,7 +1599,7 @@ static void bfq_merged_requests(struct request_queue *q, struct request *rq,
 	 */
 	if (bfqq == next_bfqq &&
 	    !list_empty(&rq->queuelist) && !list_empty(&next->queuelist) &&
-	    time_before(next->fifo_time, rq->fifo_time)) {
+	    next->fifo_time < rq->fifo_time) {
 		list_del_init(&rq->queuelist);
 		list_replace_init(&next->queuelist, &rq->queuelist);
 		rq->fifo_time = next->fifo_time;
@@ -2032,8 +2029,8 @@ bfq_merge_bfqqs(struct bfq_data *bfqd, struct bfq_io_cq *bic,
 	bfq_put_queue(bfqq);
 }
 
-static int bfq_allow_merge(struct request_queue *q, struct request *rq,
-			   struct bio *bio)
+static int bfq_allow_bio_merge(struct request_queue *q, struct request *rq,
+			       struct bio *bio)
 {
 	struct bfq_data *bfqd = q->elevator->elevator_data;
 	struct bfq_io_cq *bic;
@@ -2043,7 +2040,7 @@ static int bfq_allow_merge(struct request_queue *q, struct request *rq,
 	 * Disallow merge of a sync bio into an async request.
 	 */
 	if (bfq_bio_sync(bio) && !rq_is_sync(rq))
-		return 0;
+		return false;
 
 	/*
 	 * Lookup the bfqq that this bio will be queued with. Allow
@@ -2052,7 +2049,7 @@ static int bfq_allow_merge(struct request_queue *q, struct request *rq,
 	 */
 	bic = bfq_bic_lookup(bfqd, current->io_context);
 	if (!bic)
-		return 0;
+		return false;
 
 	bfqq = bic_to_bfqq(bic, bfq_bio_sync(bio));
 	/*
@@ -2073,6 +2070,12 @@ static int bfq_allow_merge(struct request_queue *q, struct request *rq,
 	}
 
 	return bfqq == RQ_BFQQ(rq);
+}
+
+static int bfq_allow_rq_merge(struct request_queue *q, struct request *rq,
+			      struct request *next)
+{
+	return RQ_BFQQ(rq) == RQ_BFQQ(next);
 }
 
 /*
@@ -2252,7 +2255,7 @@ static struct request *bfq_check_fifo(struct bfq_queue *bfqq)
 
 	rq = rq_entry_fifo(bfqq->fifo.next);
 
-	if (time_is_after_jiffies(rq->fifo_time))
+	if (ktime_get_ns() < rq->fifo_time)
 		return NULL;
 
 	return rq;
@@ -3972,7 +3975,8 @@ static void bfq_insert_request(struct request_queue *q, struct request *rq)
 
 	bfq_add_request(rq);
 
-	rq->fifo_time = jiffies + bfqd->bfq_fifo_expire[rq_is_sync(rq)];
+	rq->fifo_time = ktime_get_ns() +
+	  jiffies_to_nsecs(bfqd->bfq_fifo_expire[rq_is_sync(rq)]);
 	list_add_tail(&rq->queuelist, &bfqq->fifo);
 
 	bfq_rq_enqueued(bfqd, bfqq, rq);
@@ -4088,7 +4092,7 @@ static int __bfq_may_queue(struct bfq_queue *bfqq)
 	return ELV_MQUEUE_MAY;
 }
 
-static int bfq_may_queue(struct request_queue *q, int rw)
+static int bfq_may_queue(struct request_queue *q, int op, int op_flags)
 {
 	struct bfq_data *bfqd = q->elevator->elevator_data;
 	struct task_struct *tsk = current;
@@ -4105,7 +4109,7 @@ static int bfq_may_queue(struct request_queue *q, int rw)
 	if (!bic)
 		return ELV_MQUEUE_MAY;
 
-	bfqq = bic_to_bfqq(bic, rw_is_sync(rw));
+	bfqq = bic_to_bfqq(bic, rw_is_sync(op, op_flags));
 	if (bfqq)
 		return __bfq_may_queue(bfqq);
 
@@ -4550,7 +4554,7 @@ static int __init bfq_slab_setup(void)
 
 static ssize_t bfq_var_show(unsigned int var, char *page)
 {
-	return sprintf(page, "%d\n", var);
+	return sprintf(page, "%u\n", var);
 }
 
 static ssize_t bfq_var_store(unsigned long *var, const char *page,
@@ -4803,7 +4807,8 @@ static struct elevator_type iosched_bfq = {
 #ifdef CONFIG_BFQ_GROUP_IOSCHED
 		.elevator_bio_merged_fn =	bfq_bio_merged,
 #endif
-		.elevator_allow_merge_fn =	bfq_allow_merge,
+		.elevator_allow_bio_merge_fn =	bfq_allow_bio_merge,
+		.elevator_allow_rq_merge_fn =	bfq_allow_rq_merge,
 		.elevator_dispatch_fn =		bfq_dispatch_requests,
 		.elevator_add_req_fn =		bfq_insert_request,
 		.elevator_activate_req_fn =	bfq_activate_request,

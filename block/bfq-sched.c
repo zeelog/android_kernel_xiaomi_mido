@@ -1246,6 +1246,12 @@ static struct bfq_entity *bfq_lookup_next_entity(struct bfq_sched_data *sd,
 
 	BUG_ON(sd->in_service_entity);
 
+	/*
+	 * Choose from idle class, if needed to guarantee a minimum
+	 * bandwidth to this class. This should also mitigate
+	 * priority-inversion problems in case a low priority task is
+	 * holding file system resources.
+	 */
 	if (bfqd &&
 	    jiffies - bfqd->bfq_class_idle_last_service >
 	    BFQ_CL_IDLE_TIMEOUT) {
