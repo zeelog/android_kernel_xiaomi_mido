@@ -4268,8 +4268,7 @@ static void bfq_insert_request(struct request_queue *q, struct request *rq)
 
 	bfq_add_request(rq);
 
-	rq->fifo_time = ktime_get_ns() +
-	  jiffies_to_nsecs(bfqd->bfq_fifo_expire[rq_is_sync(rq)]);
+	rq->fifo_time = ktime_get_ns() + bfqd->bfq_fifo_expire[rq_is_sync(rq)];
 	list_add_tail(&rq->queuelist, &bfqq->fifo);
 
 	bfq_rq_enqueued(bfqd, bfqq, rq);
