@@ -2154,8 +2154,10 @@ void resume_console(void)
  */
 static int console_cpu_notify(unsigned int cpu)
 {
-	console_lock();
-	console_unlock();
+	if (!cpuhp_tasks_frozen) {
+		console_lock();
+		console_unlock();
+	}
 	return 0;
 }
 
