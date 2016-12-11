@@ -86,6 +86,9 @@ struct bfq_sched_data {
 	struct bfq_entity *next_in_service;
 	/* array of service trees, one per ioprio_class */
 	struct bfq_service_tree service_tree[BFQ_IOPRIO_CLASSES];
+	/* last time CLASS_IDLE was served */
+	unsigned long bfq_class_idle_last_service;
+
 };
 
 /**
@@ -485,8 +488,6 @@ struct bfq_data {
 	unsigned int bfq_back_max;
 	/* maximum idling time */
 	u32 bfq_slice_idle;
-	/* last time CLASS_IDLE was served */
-	u64 bfq_class_idle_last_service;
 
 	/* user-configured max budget value (0 for auto-tuning) */
 	int bfq_user_max_budget;

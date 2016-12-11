@@ -314,7 +314,7 @@ static void bfq_init_entity(struct bfq_entity *entity,
 		bfqq->ioprio_class = bfqq->new_ioprio_class;
 		bfqg_get(bfqg);
 	}
-	entity->parent = bfqg->my_entity;
+	entity->parent = bfqg->my_entity; /* NULL for root group */
 	entity->sched_data = &bfqg->sched_data;
 }
 

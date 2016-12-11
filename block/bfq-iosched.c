@@ -4763,6 +4763,7 @@ static void bfq_init_root_group(struct bfq_group *root_group,
 	root_group->rq_pos_tree = RB_ROOT;
 	for (i = 0; i < BFQ_IOPRIO_CLASSES; i++)
 		root_group->sched_data.service_tree[i] = BFQ_SERVICE_TREE_INIT;
+	root_group->sched_data.bfq_class_idle_last_service = jiffies;
 }
 
 static int bfq_init_queue(struct request_queue *q, struct elevator_type *e)
@@ -4836,7 +4837,6 @@ static int bfq_init_queue(struct request_queue *q, struct elevator_type *e)
 	bfqd->bfq_back_max = bfq_back_max;
 	bfqd->bfq_back_penalty = bfq_back_penalty;
 	bfqd->bfq_slice_idle = bfq_slice_idle;
-	bfqd->bfq_class_idle_last_service = 0;
 	bfqd->bfq_timeout = bfq_timeout;
 
 	bfqd->bfq_requests_within_timer = 120;
