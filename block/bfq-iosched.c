@@ -117,6 +117,7 @@ struct kmem_cache *bfq_pool;
 #define BFQ_HW_QUEUE_SAMPLES	32
 
 #define BFQQ_SEEK_THR		(sector_t)(8 * 100)
+#define BFQQ_SECT_THR_NONROT	(sector_t)(2 * 32)
 #define BFQQ_CLOSE_THR		(sector_t)(8 * 1024)
 #define BFQQ_SEEKY(bfqq)	(hweight32(bfqq->seek_history) > 32/8)
 
@@ -4117,7 +4118,9 @@ bfq_update_io_seektime(struct bfq_data *bfqd, struct bfq_queue *bfqq,
 {
 	bfqq->seek_history <<= 1;
 	bfqq->seek_history |=
-		get_sdist(bfqq->last_request_pos, rq) > BFQQ_SEEK_THR;
+		get_sdist(bfqq->last_request_pos, rq) > BFQQ_SEEK_THR &&
+		(!blk_queue_nonrot(bfqd->queue) ||
+		 blk_rq_sectors(rq) < BFQQ_SECT_THR_NONROT);
 }
 
 /*
