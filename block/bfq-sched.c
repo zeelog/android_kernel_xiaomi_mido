@@ -1635,8 +1635,7 @@ static void bfqg_stats_update_dequeue(struct bfq_group *bfqg);
  * Called when the bfqq no longer has requests pending, remove it from
  * the service tree.
  */
-static void bfq_del_bfqq_busy(struct bfq_data *bfqd, struct bfq_queue *bfqq,
-			      int requeue)
+static void bfq_del_bfqq_busy(struct bfq_data *bfqd, struct bfq_queue *bfqq)
 {
 	BUG_ON(!bfq_bfqq_busy(bfqq));
 	BUG_ON(!RB_EMPTY_ROOT(&bfqq->sort_list));
@@ -1660,7 +1659,7 @@ static void bfq_del_bfqq_busy(struct bfq_data *bfqd, struct bfq_queue *bfqq,
 
 	BUG_ON(bfqq->entity.budget < 0);
 
-	bfq_deactivate_bfqq(bfqd, bfqq, requeue);
+	bfq_deactivate_bfqq(bfqd, bfqq, 1);
 
 	BUG_ON(bfqq->entity.budget < 0);
 }

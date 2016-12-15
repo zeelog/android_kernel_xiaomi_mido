@@ -656,7 +656,7 @@ bfq_bfqq_resume_state(struct bfq_queue *bfqq, struct bfq_io_cq *bic)
 	    time_is_before_jiffies(bfqq->last_wr_start_finish +
 				   bfqq->wr_cur_max_time))) {
 		bfq_log_bfqq(bfqq->bfqd, bfqq,
-			     "resume state: switching off wr (%u + %u < %u)",
+			     "resume state: switching off wr (%lu + %lu < %lu)",
 			     bfqq->last_wr_start_finish, bfqq->wr_cur_max_time,
 			     jiffies);
 
@@ -1525,7 +1525,7 @@ static void bfq_remove_request(struct request *rq)
 		BUG_ON(bfqq->entity.budget < 0);
 
 		if (bfq_bfqq_busy(bfqq) && bfqq != bfqd->in_service_queue) {
-			bfq_del_bfqq_busy(bfqd, bfqq, 1);
+			bfq_del_bfqq_busy(bfqd, bfqq);
 
 			/* bfqq emptied. In normal operation, when
 			 * bfqq is empty, bfqq->entity.service and
@@ -2662,7 +2662,7 @@ static void __bfq_bfqq_expire(struct bfq_data *bfqd, struct bfq_queue *bfqq)
 			 */
 			bfqq->budget_timeout = jiffies;
 
-		bfq_del_bfqq_busy(bfqd, bfqq, 1);
+		bfq_del_bfqq_busy(bfqd, bfqq);
 	} else {
 		bfq_activate_bfqq(bfqd, bfqq);
 		/*
