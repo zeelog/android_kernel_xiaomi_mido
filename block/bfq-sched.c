@@ -14,6 +14,18 @@
 
 static struct bfq_group *bfqq_group(struct bfq_queue *bfqq);
 
+/**
+ * bfq_gt - compare two timestamps.
+ * @a: first ts.
+ * @b: second ts.
+ *
+ * Return @a > @b, dealing with wrapping correctly.
+ */
+static int bfq_gt(u64 a, u64 b)
+{
+	return (s64)(a - b) > 0;
+}
+
 #ifdef CONFIG_BFQ_GROUP_IOSCHED
 /* both next loops stop at one of the child entities of the root group */
 #define for_each_entity(entity)				\
@@ -46,18 +58,99 @@ static void bfq_update_budget(struct bfq_entity *next_in_service)
 		bfqg_entity->budget = next_in_service->budget;
 }
 
-/*
- * Incomplete version that always returns true. It will return also
- * false in its complete version, in case either next_in_service has
- * not changed, or next_in_service has changed but in a way that will
- * not influence upper levels.
- */
-static bool bfq_update_next_in_service(struct bfq_sched_data *sd)
+static struct bfq_entity *bfq_root_active_entity(struct rb_root *tree)
 {
-	struct bfq_entity *next_in_service;
+	struct rb_node *node = tree->rb_node;
+
+	return rb_entry(node, struct bfq_entity, rb_node);
+}
+
+/**
+ * bfq_update_next_in_service - update sd->next_in_service
+ * @sd: sched_data for which to perform the update.
+ * @new_entity: if not NULL, pointer to the entity whose activation
+ *		triggered the invocation of this function.
+ *
+ * This function is called to update sd->next_in_service, which, in
+ * its turn, may change as a consequence of the insertion or
+ * extraction of an entity into/from one of the active trees of
+ * sd. These insertions/extractions occur as a consequence of
+ * activations/deactivations of entities, with some activations being
+ * 'true' activations, and other activations being requeueings (i.e.,
+ * implementing the second, requeueing phase of the mechanism used to
+ * reposition an entity in its active tree; see comments on
+ * __bfq_activate_entity for details). In both the last two activation
+ * sub-cases, new_entity points to the just activated or requeued
+ * entity.
+ *
+ * This is a still incomplete version of this function, which always
+ * returns true. It will return also false in its complete version, in
+ * case either next_in_service has not changed, or next_in_service has
+ * changed but in a way that will not influence upper levels.
+ */
+static bool bfq_update_next_in_service(struct bfq_sched_data *sd,
+				       struct bfq_entity *new_entity)
+{
+	struct bfq_entity *next_in_service = sd->next_in_service;
 	struct bfq_queue *bfqq;
 
-	next_in_service = bfq_lookup_next_entity(sd);
+	/*
+	 * If this update is triggered by the activation of a new
+	 * entity, then a full lookup in the active tree can be
+	 * avoided. In fact, it is enough to check whether the
+	 * just-activated entity has a higher priority of
+	 * sd->next_in_service, or, even if it has the same priority
+	 * as sd->next_in_service, is eligible and has a lower virtual
+	 * finish time than sd->next_in_service. If this compound
+	 * condition holds, then the new entity becomes the new
+	 * next_in_service. Otherwise no change is needed.
+	 */
+	if (new_entity) {
+		/*
+		 * Flag used to decide whether to replace
+		 * sd->next_in_service with new_entity. Tentatively
+		 * set to true, and left as true if
+		 * sd->next_in_service is NULL.
+		 */
+		bool replace_next = true;
+
+		if (new_entity == sd->next_in_service)
+			return false;
+
+		/*
+		 * If there is already a next_in_service candidate
+		 * entity, then compare class priorities or timestamps
+		 * to decide whether to replace sd->service_tree with
+		 * new_entity.
+		 */
+		if (next_in_service) {
+			unsigned int new_entity_class_idx =
+				bfq_class_idx(new_entity);
+			struct bfq_service_tree *st =
+				sd->service_tree + new_entity_class_idx;
+
+			/*
+			 * For efficiency, evaluate the most likely
+			 * sub-condition first.
+			 */
+			replace_next =
+				(new_entity_class_idx ==
+				 bfq_class_idx(next_in_service)
+				 &&
+				 !bfq_gt(new_entity->start, st->vtime)
+				 &&
+				 bfq_gt(next_in_service->finish,
+					new_entity->finish))
+				||
+				new_entity_class_idx <
+				bfq_class_idx(next_in_service);
+		}
+
+		if (replace_next)
+			next_in_service = new_entity;
+	} else /* invoked because of a deactivation: lookup needed */
+		next_in_service = bfq_lookup_next_entity(sd);
+
 	sd->next_in_service = next_in_service;
 
 	if (next_in_service)
@@ -108,18 +201,6 @@ static void bfq_update_budget(struct bfq_entity *next_in_service)
  * wraparounds.
  */
 #define WFQ_SERVICE_SHIFT	22
-
-/**
- * bfq_gt - compare two timestamps.
- * @a: first ts.
- * @b: second ts.
- *
- * Return @a > @b, dealing with wrapping correctly.
- */
-static int bfq_gt(u64 a, u64 b)
-{
-	return (s64)(a - b) > 0;
-}
 
 static struct bfq_queue *bfq_entity_to_bfqq(struct bfq_entity *entity)
 {
@@ -816,15 +897,18 @@ static void bfq_bfqq_charge_time(struct bfq_data *bfqd, struct bfq_queue *bfqq,
 }
 
 /**
- * __bfq_activate_entity - activate an entity.
- * @entity: the entity being activated.
- * @non_blocking_wait_rq: true if this entity was waiting for a request
+ * __bfq_activate_entity - handle activation or requeueing of an entity.
+ * @entity: the entity being activated or requeued.
+ * @non_blocking_wait_rq: true if entity was waiting for a request
  *
- * Called whenever an entity is activated, i.e., it is not active and one
- * of its children receives a new request, or has to be reactivated due to
- * budget exhaustion.  It uses the current budget of the entity (and the
- * service received if @entity is active) of the queue to calculate its
- * timestamps.
+ * Called whenever an entity is activated, which happens either if the
+ * entity is not active and one of its children receives a new request
+ * (true activation), or if the entity needs to be repositioned in its
+ * active tree (requeueing, as explained in detail in the comments
+ * inside the function).
+ *
+ * Basically, this function updates the timestamps of entity and
+ * (re)inserts entity into its active tree.
  */
 static void __bfq_activate_entity(struct bfq_entity *entity,
 				  bool non_blocking_wait_rq)
@@ -1027,7 +1111,7 @@ static void bfq_activate_entity(struct bfq_entity *entity,
 		       RB_EMPTY_ROOT(&(sd->service_tree+1)->active) &&
 		       RB_EMPTY_ROOT(&(sd->service_tree+2)->active));
 
-		if (!bfq_update_next_in_service(sd)) {
+		if (!bfq_update_next_in_service(sd, entity)) {
 			BUG_ON(!sd->next_in_service);
 			/*
 			 * No need to propagate the activation to the
@@ -1081,8 +1165,8 @@ static bool __bfq_deactivate_entity(struct bfq_entity *entity, bool requeue)
 	else if (entity->tree)
 		BUG();
 
-	if (was_in_service || sd->next_in_service == entity)
-		ret = bfq_update_next_in_service(sd);
+	if (sd->next_in_service == entity)
+		ret = bfq_update_next_in_service(sd, NULL);
 
 	if (!requeue || !bfq_gt(entity->finish, st->vtime))
 		bfq_forget_entity(st, entity);
@@ -1169,7 +1253,7 @@ update_schedule:
 				     "invoking udpdate_next for this entity");
 		}
 #endif
-		if (!bfq_update_next_in_service(sd))
+		if (!bfq_update_next_in_service(sd, entity))
 			break;
 	}
 }
@@ -1183,28 +1267,27 @@ update_schedule:
  */
 static u64 bfq_calc_vtime_jump(struct bfq_service_tree *st)
 {
-	struct bfq_entity *entry;
-	struct rb_node *node = st->active.rb_node;
+	struct bfq_entity *root_entity = bfq_root_active_entity(&st->active);
 
-	entry = rb_entry(node, struct bfq_entity, rb_node);
-	if (bfq_gt(entry->min_start, st->vtime)) {
-		struct bfq_queue *bfqq = bfq_entity_to_bfqq(entry);
+	if (bfq_gt(root_entity->min_start, st->vtime)) {
+		struct bfq_queue *bfqq = bfq_entity_to_bfqq(root_entity);
 
 		if (bfqq)
 			bfq_log_bfqq(bfqq->bfqd, bfqq,
 				     "calc_vtime_jump: new value %llu",
-				     entry->min_start);
+				     root_entity->min_start);
 #ifdef CONFIG_BFQ_GROUP_IOSCHED
 		else {
 			struct bfq_group *bfqg =
-				container_of(entry, struct bfq_group, entity);
+				container_of(root_entity, struct bfq_group,
+					     entity);
 
 			bfq_log_bfqg((struct bfq_data *)bfqg->bfqd, bfqg,
 				     "calc_vtime_jump: new value %llu",
-				     entry->min_start);
+				     root_entity->min_start);
 		}
 #endif
-		return entry->min_start;
+		return root_entity->min_start;
 	}
 	return st->vtime;
 }
@@ -1608,7 +1691,7 @@ static struct bfq_queue *bfq_get_next_queue(struct bfq_data *bfqd)
 	for_each_entity(entity) {
 		struct bfq_sched_data *sd = entity->sched_data;
 
-		if(!bfq_update_next_in_service(sd))
+		if(!bfq_update_next_in_service(sd, NULL))
 			break;
 	}
 
