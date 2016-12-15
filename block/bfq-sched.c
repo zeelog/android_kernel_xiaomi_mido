@@ -841,9 +841,9 @@ static void __bfq_activate_entity(struct bfq_entity *entity,
 		 * We are requeueing the current in-service entity,
 		 * because of the requeueing of a just-expired
 		 * non-idle leaf entity in the path originating from
-		 * this entity. In fact, in this case, then all
-		 * entities in this path need to be requeued again for
-		 * next service.
+		 * this entity. In fact, in this case, all entities in
+		 * this path need to be requeued again for next
+		 * service.
 		 *
 		 * Before requeueing, the start time of the entity
 		 * must be moved forward to account for the service
@@ -882,7 +882,7 @@ static void __bfq_activate_entity(struct bfq_entity *entity,
 		 * implies that the finish time of this entity must be
 		 * updated. Such an update may cause the scheduling,
 		 * i.e., the position in the active tree, of this
-		 * entity to change. We handle this fact by: 1)
+		 * entity to change. We handle this change by: 1)
 		 * dequeueing the entity here, 2) updating the finish
 		 * time and requeueing the entity according to the new
 		 * timestamps below. This is the same approach as the
@@ -1054,7 +1054,7 @@ static void bfq_activate_entity(struct bfq_entity *entity,
  * if the entity was in service or if it was the next_in_service for
  * its sched_data; return %false otherwise.
  */
-static bool __bfq_deactivate_entity(struct bfq_entity *entity, int requeue)
+static bool __bfq_deactivate_entity(struct bfq_entity *entity, bool requeue)
 {
 	struct bfq_sched_data *sd = entity->sched_data;
 	struct bfq_service_tree *st;
@@ -1118,26 +1118,41 @@ static void bfq_deactivate_entity(struct bfq_entity *entity, int requeue)
 		if (sd->next_in_service)
 			/*
 			 * The parent entity is still backlogged,
-			 * because next_in_service is not NULL, and
+			 * because next_in_service is not NULL. So, no
+			 * upwards deactivation is needed.  Yet,
 			 * next_in_service has been updated (see
-			 * comment on the body of the above if):
-			 * upwards update of the schedule is needed.
+			 * comment on the body of the above if).  Then
+			 * the schedule nees to be updated upwards.
 			 */
-			goto update;
+			goto update_schedule;
 
 		/*
-		 * If we get here, then the parent is no more backlogged and
-		 * we want to propagate the deactivation upwards.
+		 * If we get here, then the parent is no more
+		 * backlogged and we need to propagate the
+		 * deactivation upwards. Then let the loop go on.
 		 */
-		requeue = 1;
+
+		/*
+		 * Also let parent be queued into the idle tree on
+		 * deactivation, to preserve service guarantees, and
+		 * assuming that who invoked this function does not
+		 * need parent entities too to be removed by any tree.
+		 */
+		requeue = true;
 	}
 
 	return;
 
-update:
+update_schedule:
 	entity = parent;
 	for_each_entity(entity) {
 		struct bfq_queue *bfqq = bfq_entity_to_bfqq(entity);
+		/*
+		 * Invoke __bfq_activate_entity on entity, even if
+		 * already active, to update its position in the
+		 * active tree (because sd->next_in_service has
+		 * changed)
+		 */
 		__bfq_activate_entity(entity, false);
 
 		sd = entity->sched_data;
@@ -1613,7 +1628,7 @@ static void __bfq_bfqd_reset_in_service(struct bfq_data *bfqd)
 }
 
 static void bfq_deactivate_bfqq(struct bfq_data *bfqd, struct bfq_queue *bfqq,
-				int requeue)
+				bool requeue)
 {
 	struct bfq_entity *entity = &bfqq->entity;
 
@@ -1659,7 +1674,7 @@ static void bfq_del_bfqq_busy(struct bfq_data *bfqd, struct bfq_queue *bfqq)
 
 	BUG_ON(bfqq->entity.budget < 0);
 
-	bfq_deactivate_bfqq(bfqd, bfqq, 1);
+	bfq_deactivate_bfqq(bfqd, bfqq, true);
 
 	BUG_ON(bfqq->entity.budget < 0);
 }

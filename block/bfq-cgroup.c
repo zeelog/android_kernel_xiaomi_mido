@@ -552,7 +552,7 @@ static void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq_queue *bfqq,
 	BUG_ON(RB_EMPTY_ROOT(&bfqq->sort_list) && bfq_bfqq_busy(bfqq));
 
 	if (bfq_bfqq_busy(bfqq))
-		bfq_deactivate_bfqq(bfqd, bfqq, 0);
+		bfq_deactivate_bfqq(bfqd, bfqq, false);
 	else if (entity->on_st) {
 		BUG_ON(&bfq_entity_service_tree(entity)->idle !=
 		       entity->tree);
@@ -664,7 +664,7 @@ static void bfq_flush_idle_tree(struct bfq_service_tree *st)
 	struct bfq_entity *entity = st->first_idle;
 
 	for (; entity ; entity = st->first_idle)
-		__bfq_deactivate_entity(entity, 0);
+		__bfq_deactivate_entity(entity, false);
 }
 
 /**
@@ -769,7 +769,7 @@ static void bfq_pd_offline(struct blkg_policy_data *pd)
 	BUG_ON(bfqg->sched_data.next_in_service);
 	BUG_ON(bfqg->sched_data.in_service_entity);
 
-	__bfq_deactivate_entity(entity, 0);
+	__bfq_deactivate_entity(entity, false);
 	bfq_put_async_queues(bfqd, bfqg);
 	BUG_ON(entity->tree);
 
