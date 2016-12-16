@@ -552,7 +552,7 @@ static void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq_queue *bfqq,
 	BUG_ON(RB_EMPTY_ROOT(&bfqq->sort_list) && bfq_bfqq_busy(bfqq));
 
 	if (bfq_bfqq_busy(bfqq))
-		bfq_deactivate_bfqq(bfqd, bfqq, false);
+		bfq_deactivate_bfqq(bfqd, bfqq, false, false);
 	else if (entity->on_st) {
 		BUG_ON(&bfq_entity_service_tree(entity)->idle !=
 		       entity->tree);

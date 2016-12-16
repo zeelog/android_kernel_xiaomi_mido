@@ -138,10 +138,10 @@ struct bfq_entity {
 	struct bfq_weight_counter *weight_counter;
 
 	/*
-	 * flag, true if the entity is on a tree (either the active or
-	 * the idle one of its service_tree).
+	 * Flag, true if the entity is on a tree (either the active or
+	 * the idle one of its service_tree) or is in service.
 	 */
-	int on_st;
+	bool on_st;
 
 	u64 finish; /* B-WF2Q+ finish timestamp (aka F_i) */
 	u64 start;  /* B-WF2Q+ start timestamp (aka S_i) */
