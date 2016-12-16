@@ -646,6 +646,43 @@ BFQ_BFQQ_FNS(softrt_update);
 #undef BFQ_BFQQ_FNS
 
 /* Logging facilities. */
+#ifdef CONFIG_BFQ_REDIRECT_TO_CONSOLE
+#ifdef CONFIG_BFQ_GROUP_IOSCHED
+static struct bfq_group *bfqq_group(struct bfq_queue *bfqq);
+static struct blkcg_gq *bfqg_to_blkg(struct bfq_group *bfqg);
+
+#define bfq_log_bfqq(bfqd, bfqq, fmt, args...)	do {			\
+	char __pbuf[128];						\
+									\
+	assert_spin_locked((bfqd)->queue->queue_lock);			\
+	blkg_path(bfqg_to_blkg(bfqq_group(bfqq)), __pbuf, sizeof(__pbuf)); \
+	pr_crit("bfq%d%c %s " fmt "\n", 			\
+		(bfqq)->pid,						\
+		bfq_bfqq_sync((bfqq)) ? 'S' : 'A',			\
+		__pbuf, ##args);					\
+} while (0)
+
+#define bfq_log_bfqg(bfqd, bfqg, fmt, args...)	do {			\
+	char __pbuf[128];						\
+									\
+	blkg_path(bfqg_to_blkg(bfqg), __pbuf, sizeof(__pbuf));		\
+	pr_crit("%s " fmt "\n", __pbuf, ##args);	\
+} while (0)
+
+#else /* CONFIG_BFQ_GROUP_IOSCHED */
+
+#define bfq_log_bfqq(bfqd, bfqq, fmt, args...)		\
+	pr_crit("bfq%d%c " fmt "\n", (bfqq)->pid,		\
+		bfq_bfqq_sync((bfqq)) ? 'S' : 'A',	\
+		##args)
+#define bfq_log_bfqg(bfqd, bfqg, fmt, args...)		do {} while (0)
+
+#endif /* CONFIG_BFQ_GROUP_IOSCHED */
+
+#define bfq_log(bfqd, fmt, args...) \
+	pr_crit("bfq " fmt "\n", ##args)
+
+#else /* CONFIG_BFQ_REDIRECT_TO_CONSOLE */
 #ifdef CONFIG_BFQ_GROUP_IOSCHED
 static struct bfq_group *bfqq_group(struct bfq_queue *bfqq);
 static struct blkcg_gq *bfqg_to_blkg(struct bfq_group *bfqg);
@@ -680,6 +717,7 @@ static struct blkcg_gq *bfqg_to_blkg(struct bfq_group *bfqg);
 
 #define bfq_log(bfqd, fmt, args...) \
 	blk_add_trace_msg((bfqd)->queue, "bfq " fmt, ##args)
+#endif /* CONFIG_BFQ_REDIRECT_TO_CONSOLE */
 
 /* Expiration reasons. */
 enum bfqq_expiration {
