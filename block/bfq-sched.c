@@ -68,8 +68,9 @@ static struct bfq_entity *bfq_root_active_entity(struct rb_root *tree)
 /**
  * bfq_update_next_in_service - update sd->next_in_service
  * @sd: sched_data for which to perform the update.
- * @new_entity: if not NULL, pointer to the entity whose activation
- *		triggered the invocation of this function.
+ * @new_entity: if not NULL, pointer to the entity whose activation,
+ *		requeueing or repositionig triggered the invocation of
+ *		this function.
  *
  * This function is called to update sd->next_in_service, which, in
  * its turn, may change as a consequence of the insertion or
@@ -95,17 +96,18 @@ static bool bfq_update_next_in_service(struct bfq_sched_data *sd,
 	struct bfq_queue *bfqq;
 
 	/*
-	 * If this update is triggered by the activation of a new
-	 * entity, then a full lookup in the active tree can be
-	 * avoided. In fact, it is enough to check whether the
-	 * just-activated entity has a higher priority of
+	 * If this update is triggered by the activation, requeueing
+	 * or repositiong of an entity that does not coincide with
+	 * sd->next_in_service, then a full lookup in the active tree
+	 * can be avoided. In fact, it is enough to check whether the
+	 * just-modified entity has a higher priority than
 	 * sd->next_in_service, or, even if it has the same priority
 	 * as sd->next_in_service, is eligible and has a lower virtual
 	 * finish time than sd->next_in_service. If this compound
 	 * condition holds, then the new entity becomes the new
 	 * next_in_service. Otherwise no change is needed.
 	 */
-	if (new_entity) {
+	if (new_entity && new_entity != sd->next_in_service) {
 		/*
 		 * Flag used to decide whether to replace
 		 * sd->next_in_service with new_entity. Tentatively
@@ -113,9 +115,6 @@ static bool bfq_update_next_in_service(struct bfq_sched_data *sd,
 		 * sd->next_in_service is NULL.
 		 */
 		bool replace_next = true;
-
-		if (new_entity == sd->next_in_service)
-			return false;
 
 		/*
 		 * If there is already a next_in_service candidate
