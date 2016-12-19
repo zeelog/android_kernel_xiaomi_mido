@@ -107,7 +107,7 @@ static const int bfq_async_charge_factor = 10;
 /* Default timeout values, in jiffies, approximating CFQ defaults. */
 static const int bfq_timeout = (HZ / 8);
 
-struct kmem_cache *bfq_pool;
+static struct kmem_cache *bfq_pool;
 
 /* Below this threshold (in ns), we consider thinktime immediate. */
 #define BFQ_MIN_TT		(2 * NSEC_PER_MSEC)
@@ -1868,7 +1868,7 @@ static bool bfq_may_be_close_cooperator(struct bfq_queue *bfqq,
  * positives. In case bfqq is weight-raised, such false positives
  * would evidently degrade latency guarantees for bfqq.
  */
-bool wr_from_too_long(struct bfq_queue *bfqq)
+static bool wr_from_too_long(struct bfq_queue *bfqq)
 {
 	return bfqq->wr_coeff > 1 &&
 		time_is_before_jiffies(bfqq->last_wr_start_finish +
@@ -2298,7 +2298,7 @@ static unsigned long bfq_calc_max_budget(struct bfq_data *bfqd)
  * function of the estimated peak rate. See comments on
  * bfq_calc_max_budget(), and on T_slow and T_fast arrays.
  */
-void update_thr_responsiveness_params(struct bfq_data *bfqd)
+static void update_thr_responsiveness_params(struct bfq_data *bfqd)
 {
 	int dev_type = blk_queue_nonrot(bfqd->queue);
 
@@ -2333,7 +2333,7 @@ void update_thr_responsiveness_params(struct bfq_data *bfqd)
 		BFQ_RATE_SHIFT);
 }
 
-void bfq_reset_rate_computation(struct bfq_data *bfqd, struct request *rq)
+static void bfq_reset_rate_computation(struct bfq_data *bfqd, struct request *rq)
 {
 	if (rq != NULL) { /* new rq dispatch now, reset accordingly */
 		bfqd->last_dispatch = bfqd->first_dispatch = ktime_get_ns() ;
@@ -2350,7 +2350,7 @@ void bfq_reset_rate_computation(struct bfq_data *bfqd, struct request *rq)
 		bfqd->tot_sectors_dispatched);
 }
 
-void bfq_update_rate_reset(struct bfq_data *bfqd, struct request *rq)
+static void bfq_update_rate_reset(struct bfq_data *bfqd, struct request *rq)
 {
 	u32 rate, weight, divisor;
 
@@ -2515,7 +2515,7 @@ reset_computation:
  * of the observed dispatch rate. The function assumes to be invoked
  * on every request dispatch.
  */
-void bfq_update_peak_rate(struct bfq_data *bfqd, struct request *rq)
+static void bfq_update_peak_rate(struct bfq_data *bfqd, struct request *rq)
 {
 	u64 now_ns = ktime_get_ns();
 
