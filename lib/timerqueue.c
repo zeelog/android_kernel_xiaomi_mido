@@ -49,7 +49,7 @@ bool timerqueue_add(struct timerqueue_head *head, struct timerqueue_node *node)
 	while (*p) {
 		parent = *p;
 		ptr = rb_entry(parent, struct timerqueue_node, node);
-		if (node->expires.tv64 < ptr->expires.tv64) {
+		if (node->expires < ptr->expires) {
 			p = &(*p)->rb_left;
 		} else {
 			p = &(*p)->rb_right;

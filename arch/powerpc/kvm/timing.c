@@ -46,8 +46,8 @@ void kvmppc_init_timing_stats(struct kvm_vcpu *vcpu)
 		vcpu->arch.timing_sum_quad_duration[i] = 0;
 	}
 	vcpu->arch.timing_last_exit = 0;
-	vcpu->arch.timing_exit.tv64 = 0;
-	vcpu->arch.timing_last_enter.tv64 = 0;
+	vcpu->arch.timing_exit = 0;
+	vcpu->arch.timing_last_enter = 0;
 
 	mutex_unlock(&vcpu->arch.exit_timing_lock);
 }
@@ -93,10 +93,10 @@ static void add_exit_timing(struct kvm_vcpu *vcpu, u64 duration, int type)
 void kvmppc_update_timing_stats(struct kvm_vcpu *vcpu)
 {
 	u64 exit = vcpu->arch.timing_last_exit;
-	u64 enter = vcpu->arch.timing_last_enter.tv64;
+	u64 enter = vcpu->arch.timing_last_enter;
 
 	/* save exit time, used next exit when the reenter time is known */
-	vcpu->arch.timing_last_exit = vcpu->arch.timing_exit.tv64;
+	vcpu->arch.timing_last_exit = vcpu->arch.timing_exit;
 
 	if (unlikely(vcpu->arch.last_exit_type == 0xDEAD || exit == 0))
 		return; /* skip incomplete cycle (e.g. after reset) */

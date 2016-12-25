@@ -157,7 +157,7 @@ static ssize_t perfmon_counter_dump_show(struct device *dev,
 		return cnt;
 	}
 
-	if (llcc_priv->expires.tv64) {
+	if (llcc_priv->expires) {
 		perfmon_counter_dump(llcc_priv);
 		for (i = 0; i < llcc_priv->configured_counters - 1; i++) {
 			print = snprintf(buf, MAX_STRING_SIZE, "Port %02d,",
@@ -524,7 +524,7 @@ static ssize_t perfmon_start_store(struct device *dev,
 			pr_err("start failed. perfmon not configured\n");
 
 		val = MANUAL_MODE | MONITOR_EN;
-		if (llcc_priv->expires.tv64) {
+		if (llcc_priv->expires) {
 			if (hrtimer_is_queued(&llcc_priv->hrtimer))
 				hrtimer_forward_now(&llcc_priv->hrtimer,
 						llcc_priv->expires);
@@ -535,7 +535,7 @@ static ssize_t perfmon_start_store(struct device *dev,
 		}
 
 	} else {
-		if (llcc_priv->expires.tv64)
+		if (llcc_priv->expires)
 			hrtimer_cancel(&llcc_priv->hrtimer);
 
 		if (!llcc_priv->configured_counters)
@@ -556,11 +556,11 @@ static ssize_t perfmon_ns_periodic_dump_store(struct device *dev,
 {
 	struct llcc_perfmon_private *llcc_priv = dev_get_drvdata(dev);
 
-	if (kstrtos64(buf, 10, &llcc_priv->expires.tv64))
+	if (kstrtos64(buf, 10, &llcc_priv->expires))
 		return -EINVAL;
 
 	mutex_lock(&llcc_priv->mutex);
-	if (!llcc_priv->expires.tv64) {
+	if (!llcc_priv->expires) {
 		hrtimer_cancel(&llcc_priv->hrtimer);
 		mutex_unlock(&llcc_priv->mutex);
 		return count;
@@ -1158,7 +1158,7 @@ static int llcc_perfmon_probe(struct platform_device *pdev)
 	llcc_register_event_port(llcc_priv, &pmgr_port_ops, EVENT_PORT_PMGR);
 	hrtimer_init(&llcc_priv->hrtimer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 	llcc_priv->hrtimer.function = llcc_perfmon_timer_handler;
-	llcc_priv->expires.tv64 = 0;
+	llcc_priv->expires = 0;
 	return 0;
 }
 

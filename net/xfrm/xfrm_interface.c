@@ -172,7 +172,7 @@ static void xfrmi_dev_uninit(struct net_device *dev)
 
 static void xfrmi_scrub_packet(struct sk_buff *skb, bool xnet)
 {
-	skb->tstamp.tv64 = 0;
+	skb->tstamp = 0;
 	skb->pkt_type = PACKET_HOST;
 	skb->skb_iif = 0;
 	skb->ignore_df = 0;

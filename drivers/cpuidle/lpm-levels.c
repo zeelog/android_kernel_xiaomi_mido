@@ -368,13 +368,13 @@ static unsigned int get_next_online_cpu(bool from_idle)
 
 	if (!from_idle)
 		return next_cpu;
-	next_event.tv64 = KTIME_MAX;
+	next_event = KTIME_MAX;
 	for_each_online_cpu(cpu) {
 		ktime_t *next_event_c;
 
 		next_event_c = get_next_event_cpu(cpu);
-		if (next_event_c->tv64 < next_event.tv64) {
-			next_event.tv64 = next_event_c->tv64;
+		if (*next_event_c < next_event) {
+			next_event = *next_event_c;
 			next_cpu = cpu;
 		}
 	}
@@ -391,7 +391,7 @@ static uint64_t get_cluster_sleep_time(struct lpm_cluster *cluster,
 	if (!from_idle)
 		return ~0ULL;
 
-	next_event.tv64 = KTIME_MAX;
+	next_event = KTIME_MAX;
 	cpumask_and(&online_cpus_in_cluster,
 			&cluster->num_children_in_sync, cpu_online_mask);
 
@@ -399,8 +399,8 @@ static uint64_t get_cluster_sleep_time(struct lpm_cluster *cluster,
 		ktime_t *next_event_c;
 
 		next_event_c = get_next_event_cpu(cpu);
-		if (next_event_c->tv64 < next_event.tv64) {
-			next_event.tv64 = next_event_c->tv64;
+		if (*next_event_c < next_event) {
+			next_event = *next_event_c;
 		}
 
 	}
