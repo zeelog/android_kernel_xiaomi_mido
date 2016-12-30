@@ -26,54 +26,16 @@ static int bfq_gt(u64 a, u64 b)
 	return (s64)(a - b) > 0;
 }
 
-#ifdef CONFIG_BFQ_GROUP_IOSCHED
-/* both next loops stop at one of the child entities of the root group */
-#define for_each_entity(entity)				\
-	for (; entity ; entity = entity->parent)
-
-#define for_each_entity_safe(entity, parent) \
-	for (; entity && ({ parent = entity->parent; 1; }); entity = parent)
-
-
-static struct bfq_entity *bfq_lookup_next_entity(struct bfq_sched_data *sd);
-
-/*
- * Returns true if this budget changes may let next_in_service->parent
- * become the next_in_service entity for its parent entity.
- */
-static bool bfq_update_parent_budget(struct bfq_entity *next_in_service)
-{
-	struct bfq_entity *bfqg_entity;
-	struct bfq_group *bfqg;
-	struct bfq_sched_data *group_sd;
-	bool ret = false;
-
-	BUG_ON(!next_in_service);
-
-	group_sd = next_in_service->sched_data;
-
-	bfqg = container_of(group_sd, struct bfq_group, sched_data);
-	/*
-	 * bfq_group's my_entity field is not NULL only if the group
-	 * is not the root group. We must not touch the root entity
-	 * as it must never become an in-service entity.
-	 */
-	bfqg_entity = bfqg->my_entity;
-	if (bfqg_entity) {
-		if (bfqg_entity->budget > next_in_service->budget)
-			ret = true;
-		bfqg_entity->budget = next_in_service->budget;
-	}
-
-	return ret;
-}
-
 static struct bfq_entity *bfq_root_active_entity(struct rb_root *tree)
 {
 	struct rb_node *node = tree->rb_node;
 
 	return rb_entry(node, struct bfq_entity, rb_node);
 }
+
+static struct bfq_entity *bfq_lookup_next_entity(struct bfq_sched_data *sd);
+
+static bool bfq_update_parent_budget(struct bfq_entity *next_in_service);
 
 /**
  * bfq_update_next_in_service - update sd->next_in_service
@@ -187,22 +149,98 @@ static bool bfq_update_next_in_service(struct bfq_sched_data *sd,
 	return parent_sched_may_change;
 }
 
-#else
+#ifdef CONFIG_BFQ_GROUP_IOSCHED
+/* both next loops stop at one of the child entities of the root group */
+#define for_each_entity(entity)				\
+	for (; entity ; entity = entity->parent)
+
+#define for_each_entity_safe(entity, parent) \
+	for (; entity && ({ parent = entity->parent; 1; }); entity = parent)
+
+/*
+ * Returns true if this budget changes may let next_in_service->parent
+ * become the next_in_service entity for its parent entity.
+ */
+static bool bfq_update_parent_budget(struct bfq_entity *next_in_service)
+{
+	struct bfq_entity *bfqg_entity;
+	struct bfq_group *bfqg;
+	struct bfq_sched_data *group_sd;
+	bool ret = false;
+
+	BUG_ON(!next_in_service);
+
+	group_sd = next_in_service->sched_data;
+
+	bfqg = container_of(group_sd, struct bfq_group, sched_data);
+	/*
+	 * bfq_group's my_entity field is not NULL only if the group
+	 * is not the root group. We must not touch the root entity
+	 * as it must never become an in-service entity.
+	 */
+	bfqg_entity = bfqg->my_entity;
+	if (bfqg_entity) {
+		if (bfqg_entity->budget > next_in_service->budget)
+			ret = true;
+		bfqg_entity->budget = next_in_service->budget;
+	}
+
+	return ret;
+}
+
+/*
+ * This function tells whether entity stops being a candidate for next
+ * service, according to the following logic.
+ *
+ * This function is invoked for an entity that is about to be set in
+ * service. If such an entity is a queue, then the entity is no longer
+ * a candidate for next service (i.e, a candidate entity to serve
+ * after the in-service entity is expired). The function then returns
+ * true.
+ *
+ * In contrast, the entity could stil be a candidate for next service
+ * if it is not a queue, and has more than one child. In fact, even if
+ * one of its children is about to be set in service, other children
+ * may still be the next to serve. As a consequence, a non-queue
+ * entity is not a candidate for next-service only if it has only one
+ * child. And only if this condition holds, then the function returns
+ * true for a non-queue entity.
+ */
+static bool bfq_no_longer_next_in_service(struct bfq_entity *entity)
+{
+	struct bfq_group *bfqg;
+
+	if (bfq_entity_to_bfqq(entity))
+		return true;
+
+	bfqg = container_of(entity, struct bfq_group, entity);
+
+	BUG_ON(bfqg == ((struct bfq_data *)(bfqg->bfqd))->root_group);
+	BUG_ON(bfqg->active_entities == 0);
+	if (bfqg->active_entities == 1)
+		return true;
+
+	return false;
+}
+
+#else /* CONFIG_BFQ_GROUP_IOSCHED */
 #define for_each_entity(entity)	\
 	for (; entity ; entity = NULL)
 
 #define for_each_entity_safe(entity, parent) \
 	for (parent = NULL; entity ; entity = parent)
 
-static int bfq_update_next_in_service(struct bfq_sched_data *sd)
+static bool bfq_update_parent_budget(struct bfq_entity *next_in_service)
 {
-	return 0;
+	return false;
 }
 
-static void bfq_update_parent_budget(struct bfq_entity *next_in_service)
+static bool bfq_no_longer_next_in_service(struct bfq_entity *entity)
 {
+	return true;
 }
-#endif
+
+#endif /* CONFIG_BFQ_GROUP_IOSCHED */
 
 /*
  * Shift for timestamp calculations.  This actually limits the maximum
@@ -1369,7 +1407,8 @@ static void bfq_deactivate_entity(struct bfq_entity *entity,
 		if (!bfq_update_next_in_service(sd, entity) &&
 		    !expiration)
 			/*
-			 * next_in_service unchanged, and no
+			 * next_in_service unchanged or not causing
+			 * any change in entity->parent->sd, and no
 			 * requeueing needed for expiration: stop
 			 * here.
 			 */
@@ -1624,43 +1663,6 @@ static bool next_queue_may_preempt(struct bfq_data *bfqd)
 	struct bfq_sched_data *sd = &bfqd->root_group->sched_data;
 
 	return sd->next_in_service != sd->in_service_entity;
-}
-
-/*
- * This function tells whether entity stops being a candidate for next
- * service, according to the following logic.
- *
- * This function is invoked for an entity that is about to be set in
- * service. If such an entity is a queue, then the entity is no longer
- * a candidate for next service (i.e, a candidate entity to serve
- * after the in-service entity is expired). The function then returns
- * true.
- *
- * In contrast, the entity could stil be a candidate for next service
- * if it is not a queue, and has more than one child. In fact, even if
- * one of its children is about to be set in service, other children
- * may still be the next to serve. As a consequence, a non-queue
- * entity is not a candidate for next-service only if it has only one
- * child. And only if this condition holds, then the function returns
- * true for a non-queue entity.
- */
-static bool bfq_no_longer_next_in_service(struct bfq_entity *entity)
-{
-	struct bfq_group *bfqg;
-
-	if (bfq_entity_to_bfqq(entity))
-		return true;
-
-#ifdef CONFIG_BFQ_GROUP_IOSCHED
-	bfqg = container_of(entity, struct bfq_group, entity);
-
-	BUG_ON(bfqg == ((struct bfq_data *)(bfqg->bfqd))->root_group);
-	BUG_ON(bfqg->active_entities == 0);
-	if (bfqg->active_entities == 1)
-		return true;
-#endif
-
-	return false;
 }
 
 /*
