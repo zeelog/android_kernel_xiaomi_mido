@@ -2684,6 +2684,36 @@ static int read_beat(struct fg_chip *chip, u8 *beat_count)
 	return rc;
 }
 
+#define FG_ALG_SYSCTL_1		0x4B0
+static int fg_check_system_config(struct fg_chip *chip)
+{
+	int rc;
+	u32 buf;
+
+	if (!chip->ima_supported)
+		return 0;
+
+	rc = fg_mem_read(chip, (u8 *)&buf, FG_ALG_SYSCTL_1, 4, 0, 0);
+	if (rc) {
+		pr_err("Failed to read 0x4B0-3 rc=%d\n", rc);
+		return rc;
+	}
+
+	if (fg_debug_mask & FG_STATUS)
+		pr_info("FG_ALG_SYSCTL_1: %x\n", buf);
+	if (buf != 0x870C7999) {
+		pr_err("FG_ALG_SYSCTL_1 corrupted? buf: %x\n", buf);
+		buf = 0x870C7999;
+		rc = fg_mem_write(chip, (u8 *)&buf, FG_ALG_SYSCTL_1, 4, 0, 0);
+		if (rc) {
+			pr_err("Failed to write 0x4B0-3 rc=%d\n", rc);
+			return rc;
+		}
+	}
+
+	return rc;
+}
+
 #define SANITY_CHECK_PERIOD_MS	5000
 static void check_sanity_work(struct work_struct *work)
 {
@@ -2693,6 +2723,10 @@ static void check_sanity_work(struct work_struct *work)
 	int rc = 0;
 	u8 beat_count;
 	bool tried_once = false;
+
+	rc = fg_check_system_config(chip);
+	if (rc)
+		pr_err("Failed to check system config rc=%d\n", rc);
 
 	// Try one beat check once up-front to avoid the common
 	// case where the beat has changed and we don't need to hold
@@ -5398,6 +5432,12 @@ static irqreturn_t fg_soc_irq_handler(int irq, void *_chip)
 	if (fg_debug_mask & FG_IRQS)
 		pr_info("triggered 0x%x\n", soc_rt_sts);
 
+	rc = fg_check_system_config(chip);
+	if (rc) {
+		pr_err("Failed to check system config rc=%d\n", rc);
+		return rc;
+	}
+
 	if (chip->dischg_gain.enable) {
 		fg_stay_awake(&chip->dischg_gain_wakeup_source);
 		schedule_work(&chip->dischg_gain_work);
@@ -7320,9 +7360,10 @@ static int fg_init_irqs(struct fg_chip *chip)
 				return rc;
 			}
 
-			rc = devm_request_irq(chip->dev,
-				chip->soc_irq[FULL_SOC].irq,
-				fg_soc_irq_handler, IRQF_TRIGGER_RISING,
+			rc = devm_request_threaded_irq(chip->dev,
+				chip->soc_irq[FULL_SOC].irq, NULL,
+				fg_soc_irq_handler,
+				IRQF_TRIGGER_RISING | IRQF_ONESHOT,
 				"full-soc", chip);
 			if (rc < 0) {
 				pr_err("Can't request %d full-soc: %d\n",
@@ -7347,9 +7388,10 @@ static int fg_init_irqs(struct fg_chip *chip)
 				}
 			}
 
-			rc = devm_request_irq(chip->dev,
-				chip->soc_irq[DELTA_SOC].irq,
-				fg_soc_irq_handler, IRQF_TRIGGER_RISING,
+			rc = devm_request_threaded_irq(chip->dev,
+				chip->soc_irq[DELTA_SOC].irq, NULL,
+				fg_soc_irq_handler,
+				IRQF_TRIGGER_RISING | IRQF_ONESHOT,
 				"delta-soc", chip);
 			if (rc < 0) {
 				pr_err("Can't request %d delta-soc: %d\n",
@@ -8178,6 +8220,12 @@ static int fg_common_hw_init(struct fg_chip *chip)
 	if (fg_debug_mask & FG_STATUS)
 		pr_info("rslow_comp active is %sabled\n",
 			chip->rslow_comp.active ? "en" : "dis");
+
+	rc = fg_check_system_config(chip);
+	if (rc) {
+		pr_err("Failed to check system config rc=%d\n", rc);
+		return rc;
+	}
 
 	/*
 	 * Clear bits 0-2 in 0x4B3 and set them again to make empty_soc irq
