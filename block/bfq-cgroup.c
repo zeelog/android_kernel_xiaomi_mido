@@ -1140,6 +1140,9 @@ static inline void bfqg_stats_update_idle_time(struct bfq_group *bfqg) { }
 static inline void bfqg_stats_set_start_idle_time(struct bfq_group *bfqg) { }
 static inline void bfqg_stats_update_avg_queue_size(struct bfq_group *bfqg) { }
 
+static void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq_queue *bfqq,
+			  struct bfq_group *bfqg) {}
+
 static void bfq_init_entity(struct bfq_entity *entity,
 			    struct bfq_group *bfqg)
 {
