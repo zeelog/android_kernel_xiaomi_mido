@@ -1,5 +1,5 @@
 /*
- * BFQ v8r8-rc1 for 4.10.0: data structures and common functions prototypes.
+ * BFQ v8r8-rc2 for 4.10.0: data structures and common functions prototypes.
  *
  * Based on ideas and code from CFQ:
  * Copyright (C) 2003 Jens Axboe <axboe@kernel.dk>
@@ -9,7 +9,7 @@
  *
  * Copyright (C) 2015 Paolo Valente <paolo.valente@unimore.it>
  *
- * Copyright (C) 2016 Paolo Valente <paolo.valente@linaro.org>
+ * Copyright (C) 2017 Paolo Valente <paolo.valente@linaro.org>
  */
 
 #ifndef _BFQ_H
