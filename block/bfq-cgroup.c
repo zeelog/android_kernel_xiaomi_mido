@@ -1157,13 +1157,7 @@ static void bfq_init_entity(struct bfq_entity *entity,
 	entity->sched_data = &bfqg->sched_data;
 }
 
-static struct bfq_group *
-bfq_bic_update_cgroup(struct bfq_io_cq *bic, struct bio *bio)
-{
-	struct bfq_data *bfqd = bic_to_bfqd(bic);
-
-	return bfqd->root_group;
-}
+static void bfq_bic_update_cgroup(struct bfq_io_cq *bic, struct bio *bio) {}
 
 static void bfq_end_wr_async(struct bfq_data *bfqd)
 {
