@@ -5238,7 +5238,7 @@ static struct blkcg_policy blkcg_policy_bfq = {
 static int __init bfq_init(void)
 {
 	int ret;
-	char msg[60] = "BFQ I/O-scheduler: v8r8-rc2";
+	char msg[60] = "BFQ I/O-scheduler: v8r8";
 
 #ifdef CONFIG_BFQ_GROUP_IOSCHED
 	ret = blkcg_policy_register(&blkcg_policy_bfq);
