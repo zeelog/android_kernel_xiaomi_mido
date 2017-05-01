@@ -1,5 +1,5 @@
 /*
- * BFQ v8r10 for 4.9.0: data structures and common functions prototypes.
+ * BFQ v8r11 for 4.9.0: data structures and common functions prototypes.
  *
  * Based on ideas and code from CFQ:
  * Copyright (C) 2003 Jens Axboe <axboe@kernel.dk>
