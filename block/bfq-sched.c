@@ -1932,8 +1932,10 @@ static void bfq_del_bfqq_busy(struct bfq_data *bfqd, struct bfq_queue *bfqq,
 		bfq_weights_tree_remove(bfqd, &bfqq->entity,
 					&bfqd->queue_weights_tree);
 
-	if (bfqq->wr_coeff > 1)
+	if (bfqq->wr_coeff > 1) {
 		bfqd->wr_busy_queues--;
+		BUG_ON(bfqd->wr_busy_queues < 0);
+	}
 
 	bfqg_stats_update_dequeue(bfqq_group(bfqq));
 
@@ -1962,6 +1964,9 @@ static void bfq_add_bfqq_busy(struct bfq_data *bfqd, struct bfq_queue *bfqq)
 			bfq_weights_tree_add(bfqd, &bfqq->entity,
 					     &bfqd->queue_weights_tree);
 
-	if (bfqq->wr_coeff > 1)
+	if (bfqq->wr_coeff > 1) {
 		bfqd->wr_busy_queues++;
+		BUG_ON(bfqd->wr_busy_queues > bfqd->busy_queues);
+	}
+
 }
