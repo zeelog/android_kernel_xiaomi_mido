@@ -224,6 +224,9 @@ line of text and contains the following stats separated by whitespace:
  pages_compacted  the number of pages freed during compaction
  huge_pages	  the number of incompressible pages
 
+ dup_data_size	  deduplicated data size
+ meta_data_size	  the amount of metadata allocated for deduplication feature
+ 
 File /sys/block/zram<id>/bd_stat
 
 The stat file represents device's backing device statistics. It consists of
@@ -253,6 +256,7 @@ a single line of text and contains the following stats separated by whitespace:
 = writeback
 
 With CONFIG_ZRAM_WRITEBACK, zram can write idle/incompressible page
+
 to backing storage rather than keeping it in memory.
 To use the feature, admin should set up backing device via
 
