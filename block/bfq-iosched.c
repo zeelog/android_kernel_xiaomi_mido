@@ -4600,7 +4600,6 @@ static int bfq_set_request(struct request_queue *q, struct request *rq,
 	bool bfqq_already_existing = false, split = false;
 
 	spin_lock_irqsave(q->queue_lock, flags);
-	bfq_check_ioprio_change(bic, bio);
 
 	if (!bic)
 		goto queue_fail;
