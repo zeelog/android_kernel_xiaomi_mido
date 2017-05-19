@@ -1452,4 +1452,42 @@ config TOUCHSCREEN_RAYDIUM_CHIPSET
 
 	  If unsure, say N.
 
+config TOUCHSCREEN_FT5435
+	tristate "FocalTech touchscreens"
+	depends on I2C
+	help
+	  Say Y here if you have a ft5435 touchscreen.
+	  Ft5435 controllers are multi touch controllers which can
+	  report 5 touches at a time.
+
+	  If unsure, say N.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called ft5435_ts.
+
+config TOUCHSCREEN_IST3038C
+	tristate "imagies touchscreens"
+	depends on I2C
+	help
+	  Say Y here if you have a ist3038c touchscreen.
+	  Ft5x06 controllers are multi touch controllers which can
+	  report 5 touches at a time.
+
+	  If unsure, say N.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called ist3038c_ts.
+
+config TOUCHSCREEN_GT9XX_v24
+	bool "Goodix touchpanel GT9xx_v24 series"
+	depends on I2C
+	help
+	  Say Y here if you have a Goodix GT9xx_v24 touchscreen.
+	  Gt9xx controllers are multi touch controllers which can
+	  report 5 touches at a time.
+
+          If unsure, say N.
+
+source "drivers/input/touchscreen/gt9xx_v2.4/Kconfig"
+
 endif
