@@ -2332,10 +2332,18 @@ static void msm_isp_update_camif_output_count(
 /*Factor in Q2 format*/
 #define ISP_DEFAULT_FORMAT_FACTOR 6
 #define ISP_BUS_UTILIZATION_FACTOR 6
+
+#ifdef CONFIG_MACH_XIAOMI_MIDO
+static int msm_isp_update_stream_bandwidth(struct vfe_device *vfe_dev)
+#else
 int msm_isp_update_stream_bandwidth(struct vfe_device *vfe_dev,
 	enum msm_vfe_hw_state hw_state)
+#endif
 {
-	int i, rc = 0, frame_src, ms_type;
+	int i, rc = 0;
+#ifndef CONFIG_MACH_XIAOMI_MIDO
+	int frame_src, ms_type;
+#endif
 	struct msm_vfe_axi_stream *stream_info;
 	struct msm_vfe_axi_shared_data *axi_data = &vfe_dev->axi_data;
 	uint64_t total_pix_bandwidth = 0, total_rdi_bandwidth = 0;
@@ -2346,6 +2354,7 @@ int msm_isp_update_stream_bandwidth(struct vfe_device *vfe_dev,
 
 	for (i = 0; i < VFE_AXI_SRC_MAX; i++) {
 		stream_info = &axi_data->stream_info[i];
+#ifndef CONFIG_MACH_XIAOMI_MIDO
 		frame_src = SRC_TO_INTF(stream_info->stream_src);
 		ms_type = vfe_dev->axi_data.src_info[frame_src].
 			dual_hw_ms_info.dual_hw_ms_type;
@@ -2354,6 +2363,7 @@ int msm_isp_update_stream_bandwidth(struct vfe_device *vfe_dev,
 				ISP_VFE0 + vfe_dev->pdev->id, 0, 0);
 			return rc;
 		}
+#endif
 
 		if (stream_info->state == ACTIVE ||
 			stream_info->state == START_PENDING) {
@@ -2989,7 +2999,11 @@ static int msm_isp_start_axi_stream(struct vfe_device *vfe_dev,
 		}
 	}
 	mutex_unlock(&vfe_dev->buf_mgr->lock);
+#ifdef CONFIG_MACH_XIAOMI_MIDO
+	msm_isp_update_stream_bandwidth(vfe_dev);
+#else
 	msm_isp_update_stream_bandwidth(vfe_dev, stream_cfg_cmd->hw_state);
+#endif
 	vfe_dev->hw_info->vfe_ops.axi_ops.reload_wm(vfe_dev,
 		vfe_dev->vfe_base, wm_reload_mask);
 	msm_isp_update_camif_output_count(vfe_dev, stream_cfg_cmd);
@@ -3194,7 +3208,11 @@ static int msm_isp_stop_axi_stream(struct vfe_device *vfe_dev,
 	}
 
 	msm_isp_update_camif_output_count(vfe_dev, stream_cfg_cmd);
-	msm_isp_update_stream_bandwidth(vfe_dev, stream_cfg_cmd->hw_state);
+#ifdef CONFIG_MACH_XIAOMI_MIDO
+        msm_isp_update_stream_bandwidth(vfe_dev);
+#else
+        msm_isp_update_stream_bandwidth(vfe_dev, stream_cfg_cmd->hw_state);
+#endif
 
 	for (i = 0; i < stream_cfg_cmd->num_streams; i++) {
 		stream_info = &axi_data->stream_info[
