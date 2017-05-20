@@ -968,6 +968,7 @@ enum msm_isp_ioctl_cmd_code {
 	MSM_ISP_MAP_BUF_START_MULTI_PASS_FE,
 #ifndef CONFIG_MACH_XIAOMI_MIDO
 	MSM_ISP_CFG_HW_STATE,
+#ifndef CONFIG_MACH_XIAOMI_MIDO
 	MSM_ISP_AHB_CLK_CFG,
 #endif
 	MSM_ISP_UPDATE_FE_FRAME_ID,
@@ -1105,6 +1106,7 @@ enum msm_isp_ioctl_cmd_code {
 	_IOWR('V', MSM_ISP_CFG_HW_STATE, \
 		struct msm_vfe_axi_stream_cfg_cmd)
 
+#ifndef CONFIG_MACH_XIAOMI_MIDO
 #define VIDIOC_MSM_ISP_AHB_CLK_CFG \
 	_IOWR('V', MSM_ISP_AHB_CLK_CFG, struct msm_isp_ahb_clk_cfg)
 #endif
