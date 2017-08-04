@@ -1372,7 +1372,7 @@ hdd_extract_assigned_int_from_str
 
     while ((SPACE_ASCII_VALUE  == *pInPtr) && ('\0' !=  *pInPtr)) pInPtr++;
 
-    val = sscanf(pInPtr, "%32s ", buf);
+    val = sscanf(pInPtr, "%31s ", buf);
     if (val < 0 && val > strlen(pInPtr))
     {
         return NULL;
