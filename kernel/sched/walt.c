@@ -124,22 +124,18 @@ static void release_rq_locks_irqrestore(const cpumask_t *cpus,
 	local_irq_restore(*flags);
 }
 
-#ifdef CONFIG_HZ_300
 /*
- * Tick interval becomes to 3333333 due to
- * rounding error when HZ=300.
+ * Window size (in ns). Adjust for the tick size so that the window
+ * rollover occurs just before the tick boundary.
  */
-#define MIN_SCHED_RAVG_WINDOW (3333333 * 6)
-#else
-/* Min window size (in ns) = 20ms */
-#define MIN_SCHED_RAVG_WINDOW 20000000
-#endif
+/* Min window size (in ns) = 10ms */
+#define MIN_SCHED_RAVG_WINDOW ((10000000 / TICK_NSEC) * TICK_NSEC)
 
 /* Max window size (in ns) = 1s */
-#define MAX_SCHED_RAVG_WINDOW 1000000000
+#define MAX_SCHED_RAVG_WINDOW ((1000000000 / TICK_NSEC) * TICK_NSEC)
 
-/* 1 -> use PELT based load stats, 0 -> use window-based load stats */
-unsigned int __read_mostly walt_disabled = 0;
+/* true -> use PELT based load stats, false -> use window-based load stats */
+bool __read_mostly walt_disabled = false;
 
 __read_mostly unsigned int sysctl_sched_cpu_high_irqload = (10 * NSEC_PER_MSEC);
 
@@ -164,8 +160,9 @@ __read_mostly unsigned int sched_window_stats_policy =
 __read_mostly unsigned int sysctl_sched_window_stats_policy =
 	WINDOW_STATS_MAX_RECENT_AVG;
 
-/* Window size (in ns) */
-__read_mostly unsigned int sched_ravg_window = MIN_SCHED_RAVG_WINDOW;
+/* Window size (in ns) = 20ms */
+__read_mostly unsigned int sched_ravg_window =
+					    (20000000 / TICK_NSEC) * TICK_NSEC;
 
 /*
  * A after-boot constant divisor for cpu_util_freq_walt() to apply the load
@@ -222,16 +219,25 @@ __read_mostly unsigned int sysctl_sched_freq_reporting_policy;
 static int __init set_sched_ravg_window(char *str)
 {
 	unsigned int window_size;
+	unsigned int adj_window;
 
 	get_option(&str, &window_size);
 
-	if (window_size < MIN_SCHED_RAVG_WINDOW ||
-			window_size > MAX_SCHED_RAVG_WINDOW) {
+	/* Adjust for CONFIG_HZ */
+	adj_window = (window_size / TICK_NSEC) * TICK_NSEC;
+
+	/* Warn if we're a bit too far away from the expected window size */
+	WARN(adj_window < window_size - NSEC_PER_MSEC,
+	     "tick-adjusted window size %u, original was %u\n", adj_window,
+	     window_size);
+
+	if (adj_window < MIN_SCHED_RAVG_WINDOW ||
+			adj_window > MAX_SCHED_RAVG_WINDOW) {
 		WARN_ON(1);
 		return -EINVAL;
 	}
 
-	sched_ravg_window = window_size;
+	sched_ravg_window = adj_window;
 	return 0;
 }
 
