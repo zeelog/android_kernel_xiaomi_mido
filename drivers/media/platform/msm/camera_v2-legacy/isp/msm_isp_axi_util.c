@@ -735,11 +735,11 @@ void msm_isp_reset_framedrop(struct vfe_device *vfe_dev,
 			msm_isp_get_framedrop_period(
 			stream_info->frame_skip_pattern);
 		if (stream_info->frame_skip_pattern == SKIP_ALL)
-			stream_info->current_framedrop_period =
-				MSM_VFE_STREAM_STOP_PERIOD;
-		else
-			stream_info->current_framedrop_period =
-				framedrop_period;
+ 			stream_info->current_framedrop_period =
+ 				MSM_VFE_STREAM_STOP_PERIOD;
+ 		else
+ 			stream_info->current_framedrop_period =
+ 				framedrop_period;
 	}
 
 	msm_isp_cfg_framedrop_reg(vfe_dev, stream_info);
