@@ -429,13 +429,7 @@ struct mm_struct {
 	atomic_t mm_users;			/* How many users with user space? */
 	atomic_t mm_count;			/* How many references to "struct mm_struct" (users count as 1) */
 #ifdef CONFIG_MMU
-	atomic_long_t nr_ptes;			/* PTE page table pages */
-#endif
-#if CONFIG_PGTABLE_LEVELS > 2
-	atomic_long_t nr_pmds;			/* PMD page table pages */
-#endif
-#if CONFIG_PGTABLE_LEVELS > 3
-	atomic_long_t nr_puds;			/* PUD page table pages */
+	atomic_long_t pgtables_bytes;		/* PTE page table pages */
 #endif
 	int map_count;				/* number of VMAs */
 
