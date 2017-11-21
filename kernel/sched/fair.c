@@ -2785,16 +2785,6 @@ int sched_set_wake_up_idle(struct task_struct *p, int wake_up_idle)
 EXPORT_SYMBOL(sched_set_wake_up_idle);
 
 /*
- * Precomputed \Sum y^k { 1<=k<=n }.  These are floor(true_value) to prevent
- * over-estimates when re-combining.
- */
-static const u32 runnable_avg_yN_sum[] = {
-	    0, 1002, 1982, 2941, 3880, 4798, 5697, 6576, 7437, 8279, 9103,
-	 9909,10698,11470,12226,12966,13690,14398,15091,15769,16433,17082,
-	17718,18340,18949,19545,20128,20698,21256,21802,22336,22859,23371,
-};
-
-/*
  * Precomputed \Sum y^k { 1<=k<=n, where n%32=0). Values are rolled down to
  * lower integers. See Documentation/scheduler/sched-avg.txt how these
  * were generated:
