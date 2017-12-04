@@ -24,7 +24,7 @@
 #define YAMA_SCOPE_CAPABILITY	2
 #define YAMA_SCOPE_NO_ATTACH	3
 
-static int ptrace_scope = YAMA_SCOPE_RELATIONAL;
+static int ptrace_scope = YAMA_SCOPE_NO_ATTACH;
 
 /* describe a ptrace relationship for potential exception */
 struct ptrace_relation {
