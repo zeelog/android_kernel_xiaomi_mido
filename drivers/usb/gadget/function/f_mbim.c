@@ -35,15 +35,6 @@
 #define MBIM_BULK_BUFFER_SIZE		4096
 #define MAX_CTRL_PKT_SIZE		4096
 
-enum mbim_peripheral_ep_type {
-	MBIM_DATA_EP_TYPE_RESERVED   = 0x0,
-	MBIM_DATA_EP_TYPE_HSIC       = 0x1,
-	MBIM_DATA_EP_TYPE_HSUSB      = 0x2,
-	MBIM_DATA_EP_TYPE_PCIE       = 0x3,
-	MBIM_DATA_EP_TYPE_EMBEDDED   = 0x4,
-	MBIM_DATA_EP_TYPE_BAM_DMUX   = 0x5,
-};
-
 struct mbim_peripheral_ep_info {
 	enum peripheral_ep_type	ep_type;
 	u32  peripheral_iface_id;
@@ -2061,7 +2052,7 @@ static long mbim_ioctl(struct file *fp, unsigned cmd, unsigned long arg)
 			 * This channel number 8 should be in sync with
 			 * the one defined in u_bam.c.
 			 */
-			info.ph_ep_info.ep_type = MBIM_DATA_EP_TYPE_BAM_DMUX;
+			info.ph_ep_info.ep_type = DATA_EP_TYPE_BAM_DMUX;
 			info.ph_ep_info.peripheral_iface_id =
 						BAM_DMUX_CHANNEL_ID;
 			info.ipa_ep_pair.cons_pipe_num = 0;
@@ -2076,7 +2067,7 @@ static long mbim_ioctl(struct file *fp, unsigned cmd, unsigned long arg)
 				break;
 			}
 
-			info.ph_ep_info.ep_type = MBIM_DATA_EP_TYPE_HSUSB;
+			info.ph_ep_info.ep_type = DATA_EP_TYPE_HSUSB;
 			info.ph_ep_info.peripheral_iface_id = mbim->data_id;
 			info.ipa_ep_pair.cons_pipe_num = port->ipa_consumer_ep;
 			info.ipa_ep_pair.prod_pipe_num = port->ipa_producer_ep;
