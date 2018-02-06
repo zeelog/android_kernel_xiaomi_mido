@@ -1,3 +1,4 @@
+#include <linux/cache.h>
 #include <linux/sched.h>
 #include <linux/slab.h>
 #include <linux/pid_namespace.h>
@@ -44,7 +45,7 @@ static const struct inode_operations proc_thread_self_inode_operations = {
 	.get_link	= proc_thread_self_get_link,
 };
 
-static unsigned thread_self_inum;
+static unsigned thread_self_inum __ro_after_init;
 
 int proc_setup_thread_self(struct super_block *s)
 {
