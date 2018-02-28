@@ -285,7 +285,9 @@ DTC_FLAGS += -Wno-unit_address_vs_reg \
 	-Wno-pci_device_reg \
 	-Wno-interrupts_property \
 	-Wno-gpios_property \
-	-Wno-clocks_property
+	-Wno-clocks_property \
+	-Wno-avoid_unnecessary_addr_size \
+	-Wno-alias_paths
 endif
 
 ifneq ($(findstring 2,$(KBUILD_ENABLE_EXTRA_GCC_CHECKS)),)
