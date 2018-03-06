@@ -228,6 +228,11 @@ int pm_wake_lock(const char *buf)
 		goto out;
 	}
 
+#ifdef CONFIG_PM_WAKELOCKS_SENSOR_IND_HACK
+	if (strncmp(buf, "sensor_ind", 9) == 0)
+		timeout_ns = 5000000000L; /* 5 seconds */
+#endif
+
 	if (timeout_ns) {
 		u64 timeout_ms = timeout_ns + NSEC_PER_MSEC - 1;
 
