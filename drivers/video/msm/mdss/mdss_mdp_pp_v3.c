@@ -549,7 +549,7 @@ static int pp_dither_set_config(char __iomem *base_addr,
 	if ((dither_data->g_y_depth >= DITHER_DEPTH_MAP_INDEX) ||
 		(dither_data->b_cb_depth >= DITHER_DEPTH_MAP_INDEX) ||
 		(dither_data->r_cr_depth >= DITHER_DEPTH_MAP_INDEX)) {
-		pr_err("invalid data for dither, g_y_depth %d y_cb_depth %d r_cr_depth %d\n",
+		pr_debug("invalid data for dither, g_y_depth %d y_cb_depth %d r_cr_depth %d\n",
 			dither_data->g_y_depth, dither_data->b_cb_depth,
 			dither_data->r_cr_depth);
 		return -EINVAL;
