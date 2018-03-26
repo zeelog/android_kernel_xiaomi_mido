@@ -82,6 +82,10 @@ struct icnss_soc_info {
 	u32 version;
 };
 
+struct icnss_wlan_mode_req_msg {
+	enum icnss_driver_mode mode;
+};
+
 extern int icnss_register_driver(struct icnss_driver_ops *driver);
 extern int icnss_unregister_driver(struct icnss_driver_ops *driver);
 extern int icnss_register_ce_irq(unsigned int ce_id,

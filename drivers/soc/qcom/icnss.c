@@ -510,10 +510,10 @@ out:
 	return ret;
 }
 
-static int wlfw_wlan_mode_send_sync_msg(enum wlfw_driver_mode_enum_v01 mode)
+static int wlfw_wlan_mode_send_sync_msg(enum icnss_driver_mode mode)
 {
 	int ret;
-	struct wlfw_wlan_mode_req_msg_v01 req;
+	struct icnss_wlan_mode_req_msg req;
 	struct wlfw_wlan_mode_resp_msg_v01 resp;
 	struct msg_desc req_desc, resp_desc;
 
@@ -1238,7 +1238,7 @@ EXPORT_SYMBOL(icnss_wlan_enable);
 
 int icnss_wlan_disable(enum icnss_driver_mode mode)
 {
-	return wlfw_wlan_mode_send_sync_msg(QMI_WLFW_OFF_V01);
+	return wlfw_wlan_mode_send_sync_msg(ICNSS_OFF);
 }
 EXPORT_SYMBOL(icnss_wlan_disable);
 
