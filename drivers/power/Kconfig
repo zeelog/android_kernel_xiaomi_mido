@@ -516,6 +516,16 @@ config QPNP_SMB2
 	  autonomous charging and APSD for different charging sources.
 	  This module also interfaces USB PD for power-delivery support.
 
+config QPNP_LEGACY_CYCLE_COUNT
+        tristate "QPNP FG fuel gauge cycle count bins"
+	default y
+	help
+	  Say Y here to enable the QPNP FG initial QCOM cycle count implementation.
+	  When not selected then POWER_SUPPLY_PROP_CYCLE_COUNT exposes the linux
+	  power supply battery cycle count which is not based on cycle bins.
+	  When selected only 'bms' will expose POWER_SUPPLY_PROP_CYCLE_COUNT
+	  reporting the bucket based value.
+
 config FUELGAUGE_STC3117
 	tristate "STC3117 fuel gauge driver"
 	default n
