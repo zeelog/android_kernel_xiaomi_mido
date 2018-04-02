@@ -49,6 +49,7 @@ static void free_resources(void)
 		}
 	}
 }
+static bool sge_ready;
 
 static int update_topology;
 
@@ -148,6 +149,7 @@ void init_sched_energy_costs(void)
 		}
 	}
 
+	sge_ready = true;
 	pr_info("Sched-energy-costs installed from DT\n");
 	return;
 
@@ -166,6 +168,8 @@ static int sched_energy_probe(struct platform_device *pdev)
 
 	if (!sched_is_energy_aware())
 		return 0;
+	if (!sge_ready)
+		return -EPROBE_DEFER;
 
 	max_frequencies = kmalloc_array(nr_cpu_ids, sizeof(unsigned long),
 					GFP_KERNEL);
