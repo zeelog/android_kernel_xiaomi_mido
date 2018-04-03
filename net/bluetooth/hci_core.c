@@ -4082,13 +4082,14 @@ int hci_register_dev(struct hci_dev *hdev)
 
 	/* Do not allow HCI_AMP devices to register at index 0,
 	 * so the index can be used as the AMP controller ID.
+	 * Ensure the name fits into eight characters id < 10000.
 	 */
 	switch (hdev->dev_type) {
 	case HCI_BREDR:
-		id = ida_simple_get(&hci_index_ida, 0, 0, GFP_KERNEL);
+		id = ida_simple_get(&hci_index_ida, 0, 10000, GFP_KERNEL);
 		break;
 	case HCI_AMP:
-		id = ida_simple_get(&hci_index_ida, 1, 0, GFP_KERNEL);
+		id = ida_simple_get(&hci_index_ida, 1, 10000, GFP_KERNEL);
 		break;
 	default:
 		return -EINVAL;
@@ -4097,7 +4098,7 @@ int hci_register_dev(struct hci_dev *hdev)
 	if (id < 0)
 		return id;
 
-	sprintf(hdev->name, "hci%d", id);
+	snprintf(hdev->name, sizeof(hdev->name), "hci%d", id);
 	hdev->id = id;
 
 	BT_DBG("%pK name %s bus %d", hdev, hdev->name, hdev->bus);
