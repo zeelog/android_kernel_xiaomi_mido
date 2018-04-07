@@ -24,7 +24,7 @@
 #define _UAPI__SOUND_ASOUND_H
 
 #include <linux/types.h>
-
+#include <linux/time.h>
 
 /*
  *  protocol version
