@@ -287,7 +287,10 @@ DTC_FLAGS += -Wno-unit_address_vs_reg \
 	-Wno-gpios_property \
 	-Wno-clocks_property \
 	-Wno-avoid_unnecessary_addr_size \
-	-Wno-alias_paths
+	-Wno-alias_paths \
+	-Wno-graph_child_address \
+	-Wno-graph_port \
+	-Wno-unique_unit_address
 endif
 
 ifneq ($(findstring 2,$(KBUILD_ENABLE_EXTRA_GCC_CHECKS)),)
