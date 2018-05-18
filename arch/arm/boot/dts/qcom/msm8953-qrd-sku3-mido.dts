@@ -67,3 +67,4 @@
 };
 
 #include "mido/msm8953-mido.dtsi"
+#include "msm8953-qrd-sku3-xiaomi-common.dtsi"

@@ -1,0 +1,22 @@
+/*
+ * Copyright (c) 2018, The Linux Foundation. All rights reserved.
+ * SPDX-License-Identifier: GPL-2.0-only
+ */
+
+&mdss_mdp {
+	/delete-node/ qcom,mdss_dsi_sim_video;
+	/delete-node/ qcom,mdss_dsi_dual_sim_video;
+	/delete-node/ qcom,mdss_dsi_sim_cmd;
+	/delete-node/ qcom,mdss_dsi_dual_sim_cmd;
+	/delete-node/ qcom,mdss_dsi_truly_1080p_video;
+	/delete-node/ qcom,mdss_dsi_truly_1080p_cmd;
+	/delete-node/ qcom,mdss_dsi_adv7533_1080p;
+	/delete-node/ qcom,mdss_dsi_adv7533_720p;
+	/delete-node/ qcom,mdss_dsi_r69006_1080p_video;
+	/delete-node/ qcom,mdss_dsi_r69006_1080p_cmd;
+	/delete-node/ qcom,mdss_dsi_truly_wuxga_video;
+	/delete-node/ qcom,mdss_dsi_lt8912_480p_video;
+	/delete-node/ qcom,mdss_dsi_lt8912_1080p_video;
+	/delete-node/ qcom,mdss_dsi_lgd_incell_sw49106_fhd_video;
+	/delete-node/ qcom,mdss_dsi_boyi_hx83100a_800p_video;
+};

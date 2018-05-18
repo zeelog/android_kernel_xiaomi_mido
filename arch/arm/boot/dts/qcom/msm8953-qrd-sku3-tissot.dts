@@ -68,3 +68,4 @@
 
 
 #include "tissot/msm8953-qrd-sku3-tissot-overlay.dtsi"
+#include "msm8953-qrd-sku3-xiaomi-common.dtsi"
