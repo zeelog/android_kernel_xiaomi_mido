@@ -28,29 +28,29 @@
 };
 
 &ext_codec {
-	status = "disable";
+	status = "disabled";
 };
 
 &slim_msm {
-	status = "disable";
+	status = "disabled";
 };
 
 &dai_slim {
-	status = "disable";
+	status = "disabled";
 };
 
 &wcd9xxx_intc {
-	status = "disable";
+	status = "disabled";
 };
 
 &clock_audio {
-	status = "disable";
+	status = "disabled";
 };
 
 &wcd9335 {
-	status = "disable";
+	status = "disabled";
 };
 
 &wcd_rst_gpio {
-	status = "disable";
+	status = "disabled";
 };

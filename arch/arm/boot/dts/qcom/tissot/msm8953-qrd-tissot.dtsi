@@ -229,7 +229,7 @@
 			compatible = "qcom,leds-qpnp";
 			reg = <0xa100 0x100>;
 			label = "mpp";
-			status = "disable";
+			status = "disabled";
 			/delete-node/ qcom,led_mpp_2;
 		};
 	};

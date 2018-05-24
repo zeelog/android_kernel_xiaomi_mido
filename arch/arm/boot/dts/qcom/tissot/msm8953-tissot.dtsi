@@ -20,7 +20,7 @@
 		android {
 			fstab {
 				vendor {
-					status = "disable";
+					status = "disabled";
 				};
 				system {
 					compatible = "android,system";
@@ -28,7 +28,7 @@
 					type = "ext4";
 					mnt_flags = "ro,barrier=1,discard";
 					fsmgr_flags = "wait,slotselect";
-					status = "disable";
+					status = "disabled";
 				};
 
 			};

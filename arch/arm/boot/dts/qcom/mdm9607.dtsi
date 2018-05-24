@@ -1822,7 +1822,7 @@
 		qcom,msm-bus,vectors-KBps =
 				<114 512 0 0>,       /* No vote */
 				<114 512 125000 800000>; /* Max. bandwidth */
-		status = "disable";
+		status = "disabled";
 
 		phy0: ethernet-phy@0 {
 			reg = <0>;
