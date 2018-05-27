@@ -81,6 +81,7 @@ int msm_gpioset_initialize(enum pinctrl_client client,
 	int num_strings = 0;
 	int ret = 0;
 	int i = 0;
+	int gpioset_str = 0;
 
 	pr_debug("%s\n", __func__);
 	pinctrl = devm_pinctrl_get(dev);
@@ -114,8 +115,10 @@ int msm_gpioset_initialize(enum pinctrl_client client,
 		ret = of_property_read_string_index(dev->of_node,
 					gpioset_names, i, &gpioset_names_str);
 
+		gpioset_str = strlen(gpioset_names_str) + 1;
+
 		gpioset_info[client].gpiosets[i] = devm_kzalloc(dev,
-				(strlen(gpioset_names_str) + 1), GFP_KERNEL);
+				(gpioset_str), GFP_KERNEL);
 
 		if (!gpioset_info[client].gpiosets[i]) {
 			dev_err(dev, "%s: Can't allocate gpiosets[%d] data\n",
@@ -124,7 +127,7 @@ int msm_gpioset_initialize(enum pinctrl_client client,
 			goto err;
 		}
 		strlcpy(gpioset_info[client].gpiosets[i],
-				gpioset_names_str, strlen(gpioset_names_str)+1);
+				gpioset_names_str, gpioset_str);
 		gpioset_names_str = NULL;
 	}
 	num_strings = 0;
@@ -160,16 +163,17 @@ int msm_gpioset_initialize(enum pinctrl_client client,
 		ret = of_property_read_string_index(dev->of_node,
 				gpioset_combinations, i, &gpioset_comb_str);
 
+		gpioset_str = strlen(gpioset_comb_str) + 1;
+
 		gpioset_info[client].gpiosets_comb_names[i] = devm_kzalloc(dev,
-				(strlen(gpioset_comb_str) + 1), GFP_KERNEL);
+				(gpioset_str), GFP_KERNEL);
 		if (!gpioset_info[client].gpiosets_comb_names[i]) {
 			ret = -ENOMEM;
 			goto err;
 		}
 
 		strlcpy(gpioset_info[client].gpiosets_comb_names[i],
-					gpioset_comb_str,
-					strlen(gpioset_comb_str)+1);
+					gpioset_comb_str, gpioset_str);
 		pr_debug("%s: GPIO configuration %s\n",
 				__func__,
 				gpioset_info[client].gpiosets_comb_names[i]);
