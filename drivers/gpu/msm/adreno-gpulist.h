@@ -14,6 +14,7 @@
 #define ANY_ID (~0)
 
 static const struct adreno_gpu_core adreno_gpulist[] = {
+#if defined(CONFIG_ARCH_MSM8917) | defined(CONFIG_ARCH_MSM8920)
 	{
 		.gpurev = ADRENO_REV_A306,
 		.core = 3,
@@ -53,6 +54,8 @@ static const struct adreno_gpu_core adreno_gpulist[] = {
 		.gmem_size = (SZ_64K + SZ_32K),
 		.busy_mask = 0x7FFFFFFE,
 	},
+#endif /* CONFIG_ARCH_MSM8917 | CONFIG_ARCH_MSM8920 */
+#ifdef CONFIG_ARCH_MSM8916
 	{
 		.gpurev = ADRENO_REV_A405,
 		.core = 4,
@@ -138,6 +141,8 @@ static const struct adreno_gpu_core adreno_gpulist[] = {
 		.num_protected_regs = 0x18,
 		.busy_mask = 0x7FFFFFFE,
 	},
+#endif /* CONFIG_ARCH_MSM8916 */
+#if defined(CONFIG_ARCH_MSM8937) | defined(CONFIG_ARCH_MSM8940) | defined(CONFIG_ARCH_MSM8953) | defined(CONFIG_ARCH_MSM8996) | defined(CONFIG_ARCH_MSMCOBALT) | defined(CONFIG_ARCH_SDM450)
 	{
 		.gpurev = ADRENO_REV_A530,
 		.core = 5,
@@ -336,6 +341,8 @@ static const struct adreno_gpu_core adreno_gpulist[] = {
 		.num_protected_regs = 0x20,
 		.busy_mask = 0xFFFFFFFE,
 	},
+#endif /* CONFIG_ARCH_MSM8937 | CONFIG_ARCH_MSM8940 | CONFIG_ARCH_MSM8953 | CONFIG_ARCH_MSM8996 | CONFIG_ARCH_MSMCOBALT | CONFIG_ARCH_SDM450 */
+#ifdef CONFIG_ARCH_SDM845
 	{
 		.gpurev = ADRENO_REV_A630,
 		.core = 6,
@@ -415,4 +422,5 @@ static const struct adreno_gpu_core adreno_gpulist[] = {
 		.gpmu_major = 0x1,
 		.gpmu_minor = 0x003,
 	},
+#endif /* CONFIG_ARCH_SDM845 */
 };
