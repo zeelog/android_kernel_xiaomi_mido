@@ -1865,7 +1865,7 @@ static int ist30xx_parse_dt(struct device *dev, struct ist30xx_data *data)
 #ifdef XIAOMI_PRODUCT
 #define CTP_PROC_LOCKDOWN_FILE "tp_lockdown_info"
 static struct proc_dir_entry *ctp_lockdown_status_proc;
-static char tp_lockdown_info[128];
+static char tp_lockdown_info[32];
 
 static int ctp_lockdown_proc_show(struct seq_file  *file, void *data)
 {

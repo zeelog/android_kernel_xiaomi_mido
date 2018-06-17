@@ -48,7 +48,7 @@ u8 glove1_config1[GTP_CONFIG_MAX_LENGTH + GTP_ADDR_LENGTH]
 u8 glove1_config2[GTP_CONFIG_MAX_LENGTH + GTP_ADDR_LENGTH]
 				= {GTP_REG_CONFIG_DATA >> 8, GTP_REG_CONFIG_DATA & 0xff};
 
-static char tp_lockdown_info[128];
+static char tp_lockdown_info[32];
 static char tp_fw_version[10];
 
 static char tp_info_summary[80] = "";

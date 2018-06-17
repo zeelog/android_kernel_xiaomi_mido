@@ -66,7 +66,7 @@ u8 fw_ver;
 extern int fts_i2c_read(struct i2c_client *client, char *writebuf, int writelen, char *readbuf, int readlen);
 
 #if FTS_LOCK_DOWN_INFO
-char ftp_lockdown_info[128];
+char ftp_lockdown_info[32];
 
 #define FTS_PROC_LOCKDOWN_FILE "tp_lockdown_info"
 static struct proc_dir_entry *fts_lockdown_status_proc;

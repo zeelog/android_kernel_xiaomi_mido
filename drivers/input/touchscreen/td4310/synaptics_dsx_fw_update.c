@@ -840,7 +840,7 @@ static struct synaptics_rmi4_fwu_handle *fwu;
 #define CTP_PROC_LOCKDOWN_FILE "tp_lockdown_info"
 DEFINE_MUTEX(fwu_sysfs_mutex);
 static struct proc_dir_entry *ctp_lockdown_status_proc;
-static char tp_lockdown_info[128];
+static char tp_lockdown_info[32];
 
 static int fwu_do_read_customer_serialization_data(void);
 
