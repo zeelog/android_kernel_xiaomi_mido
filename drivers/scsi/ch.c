@@ -922,7 +922,7 @@ static int ch_probe(struct device *dev)
 	}
 
 	ch->minor = ret;
-	sprintf(ch->name,"ch%d",ch->minor);
+	snprintf(ch->name, sizeof(ch->name), "ch%d", ch->minor);
 
 	class_dev = device_create(ch_sysfs_class, dev,
 				  MKDEV(SCSI_CHANGER_MAJOR, ch->minor), ch,
