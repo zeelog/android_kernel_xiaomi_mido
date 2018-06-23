@@ -90,6 +90,7 @@ config FORCE_PAGES
 
 config FREE_PAGES_RDONLY
         bool "Set pages as read only while on the buddy list"
+        depends on DEBUG_KERNEL
         select FORCE_PAGES
         select DEBUG_PAGEALLOC
         help
