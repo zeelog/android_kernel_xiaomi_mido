@@ -451,11 +451,11 @@ static int driver_init_partial(struct gf_dev *gf_dev)
 		pr_err("Could not request irq %d\n", gpio_to_irq(gf_dev->irq_gpio));
 		goto error;
 	}
-	if (!ret) {
-		enable_irq_wake(gf_dev->irq);
-		gf_enable_irq(gf_dev);
-		gf_disable_irq(gf_dev);
-	}
+
+	gf_dev->irq_enabled = 1;
+	enable_irq_wake(gf_dev->irq);
+	gf_disable_irq(gf_dev);
+
 	gf_hw_reset(gf_dev, 360);
 
 	FUNC_EXIT();
