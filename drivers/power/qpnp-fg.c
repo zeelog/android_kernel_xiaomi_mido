@@ -334,11 +334,8 @@ module_param_named(
 	battery_type, fg_batt_type, charp, S_IRUSR | S_IWUSR
 );
 
-#ifdef CONFIG_MACH_XIAOMI_C6
-static int fg_sram_update_period_ms = 3000;
-#else
-static int fg_sram_update_period_ms = 30000;
-#endif
+static int fg_sram_update_period_ms = 5000;
+
 module_param_named(
 	sram_update_period_ms, fg_sram_update_period_ms, int, S_IRUSR | S_IWUSR
 );
