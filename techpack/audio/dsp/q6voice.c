@@ -38,6 +38,7 @@
 #define NUM_CHANNELS_STEREO 2
 #define NUM_CHANNELS_THREE 3
 #define NUM_CHANNELS_QUAD 4
+#define CVP_VERSION_1 1
 #define CVP_VERSION_2 2
 #define GAIN_Q14_FORMAT(a) (a << 14)
 
@@ -4348,6 +4349,15 @@ static int voice_send_cvp_mfc_config_cmd(struct voice_data *v)
 #ifndef CONFIG_MACH_XIAOMI_C6
 static int voice_get_avcs_version_per_service(uint32_t service_id)
 {
+#if 1
+	if (service_id == AVCS_SERVICE_ID_ALL) {
+		pr_err("%s: Invalid service id: %d", __func__,
+		       AVCS_SERVICE_ID_ALL);
+		return -EINVAL;
+	}
+	common.is_avcs_version_queried = true;
+	return CVP_VERSION_1;
+#else
 	int ret = 0;
 	size_t ver_size;
 	struct avcs_fwk_ver_info *ver_info = NULL;
@@ -4373,6 +4383,7 @@ static int voice_get_avcs_version_per_service(uint32_t service_id)
 done:
 	kfree(ver_info);
 	return ret;
+#endif
 }
 #endif
 
