@@ -143,4 +143,10 @@ extern int sched_little_cluster_coloc_fmin_khz_handler(struct ctl_table *table,
 					int write, void __user *buffer,
 					size_t *lenp, loff_t *ppos);
 #endif
-#endif /* _SCHED_SYSCTL_H */
+
+#define LIB_PATH_LENGTH 512
+extern char sched_lib_name[LIB_PATH_LENGTH];
+extern unsigned int sched_lib_mask_check;
+extern unsigned int sched_lib_mask_force;
+
+#endif /* _LINUX_SCHED_SYSCTL_H */
