@@ -2231,7 +2231,7 @@ static int get_monotonic_soc_raw(struct fg_chip *chip)
 #define FULL_SOC_RAW		0xFF
 static int get_prop_capacity(struct fg_chip *chip)
 {
-	int msoc, rc;
+	int msoc = 0, rc;
 	bool vbatt_low_sts;
 
 	if (chip->use_last_soc && chip->last_soc) {
