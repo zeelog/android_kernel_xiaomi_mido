@@ -1562,7 +1562,7 @@ struct hdd_offloaded_packets_ctx
 
 struct hdd_cache_channel_info {
 	int channel_num;
-	int reg_status;
+	eNVChannelEnabledType reg_status;
 	int wiphy_status;
 };
 
@@ -1859,15 +1859,10 @@ struct hdd_context_s
 
     uint32_t track_arp_ip;
 
-    struct hdd_cache_channels *orginal_channels;
+    struct hdd_cache_channels *original_channels;
     struct mutex cache_channel_lock;
+    bool force_rsne_override;
 };
-
-typedef enum  {
-        TP_IND_LOW = 1,
-        TP_IND_MEDIUM,
-        TP_IND_HIGH,
-}TP_IND_TYPE;
 
 /* Use to notify the TDLS or BTCOEX is mode enable */
 typedef enum
@@ -1997,9 +1992,9 @@ tANI_U8* wlan_hdd_get_intf_addr(hdd_context_t* pHddCtx);
 void wlan_hdd_release_intf_addr(hdd_context_t* pHddCtx, tANI_U8* releaseAddr);
 v_U8_t hdd_get_operating_channel( hdd_context_t *pHddCtx, device_mode_t mode );
 void wlan_hdd_mon_set_typesubtype( hdd_mon_ctx_t *pMonCtx,int type);
-void hdd_monPostMsgCb(tANI_U32 *magic, struct completion *cmpVar);
-VOS_STATUS wlan_hdd_mon_postMsg(tANI_U32 *magic, struct completion *cmpVar,
-                                hdd_mon_ctx_t *pMonCtx , void* callback);
+void hdd_mon_post_msg_cb(void *context);
+VOS_STATUS wlan_hdd_mon_postMsg(void *cookie, hdd_mon_ctx_t *pMonCtx,
+                                void* callback);
 void hdd_set_conparam ( v_UINT_t newParam );
 tVOS_CON_MODE hdd_get_conparam( void );
 
@@ -2372,6 +2367,25 @@ int hdd_parse_disable_chan_cmd(hdd_adapter_t *adapter, tANI_U8 *ptr);
  * @return: length of data copied to buf
  */
 int hdd_get_disable_ch_list(hdd_context_t *hdd_ctx, tANI_U8 *buf,
-                            tANI_U8 buf_len);
+                            uint32_t buf_len);
+
+/**
+ * hdd_is_memdump_supported() - to check if memdump feature support
+ *
+ * This function is used to check if memdump feature is supported in
+ * the host driver
+ *
+ * Return: true if supported and false otherwise
+ */
+bool hdd_is_memdump_supported(void);
+
+/**
+ * hdd_is_cli_iface_up() - check if there is any cli iface up
+ * @hdd_ctx: HDD context
+ *
+ * Return: return true if there is any cli iface(STA/P2P_CLI) is up
+ *         else return false
+ */
+bool hdd_is_cli_iface_up(hdd_context_t *hdd_ctx);
 
 #endif    // end #if !defined( WLAN_HDD_MAIN_H )

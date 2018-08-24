@@ -212,6 +212,9 @@ enum qca_nl80211_vendor_subcmds {
     /* Wi-Fi Configuration subcommands */
     QCA_NL80211_VENDOR_SUBCMD_SET_WIFI_CONFIGURATION = 74,
     QCA_NL80211_VENDOR_SUBCMD_GET_WIFI_CONFIGURATION = 75,
+
+    QCA_NL80211_VENDOR_SUBCMD_GET_LOGGER_FEATURE_SET = 76,
+
     QCA_NL80211_VENDOR_SUBCMD_GET_RING_DATA = 77,
 
     QCA_NL80211_VENDOR_SUBCMD_MONITOR_RSSI = 80,
@@ -1424,10 +1427,44 @@ enum qca_wlan_vendor_config {
     QCA_WLAN_VENDOR_ATTR_CONFIG_BEACON_MISS_THRESHOLD_24 = 37,
     /* 8-bit unsigned value to set the beacon miss threshold in 5 GHz */
     QCA_WLAN_VENDOR_ATTR_CONFIG_BEACON_MISS_THRESHOLD_5 = 38,
+
+    /*8-bit unsigned value indicating the driver to use the RSNE as-is from
+     * the connect interface. Exclusively used for the scenarios where the
+     * device is used as a test bed device with special functionality and
+     * not recommended for production. This helps driver to not validate the
+     * RSNE passed from user space and thus allow arbitrary IE data to be
+     * used for testing purposes.
+     * 1-enable, 0-disable.
+     * Applications set/reset this configuration. If not reset, this
+     * parameter remains in use until the driver is unloaded.
+     */
+    QCA_WLAN_VENDOR_ATTR_CONFIG_RSN_IE = 39,
+
     /* keep last */
     QCA_WLAN_VENDOR_ATTR_CONFIG_LAST,
     QCA_WLAN_VENDOR_ATTR_CONFIG_MAX =
     QCA_WLAN_VENDOR_ATTR_CONFIG_LAST - 1
+};
+
+/**
+ * enum qca_wlan_vendor_attr_get_logger_features - value for logger
+ *						   supported features
+ * @QCA_WLAN_VENDOR_ATTR_LOGGER_INVALID - Invalid
+ * @QCA_WLAN_VENDOR_ATTR_LOGGER_SUPPORTED - Indicate the supported features
+ * @QCA_WLAN_VENDOR_ATTR_LOGGER_AFTER_LAST - To keep track of the last enum
+ * @QCA_WLAN_VENDOR_ATTR_LOGGER_MAX - max value possible for this type
+ *
+ * enum values are used for NL attributes for data used by
+ * QCA_NL80211_VENDOR_SUBCMD_GET_LOGGER_FEATURE_SET sub command.
+ */
+enum qca_wlan_vendor_attr_get_logger_features {
+	QCA_WLAN_VENDOR_ATTR_LOGGER_INVALID = 0,
+	QCA_WLAN_VENDOR_ATTR_LOGGER_SUPPORTED = 1,
+
+	/* keep last */
+	QCA_WLAN_VENDOR_ATTR_LOGGER_AFTER_LAST,
+	QCA_WLAN_VENDOR_ATTR_LOGGER_MAX =
+		QCA_WLAN_VENDOR_ATTR_LOGGER_AFTER_LAST - 1,
 };
 
 /* Feature defines */
@@ -1596,6 +1633,24 @@ enum qca_wlan_vendor_attr_offloaded_packets
 };
 #endif
 
+/**
+ * enum wifi_logger_supported_features - values for supported logger features
+ * @WIFI_LOGGER_PER_PACKET_TX_RX_STATUS_SUPPORTED - Per packet statistics
+ * @WIFI_LOGGER_CONNECT_EVENT_SUPPORTED - Logging of Connectivity events
+ * @WIFI_LOGGER_POWER_EVENT_SUPPORTED - Power of driver
+ * @WIFI_LOGGER_WAKE_LOCK_SUPPORTED - Wakelock of driver
+ * @WIFI_LOGGER_WATCHDOG_TIMER_SUPPORTED - monitor FW health
+ */
+enum wifi_logger_supported_features {
+    WIFI_LOGGER_MEMORY_DUMP_SUPPORTED = (1 << (0)),
+    WIFI_LOGGER_PER_PACKET_TX_RX_STATUS_SUPPORTED = (1 << (1)),
+    WIFI_LOGGER_CONNECT_EVENT_SUPPORTED = (1 << (2)),
+    WIFI_LOGGER_POWER_EVENT_SUPPORTED = (1 << (3)),
+    WIFI_LOGGER_WAKE_LOCK_SUPPORTED = (1 << (4)),
+    WIFI_LOGGER_VERBOSE_SUPPORTED = (1 << (5)),
+    WIFI_LOGGER_WATCHDOG_TIMER_SUPPORTED = (1 << (6)),
+};
+
 struct cfg80211_bss* wlan_hdd_cfg80211_update_bss_db( hdd_adapter_t *pAdapter,
                                       tCsrRoamInfo *pRoamInfo
                                       );
@@ -1701,8 +1756,7 @@ void hdd_update_indoor_channel(hdd_context_t *hdd_ctx,
  */
 void hdd_modify_indoor_channel_state_flags(
     struct ieee80211_channel *wiphy_chan,
-    v_U32_t rfChannel,
-    bool disable);
+    v_U32_t rfChannel, bool disable, hdd_context_t *hdd_ctx);
 
 
 v_U8_t* wlan_hdd_cfg80211_get_ie_ptr(
@@ -1834,5 +1888,16 @@ void wlan_hdd_sap_get_sta_rssi(hdd_adapter_t *adapter, uint8_t staid, s8 *rssi);
 VOS_STATUS wlan_hdd_send_sta_authorized_event(hdd_adapter_t *adapter,
                                               hdd_context_t *hdd_ctx,
                                               const v_MACADDR_t *mac_addr);
+
+/**
+ * wlan_hdd_disconnect() - hdd disconnect api
+ * @pAdapter: Pointer to adapter
+ * @reason: Disconnect reason code
+ *
+ * This function is used to issue a disconnect request to SME
+ *
+ * Return: 0 for success, non-zero for failure
+ */
+int wlan_hdd_disconnect(hdd_adapter_t *pAdapter, u16 reason);
 
 #endif

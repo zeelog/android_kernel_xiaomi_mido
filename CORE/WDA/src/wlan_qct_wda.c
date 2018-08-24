@@ -8768,7 +8768,7 @@ VOS_STATUS WDA_ProcessUpdateProbeRspTemplate(tWDA_CbContext *pWDA,
 
    vos_mem_copy(
            wdiSendProbeRspParam->wdiProbeRspTemplateInfo.pProbeRespTemplate,
-           pSendProbeRspParams->pProbeRespTemplate,
+           pSendProbeRspParams->probeRespTemplate,
            pSendProbeRspParams->probeRespTemplateLen);
    
    wdiSendProbeRspParam->wdiReqStatusCB = NULL ;
@@ -14899,6 +14899,21 @@ VOS_STATUS WDA_TxPacket(tWDA_CbContext *pWDA,
                            __func__,pWDA,pFrmBuf); 
       VOS_ASSERT(0);
       return VOS_STATUS_E_FAILURE;
+   }
+
+  /*
+   * Return if SSR is in progress as TL won't send any frame if SSR is in
+   * progress and also not invokes TX completion callback, which sets
+   * completion variable, leading this function to wait on completion
+   * variable(txFrameEvent) till timeout.
+   *
+   * TBD: As a clean fix it's better to invoke TX completion callback on fail
+   * to send a TX frame.
+   */
+   if(vos_is_logp_in_progress(VOS_MODULE_ID_WDA, NULL)) {
+       VOS_TRACE(VOS_MODULE_ID_WDA, VOS_TRACE_LEVEL_ERROR,
+                 FL("SSR is in progress"));
+       return VOS_STATUS_E_FAILURE;
    }
 
    VOS_TRACE( VOS_MODULE_ID_WDA, VOS_TRACE_LEVEL_INFO_HIGH, 
@@ -22990,8 +23005,8 @@ void WDA_MonModeRspCallback(void *pEventData, void* pUserData)
       return ;
    }
    pData = (tSirMonModeReq *)pWdaParams->wdaMsgParam;
-   if (pData != NULL) {
-        pData->callback(pData->magic, pData->cmpVar);
+   if (pData != NULL && pData->callback != NULL) {
+        pData->callback(pData->context);
         vos_mem_free(pWdaParams->wdaMsgParam);
    }
    vos_mem_free(pWdaParams) ;

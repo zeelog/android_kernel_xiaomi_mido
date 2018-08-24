@@ -221,16 +221,26 @@ int hdd_hostapd_open (struct net_device *dev)
   --------------------------------------------------------------------------*/
 int __hdd_hostapd_stop (struct net_device *dev)
 {
+   hdd_adapter_t *adapter = WLAN_HDD_GET_PRIV_PTR(dev);
+   hdd_context_t *hdd_ctx = WLAN_HDD_GET_CTX(adapter);
+   int ret;
+
    ENTER();
 
-   if(NULL != dev) {
-       hddLog(VOS_TRACE_LEVEL_INFO, FL("Disabling queues"));
-       //Stop all tx queues
-       netif_tx_disable(dev);
+   ret = wlan_hdd_validate_context(hdd_ctx);
+   if (0 != ret)
+       return ret;
 
-       //Turn OFF carrier state
-       netif_carrier_off(dev);
-   }
+   hddLog(VOS_TRACE_LEVEL_INFO, FL("Disabling queues"));
+
+   //Stop all tx queues
+   netif_tx_disable(dev);
+
+   //Turn OFF carrier state
+   netif_carrier_off(dev);
+
+   if (!hdd_is_cli_iface_up(hdd_ctx))
+       sme_ScanFlushResult(hdd_ctx->hHal, 0);
 
    EXIT();
    return 0;
@@ -1321,13 +1331,6 @@ VOS_STATUS hdd_hostapd_SAPEventCB( tpSap_Event pSapEvent, v_PVOID_t usrDataForCa
 
             pHddApCtx->operatingChannel = 0; //Invalidate the channel info.
 
-            if (pHostapdAdapter->device_mode == WLAN_HDD_P2P_GO)
-            {
-                hddLog(LOG1,
-                       FL("P2P Go is getting removed and we are trying to re-enable TDLS"));
-                wlan_hdd_tdls_reenable(pHddCtx);
-            }
-
             goto stopbss;
         case eSAP_STA_SET_KEY_EVENT:
             //TODO: forward the message to hostapd once implementtation is done for now just print
@@ -1743,6 +1746,14 @@ stopbss :
         wireless_send_event(dev, we_event, &wrqu, (char *)we_custom_event_generic);
         hdd_dump_concurrency_info(pHddCtx);
     }
+        if (pHostapdAdapter->device_mode == WLAN_HDD_P2P_GO ||
+            pHostapdAdapter->device_mode == WLAN_HDD_SOFTAP)
+        {
+            hddLog(LOG1,
+                   FL("SAP or Go is getting removed and we are trying to re-enable TDLS"));
+            wlan_hdd_tdls_reenable(pHddCtx);
+        }
+
     return VOS_STATUS_SUCCESS;
 }
 
@@ -1787,11 +1798,12 @@ int hdd_softap_unpackIE(
         RSNIeLen = gen_ie_len - 2; 
         // Unpack the RSN IE
         memset(&dot11RSNIE, 0, sizeof(tDot11fIERSN));
-        status = dot11fUnpackIeRSN((tpAniSirGlobal) halHandle,
-                            pRsnIe,
-                            RSNIeLen,
-                            &dot11RSNIE);
-        if (DOT11F_FAILED(status))
+
+        status = sme_unpack_rsn_ie(halHandle,
+                                   pRsnIe,
+                                   RSNIeLen,
+                                   &dot11RSNIE);
+        if (!DOT11F_SUCCEEDED(status))
         {
              hddLog(LOGE,
                         FL("unpack failed for RSN IE status:(0x%08x)"),
@@ -1803,12 +1815,12 @@ int hdd_softap_unpackIE(
         hddLog(LOG1, FL("%s: pairwise cipher suite count: %d"),
                 __func__, dot11RSNIE.pwise_cipher_suite_count );
         hddLog(LOG1, FL("%s: authentication suite count: %d"),
-                __func__, dot11RSNIE.akm_suite_count);
+                __func__, dot11RSNIE.akm_suite_cnt);
         /*Here we have followed the apple base code, 
           but probably I suspect we can do something different*/
-        //dot11RSNIE.akm_suite_count
+        //dot11RSNIE.akm_suite_cnt
         // Just translate the FIRST one 
-        *pAuthType =  hdd_TranslateRSNToCsrAuthType(dot11RSNIE.akm_suites[0]); 
+        *pAuthType =  hdd_TranslateRSNToCsrAuthType(dot11RSNIE.akm_suite[0]);
         //dot11RSNIE.pwise_cipher_suite_count 
         *pEncryptType = hdd_TranslateRSNToCsrEncryptionType(dot11RSNIE.pwise_cipher_suites[0]);                     
         //dot11RSNIE.gp_cipher_suite_count 
@@ -4524,7 +4536,7 @@ static int __iw_get_ap_freq(struct net_device *dev,
        else
        {
           status = hdd_wlan_get_freq(channel, &freq);
-          if( TRUE == status)
+          if( 0 == status)
           {
               /* Set Exponent parameter as 6 (MHZ) in struct iw_freq
                * iwlist & iwconfig command shows frequency into proper
@@ -4538,7 +4550,7 @@ static int __iw_get_ap_freq(struct net_device *dev,
     {
        channel = pHddApCtx->operatingChannel;
        status = hdd_wlan_get_freq(channel, &freq);
-       if( TRUE == status)
+       if( 0 == status)
        {
           /* Set Exponent parameter as 6 (MHZ) in struct iw_freq
            * iwlist & iwconfig command shows frequency into proper
@@ -4565,50 +4577,6 @@ static int iw_get_ap_freq(struct net_device *dev,
    return ret;
 }
 
-static int __iw_get_mode(struct net_device *dev,
-                         struct iw_request_info *info,
-                         union iwreq_data *wrqu, char *extra)
-{
-    int status = 0;
-    hdd_adapter_t *pAdapter;
-    hdd_context_t *pHddCtx;
-
-    ENTER();
-
-    pAdapter = WLAN_HDD_GET_PRIV_PTR(dev);
-    if (NULL == pAdapter)
-    {
-        VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_ERROR,
-                  "%s: Adapter is NULL",__func__);
-        return -EINVAL;
-    }
-    pHddCtx = WLAN_HDD_GET_CTX(pAdapter);
-    status = wlan_hdd_validate_context(pHddCtx);
-    if (0 != status)
-    {
-        return status;
-    }
-
-    wrqu->mode = IW_MODE_MASTER;
-
-    EXIT();
-    return status;
-}
-
-static int iw_get_mode(struct net_device *dev,
-                       struct iw_request_info *info,
-                       union iwreq_data *wrqu, char *extra)
-{
-    int ret;
-
-    vos_ssr_protect(__func__);
-    ret = __iw_get_mode(dev, info, wrqu, extra);
-    vos_ssr_unprotect(__func__);
-
-    return ret;
-}
-
-
 static int __iw_softap_stopbss(struct net_device *dev,
                              struct iw_request_info *info,
                              union iwreq_data *wrqu,
@@ -4634,10 +4602,12 @@ static int __iw_softap_stopbss(struct net_device *dev,
 
     if(test_bit(SOFTAP_BSS_STARTED, &pHostapdAdapter->event_flags))
     {
+        hdd_hostapd_state_t *pHostapdState =
+                              WLAN_HDD_GET_HOSTAP_STATE_PTR(pHostapdAdapter);
+
+        vos_event_reset(&pHostapdState->vosEvent);
         if ( VOS_STATUS_SUCCESS == (status = WLANSAP_StopBss((WLAN_HDD_GET_CTX(pHostapdAdapter))->pvosContext) ) )
         {
-            hdd_hostapd_state_t *pHostapdState = WLAN_HDD_GET_HOSTAP_STATE_PTR(pHostapdAdapter);
-
             status = vos_wait_single_event(&pHostapdState->vosEvent, 10000);
 
             if (!VOS_IS_STATUS_SUCCESS(status))
@@ -5103,7 +5073,7 @@ static const iw_handler      hostapd_handler[] =
    (iw_handler) NULL,           /* SIOCSIWFREQ */
    (iw_handler) iw_get_ap_freq,    /* SIOCGIWFREQ */
    (iw_handler) NULL,           /* SIOCSIWMODE */
-   (iw_handler) iw_get_mode,    /* SIOCGIWMODE */
+   (iw_handler) NULL,           /* SIOCGIWMODE */
    (iw_handler) NULL,           /* SIOCSIWSENS */
    (iw_handler) NULL,           /* SIOCGIWSENS */
    (iw_handler) NULL,           /* SIOCSIWRANGE */

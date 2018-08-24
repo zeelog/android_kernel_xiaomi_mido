@@ -6142,10 +6142,18 @@ static void WLANTL_CacheEapol(WLANTL_CbType* pTLCb, vos_pkt_t* vosTempBuff)
 static void WLANTL_SampleRxRSSI(WLANTL_CbType* pTLCb, void * pBDHeader,
                                 uint8_t sta_id)
 {
-   WLANTL_STAClientType *pClientSTA = pTLCb->atlSTAClients[sta_id];
-   uint8_t count = pClientSTA->rssi_sample_cnt;
-   uint8_t old_idx = pClientSTA->rssi_stale_idx;
+   uint8_t count;
+   uint8_t old_idx;
    s8 curr_RSSI, curr_RSSI0, curr_RSSI1;
+   WLANTL_STAClientType *pClientSTA = pTLCb->atlSTAClients[sta_id];
+
+   if(pClientSTA == NULL) {
+      TLLOGE(VOS_TRACE( VOS_MODULE_ID_TL, VOS_TRACE_LEVEL_ERROR,
+      " %s: pClientSTA is NULL", __func__));
+      return;
+   }
+   count = pClientSTA->rssi_sample_cnt;
+   old_idx = pClientSTA->rssi_stale_idx;
 
    curr_RSSI0 = WLANTL_GETRSSI0(pBDHeader);
    curr_RSSI1 = WLANTL_GETRSSI1(pBDHeader);
@@ -6156,7 +6164,7 @@ static void WLANTL_SampleRxRSSI(WLANTL_CbType* pTLCb, void * pBDHeader,
       pClientSTA->rssi_sample_sum -= pClientSTA->rssi_sample[old_idx];
       pClientSTA->rssi_sample[old_idx] = curr_RSSI;
       pClientSTA->rssi_sample_sum += pClientSTA->rssi_sample[old_idx];
-      old_idx >= WLANTL_RSSI_SAMPLE_CNT ? old_idx = 0 : old_idx++;
+      old_idx >= (WLANTL_RSSI_SAMPLE_CNT - 1) ? old_idx = 0 : old_idx++;
       pClientSTA->rssi_stale_idx = old_idx;
    } else {
       pClientSTA->rssi_sample[count] = curr_RSSI;

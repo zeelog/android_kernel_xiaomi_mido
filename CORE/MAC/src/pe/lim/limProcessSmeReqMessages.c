@@ -426,6 +426,7 @@ static tANI_BOOLEAN
 __limProcessSmeSysReadyInd(tpAniSirGlobal pMac, tANI_U32 *pMsgBuf)
 {
     tSirMsgQ msg;
+    tSirSmeReadyReq *ready_req = (tSirSmeReadyReq *) pMsgBuf;
     
     msg.type = WDA_SYS_READY_IND;
     msg.reserved = 0;
@@ -435,6 +436,7 @@ __limProcessSmeSysReadyInd(tpAniSirGlobal pMac, tANI_U32 *pMsgBuf)
     if (pMac->gDriverType != eDRIVER_TYPE_MFG)
     {
         peRegisterTLHandle(pMac);
+        pMac->lim.sme_msg_callback = ready_req->sme_msg_cb;
     }
     PELOGW(limLog(pMac, LOGW, FL("sending WDA_SYS_READY_IND msg to HAL"));)
     MTRACE(macTraceMsgTx(pMac, NO_SESSION, msg.type));
@@ -2094,7 +2096,7 @@ __limProcessSmeJoinReq(tpAniSirGlobal pMac, tANI_U32 *pMsgBuf)
                                      TX_POWER_DEFAULT);
             psessionEntry->maxTxPower = TX_POWER_DEFAULT;
         }
-
+        psessionEntry->def_max_tx_pwr = psessionEntry->maxTxPower;
         VOS_TRACE(VOS_MODULE_ID_PE, VOS_TRACE_LEVEL_INFO,
                         "Regulatory max = %d, local power constraint = %d,"
                         " max tx = %d", regMax, localPowerConstraint,

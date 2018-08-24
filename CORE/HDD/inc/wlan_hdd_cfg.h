@@ -54,7 +54,7 @@
 #endif /* DHCP_SERVER_OFFLOAD */
 
 //Number of items that can be configured
-#define MAX_CFG_INI_ITEMS   512
+#define MAX_CFG_INI_ITEMS   1024
 
 #ifdef SAP_AUTH_OFFLOAD
 /* 802.11 pre-share key length */
@@ -1612,6 +1612,27 @@ typedef enum
 
 /*
  * <ini>
+ * gindoor_channel_support - Mark indoor channels as enabled or passive
+ * @Min: 0
+ * @Max: 1
+ * @Default: 0
+ *
+ * This ini is used to control the state of indoor channels. If the
+ * value is 1 then the indoor channels will be marked as enabled and
+ * if the value is 0 then the indoor channels will be marked as
+ * DFS
+ *
+ * The default value is 0
+ * </ini>
+ */
+#define CFG_INDOOR_CHANNEL_SUPPORT_NAME     "gindoor_channel_support"
+#define CFG_INDOOR_CHANNEL_SUPPORT_MIN      (0)
+#define CFG_INDOOR_CHANNEL_SUPPORT_MAX      (1)
+#define CFG_INDOOR_CHANNEL_SUPPORT_DEFAULT  (0)
+
+
+/*
+ * <ini>
  * g_mark_indoor_as_disable - Enable/Disable Indoor channel
  * @Min: 0
  * @Max: 1
@@ -2206,7 +2227,7 @@ static __inline tANI_U32 defHddRateToDefCfgRate( tANI_U32 defRateIndex )
 #define CFG_TDLS_SCAN_ENABLE            "gEnableTDLSScan"
 #define CFG_TDLS_SCAN_ENABLE_MIN        (0)
 #define CFG_TDLS_SCAN_ENABLE_MAX        (2)
-#define CFG_TDLS_SCAN_ENABLE_DEFAULT    (0)
+#define CFG_TDLS_SCAN_ENABLE_DEFAULT    (1)
 
 #define CFG_TDLS_ENABLE_DEFER_TIMER           "gTDLSEnableDeferTime"
 #define CFG_TDLS_ENABLE_DEFER_TIMER_MIN       (2000)
@@ -3167,7 +3188,7 @@ This feature requires the dependent cfg.ini "gRoamPrefer5GHz" set to 1 */
 #define CFG_FORCE_SCC_WITH_ECSA_NAME       "force_scc_with_ecsa"
 #define CFG_FORCE_SCC_WITH_ECSA_MIN        (0)
 #define CFG_FORCE_SCC_WITH_ECSA_MAX        (1)
-#define CFG_FORCE_SCC_WITH_ECSA_DEFAULT    (0)
+#define CFG_FORCE_SCC_WITH_ECSA_DEFAULT    (1)
 
 #define CFG_STA_SAP_SCC_ON_DFS_CHAN             "sta_sap_scc_on_dfs_chan"
 #define CFG_STA_SAP_SCC_ON_DFS_CHAN_MIN         (0)
@@ -3203,7 +3224,29 @@ This feature requires the dependent cfg.ini "gRoamPrefer5GHz" set to 1 */
 #define CFG_ENABLE_POWERSAVE_OFFLOAD_MAX        (2)
 #define CFG_ENABLE_POWERSAVE_OFFLOAD_DEFAULT    (1)
 
-
+/*
+ * <ini>
+ * force_rsne_override - force rsnie override from user
+ * @Min: 0
+ * @Max: 1
+ * @Default: 0
+ *
+ * This ini is used to enable/disable test mode to force rsne override used in
+ * security enhancement test cases to pass the RSNIE sent by user in
+ * assoc request.
+ *
+ * Related: None
+ *
+ * Supported Feature: STA
+ *
+ * Usage: internal
+ *
+ * </ini>
+ */
+#define CFG_FORCE_RSNE_OVERRIDE_NAME    "force_rsne_override"
+#define CFG_FORCE_RSNE_OVERRIDE_MIN     (0)
+#define CFG_FORCE_RSNE_OVERRIDE_MAX     (1)
+#define CFG_FORCE_RSNE_OVERRIDE_DEFAULT (0)
 
 /*--------------------------------------------------------------------------- 
   Type declarations
@@ -3819,6 +3862,8 @@ typedef struct
    uint32_t                    btc_dyn_bt_len;
    uint32_t                    btc_dyn_bt_ext_len;
    uint32_t                    btc_dyn_num_bt_ext;
+   bool                        indoor_channel_support;
+   bool                        force_rsne_override;
 
 } hdd_config_t;
 

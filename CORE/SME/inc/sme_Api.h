@@ -2309,6 +2309,19 @@ eHalStatus sme_GetFramesLog(tHalHandle hHal, tANI_U8 flag);
 eHalStatus sme_InitMgmtFrameLogging( tHalHandle hHal,
                             tpSirFWLoggingInitParam wlanFWLoggingInitParam);
 
+/**
+ * sme_unpack_rsn_ie: wrapper to unpack RSN IE and update def RSN params
+ * if optional fields are not present.
+ * @hal: handle returned by mac_open
+ * @buf: rsn ie buffer pointer
+ * @buf_len: rsn ie buffer length
+ * @rsn_ie: outframe rsn ie structure
+ * @append_ie: flag to indicate if the rsn_ie need to be appended from buf
+ *
+ * Return: parse status
+ */
+uint32_t sme_unpack_rsn_ie(tHalHandle hal, uint8_t *buf,
+                        uint8_t buf_len, tDot11fIERSN *rsn_ie);
 
 /* ---------------------------------------------------------------------------
 
@@ -4075,5 +4088,28 @@ sme_get_cb_phy_mode_from_cb_ini_mode(uint32_t cb_ini_value)
  * Return: void
  */
 void sme_request_imps(tHalHandle hal);
+
+
+/**
+ * sme_is_sta_key_exchange_in_progress() - checks whether the STA/P2P client
+ * session has key exchange in progress
+ *
+ * @hal: global hal handle
+ * @session_id: session id
+ *
+ * Return: true - if key exchange in progress
+ *         false - if not in progress
+ */
+bool sme_is_sta_key_exchange_in_progress(tHalHandle hal, uint8_t session_id);
+/**
+ * sme_process_msg_callback() - process callback message from LIM
+ * @hal: global hal handle
+ * @msg: vos message
+ *
+ * This function process the callback messages from LIM.
+ *
+ * Return: VOS_STATUS enumeration.
+ */
+VOS_STATUS sme_process_msg_callback(tHalHandle hal, vos_msg_t *msg);
 
 #endif //#if !defined( __SME_API_H )

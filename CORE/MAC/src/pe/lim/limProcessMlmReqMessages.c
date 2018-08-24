@@ -1755,6 +1755,13 @@ limMlmAddBss (
     pAddBssParams->cfParamSet.cfpDurRemaining   = pMlmStartReq->cfParamSet.cfpDurRemaining;
 
     pAddBssParams->rateSet.numRates = pMlmStartReq->rateSet.numRates;
+    if (pAddBssParams->rateSet.numRates > SIR_MAC_RATESET_EID_MAX) {
+            limLog(pMac, LOGW,
+                   FL("num of sup rates %d exceeding the limit %d, resetting"),
+                   pAddBssParams->rateSet.numRates,
+                   SIR_MAC_RATESET_EID_MAX);
+            pAddBssParams->rateSet.numRates = SIR_MAC_RATESET_EID_MAX;
+    }
     vos_mem_copy(pAddBssParams->rateSet.rate,
                  pMlmStartReq->rateSet.rate, pMlmStartReq->rateSet.numRates);
 
@@ -1780,10 +1787,19 @@ limMlmAddBss (
     pAddBssParams->sessionId            = pMlmStartReq->sessionId; 
 
     //Send the SSID to HAL to enable SSID matching for IBSS
-    vos_mem_copy(&(pAddBssParams->ssId.ssId),
+    pAddBssParams->ssId.length = pMlmStartReq->ssId.length;
+    if (pAddBssParams->ssId.length > SIR_MAC_MAX_SSID_LENGTH) {
+            limLog(pMac, LOGE,
+                   FL("Invalid ssid length %d, max length allowed %d"),
+                   pAddBssParams->ssId.length,
+                   SIR_MAC_MAX_SSID_LENGTH);
+            vos_mem_free(pAddBssParams);
+            return eSIR_SME_INVALID_PARAMETERS;
+    }
+    vos_mem_copy(pAddBssParams->ssId.ssId,
                  pMlmStartReq->ssId.ssId,
                  pMlmStartReq->ssId.length);
-    pAddBssParams->ssId.length = pMlmStartReq->ssId.length;
+
     pAddBssParams->bHiddenSSIDEn = pMlmStartReq->ssidHidden;
     limLog( pMac, LOGE, FL( "TRYING TO HIDE SSID %d" ),pAddBssParams->bHiddenSSIDEn);
     // CR309183. Disable Proxy Probe Rsp.  Host handles Probe Requests.  Until FW fixed. 
@@ -2918,8 +2934,8 @@ limProcessMlmDisassocReqNtf(tpAniSirGlobal pMac, eHalStatus suspendStatus, tANI_
     tpPESession              psessionEntry;
     extern tANI_BOOLEAN     sendDisassocFrame;
     tSirSmeDisassocRsp      *pSirSmeDisassocRsp;
-    tANI_U32                *pMsg;
     tANI_U8                 *pBuf;
+    vos_msg_t               msg = {0};
 
     if(eHAL_STATUS_SUCCESS != suspendStatus)
     {
@@ -3043,10 +3059,14 @@ limProcessMlmDisassocReqNtf(tpAniSirGlobal pMac, eHalStatus suspendStatus, tANI_
          pBuf  = (tANI_U8 *) pSirSmeDisassocRsp->peerMacAddr;
          vos_mem_copy( pBuf, pMlmDisassocReq->peerMacAddr, sizeof(tSirMacAddr));
 
-         pMsg = (tANI_U32*) pSirSmeDisassocRsp;
+         msg.type = eWNI_SME_DISASSOC_RSP;
+         msg.bodyptr = pSirSmeDisassocRsp;
 
-         limSendSmeDisassocDeauthNtf( pMac, eHAL_STATUS_SUCCESS,
-                                                (tANI_U32*) pMsg );
+         if (pMac->lim.sme_msg_callback)
+             pMac->lim.sme_msg_callback(pMac, &msg);
+         else
+             limLog(pMac, LOGE, FL("Sme msg callback is NULL"));
+
          return;
 
     }
@@ -3250,8 +3270,7 @@ limProcessMlmDeauthReqNtf(tpAniSirGlobal pMac, eHalStatus suspendStatus, tANI_U3
     tpPESession             psessionEntry;
     tSirSmeDeauthRsp        *pSirSmeDeauthRsp;
     tANI_U8                 *pBuf;
-    tANI_U32                *pMsg;
-
+    vos_msg_t               msg = {0};
 
     if(eHAL_STATUS_SUCCESS != suspendStatus)
     {
@@ -3457,10 +3476,13 @@ limProcessMlmDeauthReqNtf(tpAniSirGlobal pMac, eHalStatus suspendStatus, tANI_U3
         pBuf  = (tANI_U8 *) pSirSmeDeauthRsp->peerMacAddr;
         vos_mem_copy( pBuf, pMlmDeauthReq->peerMacAddr, sizeof(tSirMacAddr));
 
-        pMsg = (tANI_U32*)pSirSmeDeauthRsp;
+        msg.type = eWNI_SME_DEAUTH_RSP;
+        msg.bodyptr = pSirSmeDeauthRsp;
 
-        limSendSmeDisassocDeauthNtf( pMac, eHAL_STATUS_SUCCESS,
-                                            (tANI_U32*) pMsg );
+        if (pMac->lim.sme_msg_callback)
+            pMac->lim.sme_msg_callback(pMac, &msg);
+        else
+            limLog(pMac, LOGE, FL("Sme msg callback is NULL"));
 
         return;
 
