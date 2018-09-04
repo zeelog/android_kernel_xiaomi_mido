@@ -23,6 +23,7 @@
 #include <linux/slab.h>
 #include <linux/input.h>
 #include <linux/time.h>
+#include <linux/cpu_boost.h>
 
 struct cpu_sync {
 	int cpu;
@@ -132,7 +133,8 @@ static int boost_adjust_notify(struct notifier_block *nb, unsigned long val,
 		if (!ib_min)
 			break;
 
-		ib_min = min(ib_min, policy->max);
+		ib_min = min((s->input_boost_min == UINT_MAX ?
+				policy->max : s->input_boost_min), policy->max);
 
 		pr_debug("CPU%u policy min before boost: %u kHz\n",
 			 cpu, policy->min);
@@ -195,6 +197,25 @@ static void do_input_boost_rem(struct work_struct *work)
 			pr_err("cpu-boost: HMP boost disable failed\n");
 		sched_boost_active = false;
 	}
+}
+
+void do_input_boost_max()
+{
+	unsigned int i;
+	struct cpu_sync *i_sync_info;
+
+	cancel_delayed_work_sync(&input_boost_rem);
+
+	for_each_possible_cpu(i) {
+		i_sync_info = &per_cpu(sync_info, i);
+		i_sync_info->input_boost_min = UINT_MAX;
+	}
+
+	update_policy_online();
+
+	queue_delayed_work(system_power_efficient_wq,
+		&input_boost_rem, msecs_to_jiffies(
+			!input_boost_ms ? 1500 : input_boost_ms));
 }
 
 static void do_input_boost(struct kthread_work *work)
