@@ -114,6 +114,8 @@ void msm_isp_axi_destroy_stream(
 	if (axi_data->stream_info[stream_idx].state != AVAILABLE) {
 		axi_data->stream_info[stream_idx].state = AVAILABLE;
 		axi_data->stream_info[stream_idx].stream_handle = 0;
+    		memset(&axi_data->stream_info[stream_idx].request_queue_cmd,
+			0, sizeof(axi_data->stream_info[stream_idx].request_queue_cmd));
 	} else {
 		pr_err("%s: stream does not exist\n", __func__);
 	}
@@ -3530,6 +3532,9 @@ static int msm_isp_request_frame(struct vfe_device *vfe_dev,
 			stream_info->undelivered_request_cnt--;
 			pr_err_ratelimited("%s:%d fail to cfg HAL buffer\n",
 				__func__, __LINE__);
+			queue_req->cmd_used = 0;
+			list_del(&queue_req->list);
+			stream_info->request_q_cnt--;
 			return rc;
 		}
 
@@ -3576,6 +3581,9 @@ static int msm_isp_request_frame(struct vfe_device *vfe_dev,
 						flags);
 			pr_err_ratelimited("%s:%d fail to cfg HAL buffer\n",
 				__func__, __LINE__);
+			queue_req->cmd_used = 0;
+			list_del(&queue_req->list);
+			stream_info->request_q_cnt--;
 			return rc;
 		}
 	} else {
