@@ -249,7 +249,7 @@ static struct fg_mem_setting settings[FG_MEM_SETTING_MAX] = {
 	SETTING(TERM_CURRENT,	 0x40C,   2,      250),
 	SETTING(CHG_TERM_CURRENT, 0x4F8,   2,      250),
 	SETTING(IRQ_VOLT_EMPTY,	 0x458,   3,      3100),
-	SETTING(CUTOFF_VOLTAGE,	 0x40C,   0,      3200),
+	SETTING(CUTOFF_VOLTAGE,  0x40C,   0,      3400),
 #ifdef CONFIG_MACH_XIAOMI_C6
 	SETTING(VBAT_EST_DIFF,	 0x000,   0,      200),
 #else
