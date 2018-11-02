@@ -462,7 +462,7 @@ static void handle_critical_trips(struct thermal_zone_device *tz,
 	}
 }
 
-static void handle_thermal_trip(struct thermal_zone_device *tz, int trip)
+void handle_thermal_trip(struct thermal_zone_device *tz, int trip)
 {
 	enum thermal_trip_type type;
 
@@ -632,12 +632,12 @@ static void thermal_zone_device_reset(struct thermal_zone_device *tz)
 }
 
 void thermal_zone_device_update_temp(struct thermal_zone_device *tz,
-				enum thermal_notify_event event, int temp)
+				     enum thermal_notify_event event, int temp)
 {
 	int count;
 
 	if (atomic_read(&in_suspend) && (!tz->ops->is_wakeable ||
-		!(tz->ops->is_wakeable(tz))))
+					 !(tz->ops->is_wakeable(tz))))
 		return;
 
 	trace_thermal_device_update(tz, event);
