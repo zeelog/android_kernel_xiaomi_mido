@@ -3,7 +3,6 @@
 
 #include <linux/types.h>
 #include <linux/notifier.h>
-#include <linux/wakelock.h>
 /**********************************************************/
 enum FP_MODE{
 	GF_IMAGE_MODE = 0,
@@ -88,7 +87,7 @@ struct gf_dev {
 	struct notifier_block notifier;
 	char device_available;
 	char fb_black;
-	struct wake_lock ttw_wl;
+	struct wakeup_source ttw_wl;
 };
 
 int gf_parse_dts(struct gf_dev *gf_dev);
