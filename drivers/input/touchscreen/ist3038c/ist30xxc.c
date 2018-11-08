@@ -2191,7 +2191,7 @@ static int ist30xx_probe(struct i2c_client *client,
 
 	/* init irq thread */
 	ret = request_threaded_irq(client->irq, NULL, ist30xx_irq_thread,
-			IRQF_TRIGGER_FALLING | IRQF_ONESHOT | IRQF_DISABLED , "ist30xx_ts",
+			IRQF_TRIGGER_FALLING | IRQF_ONESHOT , "ist30xx_ts",
 			data);
 	if (unlikely(ret))
 		goto err_init_drv;
