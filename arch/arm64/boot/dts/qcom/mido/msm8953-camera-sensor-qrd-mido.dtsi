@@ -893,6 +893,8 @@
 
 	qcom,camera@0 {
 		qcom,eeprom-src = <&eeprom0 &eeprom1 &eeprom2 &eeprom6 &eeprom7 &eeprom8>;
+		qcom,gpio-req-tbl-num = <0 1 2>;
+		qcom,gpio-req-tbl-flags = <1 0 0>;
 	};
 	
 	qcom,camera@1 {
