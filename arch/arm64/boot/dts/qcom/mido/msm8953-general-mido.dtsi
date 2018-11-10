@@ -76,6 +76,14 @@
 			qcom,fg-restore-batt-info;
 		};
 	};
+
+	qcom,pmi8950@3 {
+		qcom,haptics@c000 {
+			qcom,actuator-type = <1>;
+			qcom,use-play-irq;
+			qcom,use-sc-irq;
+		};
+	};
 };
 
 &pm8953_gpios {
