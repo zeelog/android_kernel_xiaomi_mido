@@ -86,7 +86,6 @@ config RING_BUFFER_ALLOW_SWAP
 
 config IPC_LOGGING
 	bool "Debug Logging for IPC Drivers"
-	select GENERIC_TRACER
 	help
 	  IPC Logging driver provides a logging option for IPC Drivers.
 	  This provides a cyclic buffer based logging support in a driver
