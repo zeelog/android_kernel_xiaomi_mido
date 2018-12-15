@@ -914,11 +914,9 @@ vmw_surface_handle_reference(struct vmw_private *dev_priv,
 		if (unlikely(ret != 0))
 			return ret;
 	} else {
-		if (unlikely(drm_is_render_client(file_priv))) {
-			DRM_ERROR("Render client refused legacy "
-				  "surface reference.\n");
-			return -EACCES;
-		}
+		if (unlikely(drm_is_render_client(file_priv)))
+			require_exist = true;
+
 		if (ACCESS_ONCE(vmw_fpriv(file_priv)->locked_master)) {
 			DRM_ERROR("Locked master refused legacy "
 				  "surface reference.\n");
@@ -1291,6 +1289,9 @@ int vmw_gb_surface_define_ioctl(struct drm_device *dev, void *data,
 	int ret;
 	uint32_t size;
 	uint32_t backup_handle;
+
+	if (req->multisample_count != 0)
+		return -EINVAL;
 
 	if (req->mip_levels > DRM_VMW_MAX_MIP_LEVELS)
 		return -EINVAL;
