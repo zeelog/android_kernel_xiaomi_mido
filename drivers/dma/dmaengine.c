@@ -1027,6 +1027,7 @@ int dma_async_device_register(struct dma_device *device)
 	if (dma_has_cap(DMA_PRIVATE, device->cap_mask))
 		device->privatecnt++;	/* Always private */
 	dma_channel_rebalance();
+	kfree(idr_ref);
 	mutex_unlock(&dma_list_mutex);
 
 	return 0;
