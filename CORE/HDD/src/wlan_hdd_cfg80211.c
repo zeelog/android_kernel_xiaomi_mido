@@ -1917,6 +1917,7 @@ static v_BOOL_t put_wifi_peer_info( tpSirWifiPeerInfo stats,
                                             stats->rateStats +
                                        (i * sizeof(tSirWifiRateStat)));
         rates = nla_nest_start(vendor_event, i);
+
         if(!rates)
             return FALSE;
 
@@ -2402,10 +2403,10 @@ static v_VOID_t hdd_link_layer_process_peer_stats(hdd_adapter_t *pAdapter,
             return;
         }
 
-        pWifiPeerInfo = (tpSirWifiPeerInfo)  ((uint8 *)
-                pWifiPeerStat->peerInfo +
-                (i * sizeof(tSirWifiPeerInfo)) +
-                (numRate * sizeof (tSirWifiRateStat)));
+        pWifiPeerInfo = (tpSirWifiPeerInfo)((uint8 *)pWifiPeerInfo +
+                (sizeof(tSirWifiPeerInfo) - sizeof(tSirWifiRateStat)) +
+                (numRate * sizeof(tSirWifiRateStat)));
+
         nla_nest_end(vendor_event, peers);
     }
     nla_nest_end(vendor_event, peerInfo);
@@ -12300,6 +12301,7 @@ int __wlan_hdd_cfg80211_change_iface( struct wiphy *wiphy,
     hdd_adapter_t *pAdapter = WLAN_HDD_GET_PRIV_PTR( ndev );
     hdd_context_t *pHddCtx;
     tCsrRoamProfile *pRoamProfile = NULL;
+    hdd_adapter_t  *pP2pAdapter = NULL;
     eCsrRoamBssType LastBSSType;
     hdd_config_t *pConfig = NULL;
     eMib_dot11DesiredBssType connectedBssType;
@@ -12464,6 +12466,28 @@ int __wlan_hdd_cfg80211_change_iface( struct wiphy *wiphy,
                 {
                     wlan_hdd_cancel_existing_remain_on_channel(pAdapter);
                 }
+               if (NL80211_IFTYPE_AP == type)
+                {
+                    /*
+                     * As Loading WLAN Driver one interface being created
+                     * for p2p device address. This will take one HW STA and
+                     * the max number of clients that can connect to softAP
+                     * will be reduced by one. so while changing the interface
+                     * type to NL80211_IFTYPE_AP (SoftAP) remove p2p0 interface
+                     * as it is not required in SoftAP mode.
+                     */
+
+                     // Get P2P Adapter
+                     pP2pAdapter = hdd_get_adapter(pHddCtx,
+                                                  WLAN_HDD_P2P_DEVICE);
+                     if (pP2pAdapter)
+                     {
+                         hdd_stop_adapter(pHddCtx, pP2pAdapter, VOS_TRUE);
+                         hdd_deinit_adapter(pHddCtx, pP2pAdapter, TRUE);
+                         hdd_close_adapter(pHddCtx, pP2pAdapter, VOS_TRUE);
+                     }
+                }
+
                 //Disable IMPS & BMPS for SAP/GO
                 if(VOS_STATUS_E_FAILURE ==
                        hdd_disable_bmps_imps(pHddCtx, WLAN_HDD_P2P_GO))
@@ -12601,7 +12625,19 @@ int __wlan_hdd_cfg80211_change_iface( struct wiphy *wiphy,
            case NL80211_IFTYPE_P2P_CLIENT:
            case NL80211_IFTYPE_ADHOC:
 
+                if (pAdapter->device_mode == WLAN_HDD_SOFTAP
+                        && !hdd_get_adapter(pHddCtx, WLAN_HDD_P2P_DEVICE)) {
+                    /*
+                     * The p2p interface was deleted while SoftAP mode was init,
+                     * create that interface now that the SoftAP is going down.
+                     */
+                    pP2pAdapter = hdd_open_adapter(pHddCtx, WLAN_HDD_P2P_DEVICE,
+                                       "p2p%d", wlan_hdd_get_intf_addr(pHddCtx),
+                                       VOS_TRUE);
+                }
+
                 hdd_stop_adapter( pHddCtx, pAdapter, VOS_TRUE );
+
 #ifdef FEATURE_WLAN_TDLS
 
                 /* A Mutex Lock is introduced while changing the mode to
@@ -19314,7 +19350,7 @@ static int __wlan_hdd_cfg80211_update_ft_ies(struct wiphy *wiphy,
     }
 
 #ifdef WLAN_FEATURE_VOWIFI_11R_DEBUG
-    hddLog(LOGE, FL("%s called with Ie of length = %zu"), __func__,
+    hddLog(LOG1, FL("%s called with Ie of length = %zu"), __func__,
            ftie->ie_len);
 #endif
 
