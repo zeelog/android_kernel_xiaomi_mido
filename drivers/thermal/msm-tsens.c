@@ -778,9 +778,9 @@ enum tsens_tm_trip_type {
 #define TSENS_TM_WRITABLE_TRIPS_MASK ((1 << TSENS_TM_TRIP_NUM) - 1)
 
 struct tsens_thrshld_state {
-	enum thermal_device_mode	high_th_state;
-	enum thermal_device_mode	low_th_state;
-	enum thermal_device_mode	crit_th_state;
+	enum thermal_trip_activation_mode	high_th_state;
+	enum thermal_trip_activation_mode	low_th_state;
+	enum thermal_trip_activation_mode	crit_th_state;
 	unsigned int			high_adc_code;
 	unsigned int			low_adc_code;
 	int				high_temp;
@@ -2475,7 +2475,7 @@ static irqreturn_t tsens_tm_critical_irq_thread(int irq, void *data)
 					tm->tsens_addr));
 			critical_thr = true;
 			tm->sensor[i].debug_thr_state_copy.
-					crit_th_state = THERMAL_DEVICE_DISABLED;
+					crit_th_state = THERMAL_TRIP_ACTIVATION_DISABLED;
 		}
 		spin_unlock_irqrestore(&tm->tsens_crit_lock, flags);
 
@@ -2557,7 +2557,7 @@ static irqreturn_t tsens_tm_irq_thread(int irq, void *data)
 					tm->tsens_addr));
 			upper_thr = true;
 			tm->sensor[i].debug_thr_state_copy.
-					high_th_state = THERMAL_DEVICE_DISABLED;
+					high_th_state = THERMAL_TRIP_ACTIVATION_DISABLED;
 		}
 
 		if ((status & TSENS_TM_SN_STATUS_LOWER_STATUS) &&
@@ -2578,7 +2578,7 @@ static irqreturn_t tsens_tm_irq_thread(int irq, void *data)
 					tm->tsens_addr));
 			lower_thr = true;
 			tm->sensor[i].debug_thr_state_copy.
-					low_th_state = THERMAL_DEVICE_DISABLED;
+					low_th_state = THERMAL_TRIP_ACTIVATION_DISABLED;
 		}
 		spin_unlock_irqrestore(&tm->tsens_upp_low_lock, flags);
 
@@ -2656,7 +2656,7 @@ static irqreturn_t tsens_irq_thread(int irq, void *data)
 					tm->tsens_addr + addr_offset));
 			upper_thr = true;
 			tm->sensor[i].debug_thr_state_copy.
-					high_th_state = THERMAL_DEVICE_DISABLED;
+					high_th_state = THERMAL_TRIP_ACTIVATION_DISABLED;
 		}
 		if (status & TSENS_SN_STATUS_LOWER_STATUS) {
 			writel_relaxed(threshold | TSENS_LOWER_STATUS_CLR,
@@ -2664,7 +2664,7 @@ static irqreturn_t tsens_irq_thread(int irq, void *data)
 					tm->tsens_addr + addr_offset));
 			lower_thr = true;
 			tm->sensor[i].debug_thr_state_copy.
-					low_th_state = THERMAL_DEVICE_DISABLED;
+					low_th_state = THERMAL_TRIP_ACTIVATION_DISABLED;
 		}
 		if (upper_thr || lower_thr) {
 			unsigned long temp;
