@@ -126,13 +126,13 @@ static char *bam_enable_strings[MAX_BAMS] = {
  * CI_CTRL & DWC3_CTRL shouldn't be used simultaneously
  * since both share the same prod & cons rm resourses
  */
-static enum ipa_client_type ipa_rm_resource_prod[MAX_BAMS] = {
+static enum ipa_rm_resource_name ipa_rm_resource_prod[MAX_BAMS] = {
 	[CI_CTRL] = IPA_RM_RESOURCE_USB_PROD,
 	[HSIC_CTRL]  = IPA_RM_RESOURCE_HSIC_PROD,
 	[DWC3_CTRL] = IPA_RM_RESOURCE_USB_PROD,
 };
 
-static enum ipa_client_type ipa_rm_resource_cons[MAX_BAMS] = {
+static enum ipa_rm_resource_name ipa_rm_resource_cons[MAX_BAMS] = {
 	[CI_CTRL] = IPA_RM_RESOURCE_USB_CONS,
 	[HSIC_CTRL]  = IPA_RM_RESOURCE_HSIC_CONS,
 	[DWC3_CTRL] = IPA_RM_RESOURCE_USB_CONS,
