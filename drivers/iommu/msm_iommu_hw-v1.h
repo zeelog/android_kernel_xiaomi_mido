@@ -1018,7 +1018,7 @@ do { \
 #define SET_CB_TTBR0_RGN(b, c, v)   SET_CONTEXT_FIELD(b, c, CB_TTBR0, RGN, v)
 #define SET_CB_TTBR0_NOS(b, c, v)   SET_CONTEXT_FIELD(b, c, CB_TTBR0, NOS, v)
 #define SET_CB_TTBR0_IRGN0(b, c, v) SET_CONTEXT_FIELD(b, c, CB_TTBR0, IRGN0, v)
-#define SET_CB_TTBR0_ADDR(b, c, v)  SET_CONTEXT_FIELD(b, c, CB_TTBR0, ADDR, v)
+#define SET_CB_TTBR0_ADDR(b, c, v)  SET_CONTEXT_FIELD_Q(b, c, CB_TTBR0, ADDR, v)
 
 #define GET_CB_TTBR0_IRGN1(b, c)    GET_CONTEXT_FIELD(b, c, CB_TTBR0, IRGN1)
 #define GET_CB_TTBR0_S(b, c)        GET_CONTEXT_FIELD(b, c, CB_TTBR0, S)
