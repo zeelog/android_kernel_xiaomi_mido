@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0
 /*
  * fs/f2fs/xattr.c
  *
@@ -13,10 +14,6 @@
  *  suggestion of Luka Renko <luka.renko@hermes.si>.
  * xattr consolidation Copyright (c) 2004 James Morris <jmorris@redhat.com>,
  *  Red Hat Inc.
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
  */
 #include <linux/rwsem.h>
 #include <linux/f2fs_fs.h>
@@ -73,9 +70,6 @@ static int f2fs_xattr_generic_get(struct dentry *dentry, const char *name,
 			return -EOPNOTSUPP;
 		break;
 	case F2FS_XATTR_INDEX_TRUSTED:
-		if (!capable(CAP_SYS_ADMIN))
-			return -EPERM;
-		break;
 	case F2FS_XATTR_INDEX_SECURITY:
 		break;
 	default:
@@ -97,9 +91,6 @@ static int f2fs_xattr_generic_set(struct dentry *dentry, const char *name,
 			return -EOPNOTSUPP;
 		break;
 	case F2FS_XATTR_INDEX_TRUSTED:
-		if (!capable(CAP_SYS_ADMIN))
-			return -EPERM;
-		break;
 	case F2FS_XATTR_INDEX_SECURITY:
 		break;
 	default:
@@ -144,6 +135,8 @@ static int f2fs_xattr_advise_set(struct dentry *dentry, const char *name,
 		const void *value, size_t size, int flags, int type)
 {
 	struct inode *inode = d_inode(dentry);
+	unsigned char old_advise = F2FS_I(inode)->i_advise;
+	unsigned char new_advise;
 
 	if (strcmp(name, "") != 0)
 		return -EINVAL;
@@ -152,7 +145,14 @@ static int f2fs_xattr_advise_set(struct dentry *dentry, const char *name,
 	if (value == NULL)
 		return -EINVAL;
 
-	F2FS_I(inode)->i_advise |= *(char *)value;
+	new_advise = *(char *)value;
+	if (new_advise & ~FADVISE_MODIFIABLE_BITS)
+		return -EINVAL;
+
+	new_advise = new_advise & FADVISE_MODIFIABLE_BITS;
+	new_advise |= old_advise & ~FADVISE_MODIFIABLE_BITS;
+
+	F2FS_I(inode)->i_advise = new_advise;
 	f2fs_mark_inode_dirty_sync(inode, true);
 	return 0;
 }
