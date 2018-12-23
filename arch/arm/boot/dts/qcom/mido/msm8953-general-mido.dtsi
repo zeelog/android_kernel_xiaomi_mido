@@ -10,6 +10,23 @@
  * GNU General Public License for more details.
  */
 
+/ {
+	firmware: firmware {
+		android {
+			fstab {
+				system {
+					compatible = "android,system";
+					dev = "/dev/block/platform/soc/7824900.sdhci/by-name/system";
+					type = "ext4";
+					mnt_flags = "ro,barrier=1,discard";
+					fsmgr_flags = "wait,verify";
+					status = "ok";
+				};
+			};
+		};
+	};
+};
+
 &spmi_bus {
 	qcom,pm8953@0 {
 		qcom,power-on@800 {
