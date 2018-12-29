@@ -63,6 +63,7 @@ config IOSCHED_BFQ
 config BFQ_GROUP_IOSCHED
 	bool "BFQ hierarchical scheduling support"
 	depends on IOSCHED_BFQ && BLK_CGROUP
+	depends on BROKEN
 	default n
 	---help---
 
