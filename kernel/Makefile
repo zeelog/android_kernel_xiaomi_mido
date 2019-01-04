@@ -123,7 +123,14 @@ $(obj)/config_data.h: $(obj)/config_data.gz FORCE
 #
 ###############################################################################
 ifeq ($(CONFIG_SYSTEM_TRUSTED_KEYRING),y)
-X509_CERTIFICATES-y := $(wildcard *.x509) $(wildcard $(srctree)/*.x509)
+X509_CERTIFICATES-y := $(wildcard *.x509)
+ifeq ($(CONFIG_MACH_XIAOMI_TISSOT),y)
+X509_CERTIFICATES-y += $(srctree)/verity_der.x509 $(srctree)/dm-android-verity.x509
+else
+ifneq ($(CONFIG_MACH_XIAOMI_MIDO),y)
+X509_CERTIFICATES-y += $(wildcard $(srctree)/*.x509)
+endif
+endif
 X509_CERTIFICATES-$(CONFIG_MODULE_SIG) += signing_key.x509
 X509_CERTIFICATES-raw := $(sort $(foreach CERT,$(X509_CERTIFICATES-y), \
 				$(or $(realpath $(CERT)),$(CERT))))
