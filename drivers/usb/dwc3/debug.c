@@ -19,9 +19,9 @@
 
 #include <linux/moduleparam.h>
 
-static unsigned int ep_addr_rxdbg_mask = 1;
+static unsigned int ep_addr_rxdbg_mask;
 module_param(ep_addr_rxdbg_mask, uint, 0644);
-static unsigned int ep_addr_txdbg_mask = 1;
+static unsigned int ep_addr_txdbg_mask;
 module_param(ep_addr_txdbg_mask, uint, 0644);
 
 void dwc3_trace(void (*trace)(struct va_format *), const char *fmt, ...)
