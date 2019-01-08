@@ -25,7 +25,7 @@
 #include "rmnet_data_trace.h"
 
 /* Module Parameters */
-unsigned int rmnet_data_log_level;
+unsigned int rmnet_data_log_level = 0;
 module_param(rmnet_data_log_level, uint, 0644);
 MODULE_PARM_DESC(log_level, "Logging level");
 
