@@ -3269,7 +3269,7 @@ int msm_isp_cfg_axi_stream(struct vfe_device *vfe_dev, void *arg)
 	int rc = 0, ret;
 	struct msm_vfe_axi_stream_cfg_cmd *stream_cfg_cmd = arg;
 	struct msm_vfe_axi_shared_data *axi_data = &vfe_dev->axi_data;
-	enum msm_isp_camif_update_state camif_update;
+	enum msm_isp_camif_update_state camif_update = NO_UPDATE;
 	int halt = 0;
 
 	rc = msm_isp_axi_check_stream_state(vfe_dev, stream_cfg_cmd);
