@@ -452,7 +452,6 @@ static int driver_init_partial(struct gf_dev *gf_dev)
 		goto error;
 	}
 	if (!ret) {
-		enable_irq_wake(gf_dev->irq);
 		gf_enable_irq(gf_dev);
 		gf_disable_irq(gf_dev);
 	}
