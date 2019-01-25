@@ -31,6 +31,7 @@
  * as published by the Free Software Foundation.
  */
 
+#include <linux/atomic.h>
 #include <linux/clk.h>
 #include <linux/delay.h>
 #include <linux/gpio.h>
@@ -75,7 +76,7 @@ struct fpc1020_data {
 	int rst_gpio;
 	struct mutex lock;
 	bool prepared;
-	bool wakeup_enabled;
+	atomic_t wakeup_enabled;
 	bool compatible_enabled;
 #ifdef LINUX_CONTROL_SPI_CLK
 	bool clocks_enabled;
@@ -297,11 +298,9 @@ static ssize_t wakeup_enable_set(struct device *dev,
 	struct  fpc1020_data *fpc1020 = dev_get_drvdata(dev);
 
 	if (!strncmp(buf, "enable", strlen("enable"))) {
-		fpc1020->wakeup_enabled = true;
-		smp_wmb();
+		atomic_set(&fpc1020->wakeup_enabled, 1);
 	} else if (!strncmp(buf, "disable", strlen("disable"))) {
-		fpc1020->wakeup_enabled = false;
-		smp_wmb();
+		atomic_set(&fpc1020->wakeup_enabled, 0);
 	} else
 		return -EINVAL;
 
@@ -454,11 +453,7 @@ static irqreturn_t fpc1020_irq_handler(int irq, void *handle)
 	struct fpc1020_data *fpc1020 = handle;
 	dev_dbg(fpc1020->dev, "%s\n", __func__);
 
-	/* Make sure 'wakeup_enabled' is updated before using it
-	** since this is interrupt context (other thread...) */
-	smp_rmb();
-
-	if (fpc1020->wakeup_enabled) {
+	if (atomic_read(&fpc1020->wakeup_enabled)) {
 		__pm_wakeup_event(&fpc1020->ttw_wl,
 					msecs_to_jiffies(FPC_TTW_HOLD_TIME));
 	}
@@ -538,7 +533,8 @@ static int fpc1020_probe(struct platform_device *pdev)
 	}
 #endif
 
-	fpc1020->wakeup_enabled = false;
+	atomic_set(&fpc1020->wakeup_enabled, 0);
+
 #ifdef LINUX_CONTROL_SPI_CLK
 	fpc1020->clocks_enabled = false;
 	fpc1020->clocks_suspended = false;
