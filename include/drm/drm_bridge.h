@@ -229,8 +229,11 @@ void drm_bridge_post_disable(struct drm_bridge *bridge);
 void drm_bridge_mode_set(struct drm_bridge *bridge,
 			struct drm_display_mode *mode,
 			struct drm_display_mode *adjusted_mode);
+void __drm_bridge_pre_enable(struct drm_bridge *bridge);
 void drm_bridge_pre_enable(struct drm_bridge *bridge);
+void __drm_bridge_enable(struct drm_bridge *bridge);
 void drm_bridge_enable(struct drm_bridge *bridge);
+void drm_bridge_enable_all(struct drm_device *dev);
 int drm_bridge_connector_init(struct drm_bridge *bridge,
 	struct drm_connector *connector);
 

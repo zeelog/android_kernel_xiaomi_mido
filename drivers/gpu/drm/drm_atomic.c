@@ -2011,10 +2011,13 @@ retry:
 		 * Below we call drm_atomic_state_free for it.
 		 */
 		ret = drm_atomic_check_only(state);
-	} else if (arg->flags & DRM_MODE_ATOMIC_NONBLOCK) {
-		ret = drm_atomic_nonblocking_commit(state);
 	} else {
-		ret = drm_atomic_commit(state);
+		drm_bridge_enable_all(dev);
+
+		if (arg->flags & DRM_MODE_ATOMIC_NONBLOCK)
+			ret = drm_atomic_nonblocking_commit(state);
+		else
+			ret = drm_atomic_commit(state);
 	}
 
 out:
