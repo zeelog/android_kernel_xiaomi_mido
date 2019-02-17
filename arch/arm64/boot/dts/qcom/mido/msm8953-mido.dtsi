@@ -17,3 +17,4 @@
 #include "msm8953-camera-sensor-qrd-mido.dtsi"
 #include "msm8953-pinctrl-mido.dtsi"
 #include "msm8953-memory-mido.dtsi"
+#include "mido-gpu-oc.dtsi"
