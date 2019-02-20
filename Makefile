@@ -549,6 +549,7 @@ KBUILD_AFLAGS	+= $(CLANG_FLAGS)
 ifeq ($(ld-name),lld)
 KBUILD_CFLAGS += -fuse-ld=lld
 endif
+KBUILD_CPPFLAGS += $(call cc-option,-Qunused-arguments,)
 endif
 
 ifeq ($(mixed-targets),1)
@@ -832,7 +833,6 @@ endif
 KBUILD_CFLAGS += $(stackp-flag)
 
 ifeq ($(cc-name),clang)
-KBUILD_CPPFLAGS += $(call cc-option,-Qunused-arguments,)
 KBUILD_CFLAGS += $(call cc-disable-warning, unused-variable)
 KBUILD_CFLAGS += $(call cc-disable-warning, format-invalid-specifier)
 KBUILD_CFLAGS += $(call cc-disable-warning, gnu)
