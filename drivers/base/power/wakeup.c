@@ -569,9 +569,6 @@ static void wakeup_source_activate(struct wakeup_source *ws)
 // AP: Function to check if a wakelock is on the wakelock blocker list
 static bool check_for_block(struct wakeup_source *ws)
 {
-	char wakelock_name[52] = {0};
-	int length;
-
 	// if debug mode on, print every wakelock requested
 	if (wl_blocker_debug)
 		printk("Boeffla WL blocker: %s requested\n", ws->name);
@@ -583,8 +580,10 @@ static bool check_for_block(struct wakeup_source *ws)
 	// only if ws structure is valid
 	if (ws)
 	{
+		int length = strlen(ws->name);
+		char wakelock_name[length + 2];
+
 		// wake lock names handled have maximum length=50 and minimum=1
-		length = strlen(ws->name);
 		if ((length > 50) || (length < 1))
 			return false;
 
