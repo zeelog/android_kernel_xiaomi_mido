@@ -39,7 +39,11 @@
 #include <linux/qpnp/qpnp-adc.h>
 #include <linux/batterydata-lib.h>
 #include <linux/of_batterydata.h>
+#if IS_ENABLED(CONFIG_MSM_BCL_PERIPHERAL_CTL_LEGACY)
+#include <linux/msm_bcl_legacy.h>
+#else
 #include <linux/msm_bcl.h>
+#endif
 #include <linux/ktime.h>
 #include <linux/extcon.h>
 #include <linux/pmic-voter.h>
@@ -3062,11 +3066,21 @@ static int smbchg_calc_max_flash_current(struct smbchg_chip *chip)
 		return 0;
 	}
 
+#if IS_ENABLED(CONFIG_MSM_BCL_PERIPHERAL_CTL_LEGACY)
+	rc = msm_bcl_read(BCL_HIGH_IBAT, &ibat_now);
+	if (rc) {
+		pr_smb(PR_STATUS, "BCL ibat read failed: %d\n", rc);
+		return 0;
+	} else {
+		ibat_now = ibat_now * 1000;
+	}
+#else
 	rc = msm_bcl_read(BCL_PARAM_CURRENT, &ibat_now);
 	if (rc) {
 		pr_smb(PR_STATUS, "BCL current read failed: %d\n", rc);
 		return 0;
 	}
+#endif
 
 	rbatt_uohm = esr_uohm + chip->rpara_uohm + chip->rslow_uohm;
 	/*

@@ -1,0 +1,70 @@
+===============================================================================
+BCL PMIC Peripheral driver for legacy PMIC peripherals:
+===============================================================================
+Qualcomm Technologies, Inc's PMIC has battery current limiting peripheral, which can monitor for
+high battery current and low battery voltage in the hardware. The BCL
+peripheral driver interacts with the PMIC peripheral using the SPMI driver
+interface. The hardware can take threshold for notifying for high battery
+current or low battery voltage events.
+
+Required Parameters:
+- compatible: must be
+	'qcom,msm-bcl' for bcl peripheral without LMH DCVSh
+- reg: <a b> where 'a' is the starting register address of the PMIC
+	peripheral and 'b' is the size of the peripheral address space.
+	If the BCL inhibit current derating feature is enabled, this must also
+	have the PON spare registers as well. Example: <a b c d> where
+	c is the first PON spare register that will be written and d is the
+	size of the registers space needed to be written.
+- reg-names: a list of names of the registers corresponding to the reg
+	property. The fuel gauge peripheral should be "fg_user_adc", the
+	PON spare should be "pon_spare".
+- interrupts: <a b c> Where 'a' is the SLAVE ID of the PMIC, 'b' is
+		the peripheral ID and 'c' is the interrupt number in PMIC.
+- interrupt-names: user defined names for the interrupts. These
+		interrupt names will be used by the drivers to identify the
+		interrupts, instead of specifying the ID's. bcl driver will
+		accept these two standard interrupts.
+		"bcl-low-vbat"
+		"bcl-high-ibat"
+
+- qcom,vbat-scaling-factor: The scaling factor to be used for converting
+		the raw vbat ADC value to milli-volt.
+- qcom,vbat-gain-numerator: The numerator of the vbat gain correction factor.
+- qcom,vbat-gain-denominator: The denominator of the vbat gain correction
+		factor.
+- qcom,ibat-scaling-factor: The scaling factor to be used for converting
+		the raw ibat ADC value to micro-amps.
+- qcom,ibat-gain-numerator: The numerator of the ibat gain correction factor.
+- qcom,ibat-gain-denominator: The denominator of the ibat gain correction
+		factor.
+- qcom,ibat-offset-numerator: The numerator of the ibat offset correction
+		factor.
+- qcom,ibat-offset-denominator: The denominator of the ibat offset
+		correction factor.
+
+
+Optional Parameters:
+- qcom,inhibit-derating-ua: The amount that the bcl current high trip threshold
+		should be lowered by when the bcl peripheral is operating in a
+		dead time.
+
+		bcl@4200 {
+			compatible = "qcom,msm-bcl";
+			reg = <0x4200 0xff>,
+				<0x88e 0x2>;
+			reg-names = "fg_user_adc",
+					"pon_spare";
+			interrupts = <0x2 0x42 0x0 IRQ_TYPE_NONE>,
+					<0x2 0x42 0x1 IRQ_TYPE_NONE>;
+			interrupt-names = "bcl-high-ibat",
+						"bcl-low-vbat",
+			qcom,vbat-scaling-factor = <39>;
+			qcom,vbat-gain-numerator = <1>;
+			qcom,vbat-gain-denominator = <32>;
+			qcom,ibat-scaling-factor = <39>;
+			qcom,ibat-gain-numerator = <1>;
+			qcom,ibat-gain-denominator = <32>;
+			qcom,ibat-offset-numerator = <12>;
+			qcom,ibat-offset-denominator = <10>;
+		};

@@ -21,6 +21,17 @@ config MSM_BCL_PERIPHERAL_CTL
 	  threshold input and notify the thermal core when the threshold is
 	  reached.
 
+config MSM_BCL_PERIPHERAL_CTL_LEGACY
+	bool "Legacy BCL driver to control the PMIC BCL peripheral"
+	depends on SPMI && THERMAL_OF && !MSM_BCL_PERIPHERAL_CTL
+	help
+	  Say Y here to enable this legacy version of BCL PMIC peripheral
+	  driver. This driver provides routines to configure and monitor
+	  the BCL PMIC peripheral. This driver registers the battery current
+	  and voltage sensors with the thermal core framework and can take
+	  threshold input and notify the thermal core when the threshold is
+	  reached.
+
 config QTI_THERMAL_LIMITS_DCVS
 	bool "QTI LMH DCVS Driver"
 	depends on THERMAL_OF
