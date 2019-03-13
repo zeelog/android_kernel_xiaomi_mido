@@ -937,4 +937,6 @@ struct sched_domain;
 unsigned long cpufreq_scale_freq_capacity(struct sched_domain *sd, int cpu);
 unsigned long cpufreq_scale_max_freq_capacity(struct sched_domain *sd, int cpu);
 unsigned long cpufreq_scale_min_freq_capacity(struct sched_domain *sd, int cpu);
+
+extern unsigned int cpuinfo_max_freq_cached;
 #endif /* _LINUX_CPUFREQ_H */
