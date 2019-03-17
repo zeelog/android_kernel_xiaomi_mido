@@ -32,7 +32,7 @@
 #include <uapi/linux/thermal.h>
 
 #define THERMAL_TRIPS_NONE	-1
-#define THERMAL_MAX_TRIPS	12
+#define THERMAL_MAX_TRIPS	17
 
 /* invalid cooling state */
 #define THERMAL_CSTATE_INVALID -1UL
