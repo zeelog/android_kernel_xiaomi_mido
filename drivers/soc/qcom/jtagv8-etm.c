@@ -183,18 +183,18 @@
 #define HW_SOC_ID_M8953		(293)
 
 #define etm_writel(etm, val, off)	\
-		   writel_relaxed_no_log(val, etm->base + off)
+		   writel_relaxed(val, etm->base + off)
 #define etm_writel_log(etm, val, off)	\
 		   __raw_writel(val, etm->base + off)
 
 #define etm_readl(etm, off)		\
-		   readl_relaxed_no_log(etm->base + off)
+		   readl_relaxed(etm->base + off)
 
 #define etm_writeq(etm, val, off)	\
-		   writeq_relaxed_no_log(val, etm->base + off)
+		   writeq_relaxed(val, etm->base + off)
 
 #define etm_readq(etm, off)		\
-		   readq_relaxed_no_log(etm->base + off)
+		   readq_relaxed(etm->base + off)
 
 #define ETM_LOCK(base)							\
 do {									\
