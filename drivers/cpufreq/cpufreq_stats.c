@@ -14,15 +14,13 @@
 #include <linux/module.h>
 #include <linux/slab.h>
 
-static DEFINE_SPINLOCK(cpufreq_stats_lock);
-
 struct cpufreq_stats {
 	unsigned int total_trans;
-	unsigned long long last_time;
+	atomic64_t last_time;
 	unsigned int max_state;
 	unsigned int state_num;
 	unsigned int last_index;
-	u64 *time_in_state;
+	atomic64_t *time_in_state;
 	unsigned int *freq_table;
 #ifdef CONFIG_CPU_FREQ_STAT_DETAILS
 	unsigned int *trans_table;
@@ -32,11 +30,10 @@ struct cpufreq_stats {
 static int cpufreq_stats_update(struct cpufreq_stats *stats)
 {
 	unsigned long long cur_time = get_jiffies_64();
+	unsigned long long time = cur_time;
 
-	spin_lock(&cpufreq_stats_lock);
-	stats->time_in_state[stats->last_index] += cur_time - stats->last_time;
-	stats->last_time = cur_time;
-	spin_unlock(&cpufreq_stats_lock);
+	time = atomic64_xchg(&stats->last_time, time);
+	atomic64_add(cur_time - time, &stats->time_in_state[stats->last_index]);
 	return 0;
 }
 
@@ -58,7 +55,8 @@ static ssize_t show_time_in_state(struct cpufreq_policy *policy, char *buf)
 	for (i = 0; i < stats->state_num; i++) {
 		len += sprintf(buf + len, "%u %llu\n", stats->freq_table[i],
 			(unsigned long long)
-			jiffies_64_to_clock_t(stats->time_in_state[i]));
+			jiffies_64_to_clock_t(atomic64_read(
+					&stats->time_in_state[i])));
 	}
 	return len;
 }
@@ -175,7 +173,7 @@ void cpufreq_stats_create_table(struct cpufreq_policy *policy)
 	cpufreq_for_each_valid_entry(pos, table)
 		count++;
 
-	alloc_size = count * sizeof(int) + count * sizeof(u64);
+	alloc_size = count * sizeof(int) + count * sizeof(atomic64_t);
 
 #ifdef CONFIG_CPU_FREQ_STAT_DETAILS
 	alloc_size += count * count * sizeof(int);
@@ -200,7 +198,7 @@ void cpufreq_stats_create_table(struct cpufreq_policy *policy)
 			stats->freq_table[i++] = pos->frequency;
 
 	stats->state_num = i;
-	stats->last_time = get_jiffies_64();
+	atomic64_set(&stats->last_time, get_jiffies_64());
 	stats->last_index = freq_table_get_index(stats, policy->cur);
 
 	policy->stats = stats;
