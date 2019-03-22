@@ -310,7 +310,7 @@ static int fb_notifier_callback(struct notifier_block *self,
 		}
 	}
 
-	return 0;
+	return NOTIFY_OK;
 }
 
 static struct notifier_block fb_notifier_block = {
