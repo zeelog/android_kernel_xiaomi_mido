@@ -344,7 +344,7 @@ static int l3_clk_set_rate(struct clk_hw *hw, unsigned long rate,
 				cpuclk->rate = rate;
 				return 0;
 			}
-			udelay(50);
+			usleep_range(50, 100);
 		}
 		pr_err("cannot set %s to %lu\n", clk_hw_get_name(hw), rate);
 		return -ETIMEDOUT;
