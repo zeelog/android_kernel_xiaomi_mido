@@ -30,11 +30,7 @@ static void *spdm_ipc_log_ctxt;
 #define DEVFREQ_SPDM_DEFAULT_WINDOW_MS 100
 #define SPDM_IPC_LOG_PAGES	5
 
-#define SPDM_IPC_LOG(x...)	do { \
-	pr_debug(x); \
-	if (spdm_ipc_log_ctxt) \
-		ipc_log_string(spdm_ipc_log_ctxt, x); \
-} while (0)
+#define SPDM_IPC_LOG(x...) ((void)0)
 
 #define COPY_SIZE(x, y) ((x) <= (y) ? (x) : (y))
 

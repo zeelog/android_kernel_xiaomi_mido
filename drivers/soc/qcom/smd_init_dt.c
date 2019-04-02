@@ -24,22 +24,12 @@
 
 #define MODULE_NAME "msm_smd"
 #define IPC_LOG(level, x...) do { \
-	if (smd_log_ctx) \
-		ipc_log_string(smd_log_ctx, x); \
-	else \
-		printk(level x); \
+	printk(level x); \
 	} while (0)
 
 #if defined(CONFIG_MSM_SMD_DEBUG)
-#define SMD_DBG(x...) do {				\
-		if (msm_smd_debug_mask & MSM_SMD_DEBUG) \
-			IPC_LOG(KERN_DEBUG, x);		\
-	} while (0)
-
-#define SMSM_DBG(x...) do {					\
-		if (msm_smd_debug_mask & MSM_SMSM_DEBUG)	\
-			IPC_LOG(KERN_DEBUG, x);		\
-	} while (0)
+#define SMD_DBG(x...) ((void)0)
+#define SMSM_DBG(x...) ((void)0)
 #else
 #define SMD_DBG(x...) do { } while (0)
 #define SMSM_DBG(x...) do { } while (0)

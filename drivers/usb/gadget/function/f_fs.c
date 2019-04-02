@@ -47,8 +47,6 @@
 
 static void *ffs_ipc_log;
 #define ffs_log(fmt, ...) do { \
-	ipc_log_string(ffs_ipc_log, "%s: " fmt,  __func__, \
-			##__VA_ARGS__); \
 	pr_debug("%s: " fmt, __func__, ##__VA_ARGS__); \
 } while (0)
 

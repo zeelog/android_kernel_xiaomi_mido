@@ -374,23 +374,15 @@ enum {
 /* Default IPC log level INFO */
 #define SLIM_DBG(dev, x...) do { \
 	pr_debug(x); \
-	if (dev->ipc_slimbus_log && dev->ipc_log_mask >= DBG_LEV) { \
-		ipc_log_string(dev->ipc_slimbus_log, x); \
-	} \
 } while (0)
 
 #define SLIM_INFO(dev, x...) do { \
 	pr_debug(x); \
-	if (dev->ipc_slimbus_log && dev->ipc_log_mask >= INFO_LEV) {\
-		ipc_log_string(dev->ipc_slimbus_log, x); \
-	} \
 } while (0)
 
 /* warnings and errors show up on console always */
 #define SLIM_WARN(dev, x...) do { \
 	pr_warn(x); \
-	if (dev->ipc_slimbus_log && dev->ipc_log_mask >= WARN_LEV) \
-		ipc_log_string(dev->ipc_slimbus_log, x); \
 } while (0)
 
 /* ERROR condition in the driver sets the hs_serial_debug_mask
@@ -399,11 +391,6 @@ enum {
  */
 #define SLIM_ERR(dev, x...) do { \
 	pr_err(x); \
-	if (dev->ipc_slimbus_log && dev->ipc_log_mask >= ERR_LEV) { \
-		ipc_log_string(dev->ipc_slimbus_log, x); \
-		dev->default_ipc_log_mask = dev->ipc_log_mask; \
-		dev->ipc_log_mask = FATAL_LEV; \
-	} \
 } while (0)
 
 #define SLIM_RST_LOGLVL(dev) { \

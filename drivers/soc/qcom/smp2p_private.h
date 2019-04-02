@@ -147,31 +147,17 @@ enum {
 	MSM_SMP2P_GPIO = 1U << 2,
 };
 
-#define SMP2P_IPC_LOG_STR(x...) do { \
-	if (smp2p_get_log_ctx()) \
-		ipc_log_string(smp2p_get_log_ctx(), x); \
-} while (0)
+#define SMP2P_IPC_LOG_STR(x...) ((void)0)
 
-#define SMP2P_DBG(x...) do {                              \
-	if (smp2p_get_debug_mask() & MSM_SMP2P_DEBUG) \
-		SMP2P_IPC_LOG_STR(x);  \
-} while (0)
+#define SMP2P_DBG(x...) ((void)0)
 
-#define SMP2P_INFO(x...) do {                              \
-	if (smp2p_get_debug_mask() & MSM_SMP2P_INFO) \
-		SMP2P_IPC_LOG_STR(x);  \
-} while (0)
+#define SMP2P_INFO(x...) ((void)0)
 
 #define SMP2P_ERR(x...) do {                              \
 	pr_err(x); \
-	SMP2P_IPC_LOG_STR(x);  \
 } while (0)
 
-#define SMP2P_GPIO(x...) do {                              \
-	if (smp2p_get_debug_mask() & MSM_SMP2P_GPIO) \
-		SMP2P_IPC_LOG_STR(x);  \
-} while (0)
-
+#define SMP2P_GPIO(x...) ((void)0)
 
 enum msm_smp2p_edge_state {
 	SMP2P_EDGE_STATE_CLOSED,

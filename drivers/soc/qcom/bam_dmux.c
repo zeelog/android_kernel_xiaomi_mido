@@ -323,27 +323,10 @@ static void *bam_ipc_log_txt;
  * D: 1 = Disconnect ACK active
  */
 
-#define BAM_DMUX_LOG(fmt, args...) \
-do { \
-	if (bam_ipc_log_txt) { \
-		ipc_log_string(bam_ipc_log_txt, \
-		"<DMUX> %c%c%c%c %c%c%c%c%d " fmt, \
-		a2_pc_disabled ? 'D' : 'd', \
-		in_global_reset ? 'R' : 'r', \
-		bam_dmux_power_state ? 'P' : 'p', \
-		bam_connection_is_active ? 'A' : 'a', \
-		bam_dmux_uplink_vote ? 'V' : 'v', \
-		bam_is_connected ?  'U' : 'u', \
-		wait_for_ack ? 'W' : 'w', \
-		ul_wakeup_ack_completion.done ? 'A' : 'a', \
-		atomic_read(&ul_ondemand_vote), \
-		args); \
-	} \
-} while (0)
+#define BAM_DMUX_LOG(fmt, args...) ((void)0)
 
 #define DMUX_LOG_KERR(fmt, args...) \
 do { \
-	BAM_DMUX_LOG(fmt, args); \
 	pr_err(fmt, args); \
 } while (0)
 

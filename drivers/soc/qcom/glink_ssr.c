@@ -30,14 +30,10 @@
 #define NUM_LOG_PAGES 3
 
 #define GLINK_SSR_PRIORITY 1
-#define GLINK_SSR_LOG(x...) do { \
-	if (glink_ssr_log_ctx) \
-		ipc_log_string(glink_ssr_log_ctx, x); \
-} while (0)
+#define GLINK_SSR_LOG(x...) ((void)0)
 
 #define GLINK_SSR_ERR(x...) do { \
 	pr_err(x); \
-	GLINK_SSR_LOG(x); \
 } while (0)
 
 static void *glink_ssr_log_ctx;

@@ -54,19 +54,11 @@ module_param_named(default_timeout_ms, shm_default_timeout_ms,
 
 #define SHM_ILCTXT_NUM_PAGES 2
 static void *shm_ilctxt;
-#define SHM_INFO_LOG(x...) do { \
-	if ((shm_debug_mask & SHM_INFO_FLAG) && shm_ilctxt) \
-		ipc_log_string(shm_ilctxt, x); \
-} while (0)
+#define SHM_INFO_LOG(x...) ((void)0)
 
-#define SHM_DEBUG(x...) do { \
-	if ((shm_debug_mask & SHM_DEBUG_FLAG) && shm_ilctxt) \
-		ipc_log_string(shm_ilctxt, x); \
-} while (0)
+#define SHM_DEBUG(x...) ((void)0)
 
 #define SHM_ERR(x...) do { \
-	if (shm_ilctxt) \
-		ipc_log_string(shm_ilctxt, x); \
 	pr_err(x); \
 } while (0)
 

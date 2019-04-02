@@ -53,9 +53,6 @@ module_param_named(debug_mask, msm_ipc_router_debug_mask,
 #define IPC_RTR_INFO_PAGES 6
 
 #define IPC_RTR_INFO(log_ctx, x...) do { \
-typeof(log_ctx) _log_ctx = (log_ctx); \
-if (_log_ctx) \
-	ipc_log_string(_log_ctx, x); \
 if (msm_ipc_router_debug_mask & RTR_DBG) \
 	pr_info("[IPCRTR] "x); \
 } while (0)

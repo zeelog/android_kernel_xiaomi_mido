@@ -210,23 +210,17 @@ static bool glink_pkt_read_avail(struct glink_pkt_dev *devp);
 
 #ifdef DEBUG
 
-#define GLINK_PKT_LOG_STRING(x...) \
-do { \
-	if (glink_pkt_ilctxt) \
-		ipc_log_string(glink_pkt_ilctxt, "<GLINK_PKT>: "x); \
-} while (0)
+#define GLINK_PKT_LOG_STRING(x...) ((void)0)
 
 #define GLINK_PKT_INFO(x...) \
 do { \
 	if (msm_glink_pkt_debug_mask & GLINK_PKT_STATUS) \
 		pr_info("Status: "x); \
-	GLINK_PKT_LOG_STRING(x); \
 } while (0)
 
 #define GLINK_PKT_ERR(x...) \
 do { \
 	pr_err_ratelimited("<GLINK_PKT> err: "x); \
-	GLINK_PKT_LOG_STRING(x); \
 } while (0)
 
 #else

@@ -119,11 +119,7 @@ enum {
 
 #ifdef DEBUG
 
-#define SMD_PKT_LOG_STRING(x...) \
-do { \
-	if (smd_pkt_ilctxt) \
-		ipc_log_string(smd_pkt_ilctxt, "<SMD_PKT>: "x); \
-} while (0)
+#define SMD_PKT_LOG_STRING(x...) ((void)0)
 
 #define D_STATUS(x...) \
 do { \
