@@ -1883,7 +1883,7 @@ int wlan_queue_logpkt_for_app(vos_pkt_t *pPacket, uint32 pkt_type)
 	VOS_STATUS status = VOS_STATUS_E_FAILURE;
 
 	if (pPacket == NULL) {
-		pr_err("%s: Null param", __func__);
+		pr_debug("%s: Null param", __func__);
 		VOS_ASSERT(0);
 		return VOS_STATUS_E_FAILURE;
 	}
@@ -2034,7 +2034,7 @@ int wlan_fwr_mem_dump_buffer_allocation(void)
 	  or if feature not supported just report to the user */
 	if(gwlan_logging.fw_mem_dump_ctx.fw_dump_max_size <= 0)
 	{
-	   pr_err("%s: fw_mem_dump_req not supported by firmware", __func__);
+	   pr_debug("%s: fw_mem_dump_req not supported by firmware", __func__);
 	   return -EFAULT;
 	}
 	gwlan_logging.fw_mem_dump_ctx.fw_dump_start_loc =
@@ -2115,7 +2115,7 @@ size_t wlan_fwr_mem_dump_fsread_handler(char __user *buf,
 		count = gwlan_logging.fw_mem_dump_ctx.fw_dump_max_size - *pos;
 	}
 	if (copy_to_user(buf, gwlan_logging.fw_mem_dump_ctx.fw_dump_start_loc, count)) {
-		pr_err("%s copy to user space failed",__func__);
+		pr_debug("%s copy to user space failed",__func__);
 		return 0;
 	}
 	/* offset(pos) should be updated here based on the copy done*/
