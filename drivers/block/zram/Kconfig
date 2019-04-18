@@ -35,4 +35,5 @@ config ZRAM_DEBUG
 
 config ZRAM_DEFAULT_COMP_ALGORITHM
 	string "Default ZRAM algorithm"
+	default "lz4" if ZRAM_LZ4_COMPRESS
 	default "lzo"
