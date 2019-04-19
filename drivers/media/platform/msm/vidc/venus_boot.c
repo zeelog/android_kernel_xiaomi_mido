@@ -188,7 +188,7 @@ static int pil_venus_mem_setup(size_t size)
 
 static int pil_venus_auth_and_reset(void)
 {
-	int rc;
+	int rc = 0;
 
 	/* Need to enable this for new SMMU to set the device attribute */
 	bool disable_htw = true;
@@ -336,7 +336,7 @@ static int pil_venus_shutdown(void)
 {
 	void __iomem *reg_base = venus_data->reg_base;
 	u32 reg;
-	int rc;
+	int rc = 0;
 
 	if (!venus_data->is_booted)
 		return 0;
