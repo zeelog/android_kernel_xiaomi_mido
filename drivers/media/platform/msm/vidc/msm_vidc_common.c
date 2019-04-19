@@ -295,7 +295,7 @@ static int msm_comm_get_mbs_per_frame(struct msm_vidc_inst *inst)
 
 static int msm_comm_get_mbs_per_sec(struct msm_vidc_inst *inst)
 {
-	int rc;
+	int rc = 0;
 	u32 fps;
 	struct v4l2_control ctrl;
 	int mb_per_frame;
@@ -1521,7 +1521,7 @@ static void handle_session_flush(enum hal_command_response cmd, void *data)
 	struct v4l2_event flush_event = {0};
 	u32 *ptr = NULL;
 	enum hal_flush flush_type;
-	int rc;
+	int rc = 0;
 
 	if (!response) {
 		dprintk(VIDC_ERR, "Failed to get valid response for flush\n");
@@ -3691,7 +3691,7 @@ static int request_seq_header(struct msm_vidc_inst *inst,
  */
 int msm_comm_qbuf(struct msm_vidc_inst *inst, struct vb2_buffer *vb)
 {
-	int rc, capture_count, output_count;
+	int rc = 0, capture_count, output_count;
 	struct msm_vidc_core *core;
 	struct hfi_device *hdev;
 	struct {

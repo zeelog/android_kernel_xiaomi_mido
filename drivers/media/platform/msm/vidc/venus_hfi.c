@@ -1493,7 +1493,7 @@ static int __scale_clocks_load(struct venus_hfi_device *device, int load,
 		if (cl->has_scaling) {
 
 			unsigned long rate = 0;
-			int rc;
+			int rc = 0;
 			/*
 			 * load_fw and power_on needs to be addressed.
 			 * differently. Below check enforces the same.
