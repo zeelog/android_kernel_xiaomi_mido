@@ -356,7 +356,7 @@
 			};
 		};
 
-		bcl@4200 {
+		bcl_sensor: bcl@4200 {
 			compatible = "qcom,msm-bcl";
 			reg = <0x4200 0xFF 0x88E 0x2>;
 			reg-names = "fg_user_adc", "pon_spare";
@@ -375,6 +375,7 @@
 			qcom,ibat-offset-denominator = <1>;
 			qcom,ibat-polling-delay-ms = <100>;
 			qcom,inhibit-derating-ua = <550000>;
+			#thermal-sensor-cells = <1>;
 		};
 
 		qcom,leds@a100 {
@@ -658,6 +659,53 @@
 			active-config0 {
 				temperature = <65000>;
 				hysteresis = <1000>;
+				type = "passive";
+			};
+		};
+	};
+
+	ibat-high {
+		polling-delay-passive = <100>;
+		polling-delay = <0>;
+		thermal-governor = "step_wise";
+		thermal-sensors = <&bcl_sensor 0>;
+
+		trips {
+			ibat-high {
+				temperature = <4200>;
+				hysteresis = <200>;
+				type = "passive";
+			};
+		};
+	};
+
+	vbat_low {
+		polling-delay-passive = <100>;
+		polling-delay = <0>;
+		thermal-governor = "low_limits_cap";
+		thermal-sensors = <&bcl_sensor 1>;
+		tracks-low;
+
+		trips {
+			vbat-low {
+				temperature = <3500>;
+				hysteresis = <100>;
+				type = "passive";
+			};
+		};
+	};
+
+	soc {
+		polling-delay-passive = <100>;
+		polling-delay = <0>;
+		thermal-governor = "low_limits_cap";
+		thermal-sensors = <&bcl_sensor 2>;
+		tracks-low;
+
+		trips {
+			low_soc: low-soc {
+				temperature = <10>;
+				hysteresis = <0>;
 				type = "passive";
 			};
 		};
