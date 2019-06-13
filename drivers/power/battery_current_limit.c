@@ -1732,7 +1732,7 @@ static int bcl_probe(struct platform_device *pdev)
 	bcl_psy.set_property     = bcl_battery_set_property;
 	bcl_psy.num_properties = 0;
 	bcl_psy.external_power_changed = power_supply_callback;
-	bcl->bcl_hotplug_wq = alloc_workqueue("bcl_hotplug_wq",  WQ_HIGHPRI, 0);
+	bcl->bcl_hotplug_wq = alloc_workqueue("bcl_hotplug_wq",  WQ_UNBOUND, 0);
 	if (!bcl->bcl_hotplug_wq) {
 		pr_err("Workqueue alloc failed\n");
 		return -ENOMEM;
