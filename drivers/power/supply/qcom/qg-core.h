@@ -57,6 +57,7 @@ struct qg_dt {
 	int			esr_disable_soc;
 	int			esr_min_ibat_ua;
 	int			shutdown_soc_threshold;
+	int			min_sleep_time_secs;
 	bool			hold_soc_while_full;
 	bool			linearize_soc;
 	bool			cl_disable;
@@ -140,6 +141,7 @@ struct qpnp_qg {
 	ktime_t			last_user_update_time;
 	ktime_t			last_fifo_update_time;
 	unsigned long		last_maint_soc_update_time;
+	unsigned long		suspend_time;
 
 	/* soc params */
 	int			catch_up_soc;
