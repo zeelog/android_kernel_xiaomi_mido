@@ -527,6 +527,7 @@ static void a4xx_protect_init(struct adreno_device *adreno_dev)
 				iommu_regs->base, ilog2(iommu_regs->range));
 }
 
+#if 0
 static struct adreno_snapshot_sizes a4xx_snap_sizes = {
 	.cp_pfp = 0x14,
 	.vpc_mem = 2048,
@@ -535,6 +536,7 @@ static struct adreno_snapshot_sizes a4xx_snap_sizes = {
 	.cp_merciu = 64,
 	.roq = 512,
 };
+#endif
 
 
 static void a4xx_start(struct adreno_device *adreno_dev)
@@ -622,10 +624,6 @@ static void a4xx_start(struct adreno_device *adreno_dev)
 		val |= 2 << A4XX_CGC_HLSQ_TP_EARLY_CYC_SHIFT;
 		kgsl_regwrite(device, A4XX_RBBM_CLOCK_DELAY_HLSQ, val);
 	}
-
-	/* A430 and derivatives offers bigger chunk of CP_STATE_DEBUG regs */
-	if (!adreno_is_a420(adreno_dev))
-		a4xx_snap_sizes.cp_pfp = 0x34;
 
 	if (adreno_is_a405(adreno_dev))
 		gpudev->vbif_xin_halt_ctrl0_mask =
@@ -1221,6 +1219,7 @@ static const struct adreno_invalid_countables
 	ADRENO_PERFCOUNTER_INVALID_COUNTABLE(a420_uche, UCHE),
 };
 
+#if 0
 static struct adreno_coresight_register a4xx_coresight_registers[] = {
 	{ A4XX_RBBM_CFG_DEBBUS_CTLT },
 	{ A4XX_RBBM_CFG_DEBBUS_SEL_A },
@@ -1257,6 +1256,7 @@ static struct adreno_coresight_register a4xx_coresight_registers[] = {
 	{ A4XX_RBBM_EXT_TRACE_BUS_CTL },
 	{ A4XX_RBBM_CFG_DEBBUS_CTLM },
 };
+#endif
 
 static void a4xx_perfcounter_init(struct adreno_device *adreno_dev)
 {
@@ -1593,6 +1593,7 @@ static int a4xx_rb_start(struct adreno_device *adreno_dev,
 	return ret;
 }
 
+#if 0
 static ADRENO_CORESIGHT_ATTR(cfg_debbus_ctrlt, &a4xx_coresight_registers[0]);
 static ADRENO_CORESIGHT_ATTR(cfg_debbus_sela, &a4xx_coresight_registers[1]);
 static ADRENO_CORESIGHT_ATTR(cfg_debbus_selb, &a4xx_coresight_registers[2]);
@@ -1681,6 +1682,7 @@ static struct adreno_coresight a4xx_coresight = {
 	.count = ARRAY_SIZE(a4xx_coresight_registers),
 	.groups = a4xx_coresight_groups,
 };
+#endif
 
 static void a4xx_preempt_callback(struct adreno_device *adreno_dev, int bit)
 {
@@ -1769,9 +1771,11 @@ static struct adreno_irq a4xx_irq = {
 	.mask = A4XX_INT_MASK,
 };
 
+#if 0
 static struct adreno_snapshot_data a4xx_snapshot_data = {
 	.sect_sizes = &a4xx_snap_sizes,
 };
+#endif
 
 struct adreno_gpudev adreno_a4xx_gpudev = {
 	.reg_offsets = &a4xx_reg_offsets,
@@ -1780,8 +1784,6 @@ struct adreno_gpudev adreno_a4xx_gpudev = {
 	.ft_perf_counters_count = ARRAY_SIZE(a4xx_ft_perf_counters),
 	.perfcounters = &a4xx_perfcounters,
 	.irq = &a4xx_irq,
-	.irq_trace = trace_kgsl_a4xx_irq_status,
-	.snapshot_data = &a4xx_snapshot_data,
 	.num_prio_levels = KGSL_PRIORITY_MAX_RB_LEVELS,
 	.vbif_xin_halt_ctrl0_mask = A4XX_VBIF_XIN_HALT_CTRL0_MASK,
 
@@ -1790,9 +1792,7 @@ struct adreno_gpudev adreno_a4xx_gpudev = {
 	.rb_start = a4xx_rb_start,
 	.init = a4xx_init,
 	.microcode_read = a3xx_microcode_read,
-	.coresight = {&a4xx_coresight},
 	.start = a4xx_start,
-	.snapshot = a4xx_snapshot,
 	.is_sptp_idle = a4xx_is_sptp_idle,
 	.pwrlevel_change_settings = a4xx_pwrlevel_change_settings,
 	.regulator_enable = a4xx_regulator_enable,
