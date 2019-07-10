@@ -1390,6 +1390,7 @@ static ssize_t mic_gain_store(struct kobject *kobj,
 		input = 0;
 
 	snd_soc_write(sound_control_codec_ptr, MSM89XX_CDC_CORE_TX1_VOL_CTL_GAIN, input);
+	snd_soc_write(sound_control_codec_ptr, MSM89XX_CDC_CORE_TX2_VOL_CTL_GAIN, input);
 
 	return count;
 }
@@ -1927,12 +1928,14 @@ static const struct soc_enum cf_dec4_enum =
 	SOC_ENUM_SINGLE(MSM89XX_CDC_CORE_TX4_MUX_CTL, 4, 3, cf_text);
 
 static const struct snd_kcontrol_new msm_dig_snd_controls[] = {
+#ifndef CONFIG_SOUND_CONTROL
 	SOC_SINGLE_SX_TLV("DEC1 Volume",
 		MSM89XX_CDC_CORE_TX1_VOL_CTL_GAIN,
 		0, -84, 40, digital_gain),
 	SOC_SINGLE_SX_TLV("DEC2 Volume",
 		  MSM89XX_CDC_CORE_TX2_VOL_CTL_GAIN,
 		0, -84, 40, digital_gain),
+#endif
 	SOC_SINGLE_SX_TLV("DEC3 Volume",
 		  MSM89XX_CDC_CORE_TX3_VOL_CTL_GAIN,
 		0, -84, 40, digital_gain),
