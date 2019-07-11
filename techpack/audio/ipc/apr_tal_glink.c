@@ -36,6 +36,8 @@ struct apr_tx_buf {
 	char buf[APR_MAX_BUF];
 };
 
+static struct kmem_cache *kmem_tx_pool;
+
 struct link_state {
 	uint32_t dest;
 	void *handle;
@@ -61,13 +63,12 @@ static struct apr_svc_ch_dev
 
 static struct apr_tx_buf *apr_alloc_buf(int len)
 {
-
 	if (len > APR_MAX_BUF) {
 		pr_err("%s: buf too large [%d]\n", __func__, len);
 		return ERR_PTR(-EINVAL);
 	}
 
-	return kzalloc(sizeof(struct apr_tx_buf), GFP_ATOMIC);
+	return kmem_cache_zalloc(kmem_tx_pool, GFP_ATOMIC);
 }
 
 static void apr_free_buf(const void *ptr)
@@ -85,7 +86,7 @@ static void apr_free_buf(const void *ptr)
 		tx_buf = container_of((void *)apr_pkt_priv,
 				      struct apr_tx_buf, pkt_priv);
 		pr_debug("%s: Freeing buffer %pK", __func__, tx_buf);
-		kfree(tx_buf);
+		kmem_cache_free(kmem_tx_pool, tx_buf);
 	}
 }
 
@@ -143,7 +144,7 @@ int apr_tal_write(struct apr_svc_ch_dev *apr_ch, void *data,
 	if (rc < 0) {
 		pr_err("%s: Unable to send the packet, rc:%d\n", __func__, rc);
 		if (pkt_priv->pkt_owner == APR_PKT_OWNER_DRIVER)
-			kfree(tx_buf);
+			kmem_cache_free(kmem_tx_pool, tx_buf);
 	}
 exit:
 	return rc;
@@ -451,6 +452,8 @@ static struct glink_link_info lpass_link_info = {
 int apr_tal_init(void)
 {
 	int i, j, k;
+
+	kmem_tx_pool = KMEM_CACHE(apr_tx_buf, SLAB_HWCACHE_ALIGN | SLAB_PANIC);
 
 	for (i = 0; i < APR_DL_MAX; i++) {
 		for (j = 0; j < APR_DEST_MAX; j++) {
