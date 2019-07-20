@@ -511,7 +511,10 @@ struct kgsl_sync_fence_cb *kgsl_sync_fence_async_wait(int fd,
 	kcb->priv = priv;
 	kcb->func = func;
 
+#ifdef CONFIG_SYNC_DEBUG
 	kgsl_get_fence_names(fence, info_ptr);
+#endif
+
 
 	/* if status then error or signaled */
 	status = fence_add_callback(fence, &kcb->fence_cb,

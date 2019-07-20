@@ -3078,8 +3078,10 @@ static int __mdss_fb_wait_for_fence_sub(struct msm_sync_pt_data *sync_pt_data,
 			wait_ms = min_t(long, WAIT_FENCE_FINAL_TIMEOUT,
 					wait_ms);
 
+#ifdef CONFIG_SYNC_DEBUG
 			pr_warn("%s: sync_fence_wait timed out! ",
 					mdss_get_sync_fence_name(fences[i]));
+#endif
 			pr_cont("Waiting %ld.%ld more seconds\n",
 				(wait_ms/MSEC_PER_SEC), (wait_ms%MSEC_PER_SEC));
 			MDSS_XLOG(sync_pt_data->timeline_value);

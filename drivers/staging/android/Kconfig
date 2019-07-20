@@ -53,6 +53,13 @@ config ANDROID_LMK_NOTIFY_TRIGGER
 	a set threshold. The threshold is set by the new module parameter
 	"/sys/module/lowmemorykiller/parameters/notify_trigger".
 
+config SYNC_DEBUG
+	bool "Debug software synchronization"
+	default n
+	depends on SYNC
+	---help---
+	  This makes the sync driver keep track of fence names.
+
 source "drivers/staging/android/ion/Kconfig"
 
 endif # if ANDROID
