@@ -844,6 +844,7 @@ struct ipa3_sys_context {
 	u32 len;
 	u32 len_pending_xfer;
 	atomic_t curr_polling_state;
+	atomic_t workqueue_flushed;
 	struct delayed_work switch_to_intr_work;
 	enum ipa3_sys_pipe_policy policy;
 	bool use_comm_evt_ring;
