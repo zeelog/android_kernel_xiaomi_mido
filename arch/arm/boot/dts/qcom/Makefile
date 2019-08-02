@@ -51,4 +51,4 @@ dtbs: $(addprefix $(obj)/,$(dtb-y)) $(addprefix $(obj)/,$(dtbo-y))
 else
 dtbs: $(addprefix $(obj)/,$(dtb-y))
 endif
-clean-files := *.dtb
+clean-files := *.dtb *.dtbo
