@@ -306,23 +306,28 @@ static int fb_notifier_callback(struct notifier_block *self,
 	int *blank;
 
 	if (event != FB_EVENT_BLANK)
-		return NOTIFY_DONE;
+		goto out;
 
 	if (!evdata || !evdata->data)
-		return NOTIFY_DONE;
+		goto out;
 
 	blank = evdata->data;
 	switch (*blank) {
 	case FB_BLANK_POWERDOWN:
+		if (!screen_on)
+			goto out;
 		screen_on = false;
 		queue_work(system_power_efficient_wq, &rapid_gc_fb_worker);
 		break;
 	case FB_BLANK_UNBLANK:
+		if (!screen_on)
+			goto out;
 		screen_on = true;
 		queue_work(system_power_efficient_wq, &rapid_gc_fb_worker);
 		break;
 	}
 
+out:
 	return NOTIFY_OK;
 }
 
