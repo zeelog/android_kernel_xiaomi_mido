@@ -214,6 +214,7 @@ out:
 void f2fs_stop_gc_thread(struct f2fs_sb_info *sbi)
 {
 	struct f2fs_gc_kthread *gc_th = sbi->gc_thread;
+	sbi->rapid_gc = false;
 	if (!gc_th)
 		return;
 	kthread_stop(gc_th->f2fs_gc_task);
@@ -264,6 +265,8 @@ static void f2fs_stop_rapid_gc(void)
 		f2fs_stop_gc_thread(sbi);
 	}
 	mutex_unlock(&gc_sbi_mutex);
+
+	rapid_gc_set_wakelock();
 }
 
 void f2fs_gc_sbi_list_add(struct f2fs_sb_info *sbi)
@@ -326,14 +329,14 @@ static struct notifier_block fb_notifier_block = {
 
 void __init f2fs_init_rapid_gc(void)
 {
-	INIT_WORK(&rapid_gc_fb_worker, f2fs_gc_fb_work);
+	INIT_WORK(&rapid_gc_fb_worker, rapid_gc_fb_work);
 	wakeup_source_init(&gc_wakelock, "f2fs_rapid_gc_wakelock");
 	fb_register_client(&fb_notifier_block);
 }
 
 void __exit f2fs_destroy_rapid_gc(void)
 {
-	msm_drm_unregister_client(&fb_notifier_block);
+	fb_unregister_client(&fb_notifier_block);
 	wakeup_source_trash(&gc_wakelock);
 }
 
