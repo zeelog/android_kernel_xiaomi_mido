@@ -312,12 +312,20 @@ static void bpf_jit_uncharge_modmem(u32 pages)
 
 void *__weak bpf_jit_alloc_exec(unsigned long size)
 {
+#ifdef CONFIG_MODULES
 	return module_alloc(size);
+#else
+	return vmalloc_exec(size);
+#endif
 }
 
 void __weak bpf_jit_free_exec(void *addr)
 {
+#ifdef CONFIG_MODULES
 	module_memfree(addr);
+#else
+	vfree(addr);
+#endif
 }
 
 struct bpf_binary_header *
