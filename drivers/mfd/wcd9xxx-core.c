@@ -3258,14 +3258,12 @@ static int wcd9xxx_slim_device_down(struct slim_device *sldev)
 static int wcd9xxx_slim_resume(struct slim_device *sldev)
 {
 	struct wcd9xxx *wcd9xxx = slim_get_devicedata(sldev);
-
 	return wcd9xxx_core_res_resume(&wcd9xxx->core_res);
 }
 
-static int wcd9xxx_i2c_resume(struct device *dev)
+static int wcd9xxx_i2c_resume(struct i2c_client *i2cdev)
 {
-	struct wcd9xxx *wcd9xxx = dev_get_drvdata(dev);
-
+	struct wcd9xxx *wcd9xxx = dev_get_drvdata(&i2cdev->dev);
 	if (wcd9xxx)
 		return wcd9xxx_core_res_resume(&wcd9xxx->core_res);
 	else
@@ -3275,15 +3273,12 @@ static int wcd9xxx_i2c_resume(struct device *dev)
 static int wcd9xxx_slim_suspend(struct slim_device *sldev, pm_message_t pmesg)
 {
 	struct wcd9xxx *wcd9xxx = slim_get_devicedata(sldev);
-
 	return wcd9xxx_core_res_suspend(&wcd9xxx->core_res, pmesg);
 }
 
-static int wcd9xxx_i2c_suspend(struct device *dev)
+static int wcd9xxx_i2c_suspend(struct i2c_client *i2cdev, pm_message_t pmesg)
 {
-	struct wcd9xxx *wcd9xxx = dev_get_drvdata(dev);
-	pm_message_t pmesg = {0};
-
+	struct wcd9xxx *wcd9xxx = dev_get_drvdata(&i2cdev->dev);
 	if (wcd9xxx)
 		return wcd9xxx_core_res_suspend(&wcd9xxx->core_res, pmesg);
 	else
@@ -3458,31 +3453,28 @@ static struct i2c_device_id tabla_id_table[] = {
 };
 MODULE_DEVICE_TABLE(i2c, tabla_id_table);
 
-static const struct dev_pm_ops wcd9xxx_i2c_pm_ops = {
-	.suspend = wcd9xxx_i2c_suspend,
-	.resume	= wcd9xxx_i2c_resume,
-};
-
 static struct i2c_driver tabla_i2c_driver = {
 	.driver                 = {
 		.owner          =       THIS_MODULE,
 		.name           =       "tabla-i2c-core",
-		.pm		=	&wcd9xxx_i2c_pm_ops,
 	},
 	.id_table               =       tabla_id_table,
 	.probe                  =       wcd9xxx_i2c_probe,
 	.remove                 =       wcd9xxx_i2c_remove,
+	.resume	= wcd9xxx_i2c_resume,
+	.suspend = wcd9xxx_i2c_suspend,
 };
 
 static struct i2c_driver wcd9xxx_i2c_driver = {
 	.driver                 = {
 		.owner          =       THIS_MODULE,
 		.name           =       "wcd9xxx-i2c-core",
-		.pm		=	&wcd9xxx_i2c_pm_ops,
 	},
 	.id_table               =       wcd9xxx_id_table,
 	.probe                  =       wcd9xxx_i2c_probe,
 	.remove                 =       wcd9xxx_i2c_remove,
+	.resume	= wcd9xxx_i2c_resume,
+	.suspend = wcd9xxx_i2c_suspend,
 };
 
 static struct i2c_driver wcd9335_i2c_driver = {
