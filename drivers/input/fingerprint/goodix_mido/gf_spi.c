@@ -104,7 +104,6 @@ static DEFINE_MUTEX(device_list_lock);
 static struct gf_dev gf;
 static struct class *gf_class;
 static int driver_init_partial(struct gf_dev *gf_dev);
-static int gf_notifier_init = 0;
 
 static void gf_enable_irq(struct gf_dev *gf_dev)
 {
@@ -646,6 +645,7 @@ static int gf_probe(struct platform_device *pdev)
 	struct gf_dev *gf_dev = &gf;
 	int status = -EINVAL;
 	unsigned long minor;
+	int gf_notifier_init = 0;
 
 	FUNC_ENTRY();
 
@@ -717,7 +717,7 @@ static int gf_probe(struct platform_device *pdev)
 #ifdef CONFIG_FB
 		gf_dev->gf_notifier.notifier_call = goodix_fb_state_chg_callback;
 		gf_notifier_init = fb_register_client(&gf_dev->gf_notifier);
-		if (!gf_notifier_init)
+		if (gf_notifier_init)
 			pr_err("%s: Fail to register fb notifier\n", __func__);
 #endif
 
@@ -888,8 +888,8 @@ static void __exit gf_exit(void)
 	FUNC_ENTRY();
 
 #ifdef CONFIG_FB
-	if (gf_notifier_init)
-		fb_unregister_client(&gf_dev->gf_notifier);
+	if (fb_unregister_client(&gf_dev->gf_notifier))
+		pr_err("%s: Fail to unregister fb notifier\n", __func__);
 #endif
 
 #ifdef GF_NETLINK_ENABLE
