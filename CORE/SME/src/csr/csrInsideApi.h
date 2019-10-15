@@ -1112,9 +1112,9 @@ eHalStatus csrScanCreateEntryInScanCache(tpAniSirGlobal pMac, tANI_U32 sessionId
 eHalStatus csrUpdateChannelList(tpAniSirGlobal pMac);
 eHalStatus csrRoamDelPMKIDfromCache( tpAniSirGlobal pMac, tANI_U32 sessionId,
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,18,0))
-                                     const tANI_U8 *pBSSId,
+                                     tPmkidCacheInfo *pmksa,
 #else
-                                     tANI_U8 *pBSSId,
+                                     tPmkidCacheInfo *pmksa,
 #endif
                                      tANI_BOOLEAN flush_cache );
 tANI_BOOLEAN csrElectedCountryInfo(tpAniSirGlobal pMac);
@@ -1122,6 +1122,18 @@ void csrAddVoteForCountryInfo(tpAniSirGlobal pMac, tANI_U8 *pCountryCode);
 void csrClearVotesForCountryInfo(tpAniSirGlobal pMac);
 void csr_remove_bssid_from_scan_list(tpAniSirGlobal pMac,
        tSirMacAddr bssid);
+
+/**
+ * csr_lookup_pmkid_using_bssid() - lookup pmkid using bssid
+ * @mac: pointer to mac
+ * @session: sme session pointer
+ * @pmk_cache: pointer to pmk cache
+ * @index: index value needs to be seached
+ *
+ * Return: true if pmkid is found else false
+ */
+bool csr_lookup_pmkid_using_bssid(tpAniSirGlobal mac, tCsrRoamSession *session,
+                                  tPmkidCacheInfo *pmk_cache, uint32_t *index);
 
 #ifdef WLAN_FEATURE_AP_HT40_24G
 eHalStatus csrSetHT2040Mode(tpAniSirGlobal pMac, tANI_U32 sessionId, tANI_U8 cbMode);
