@@ -95,6 +95,7 @@ struct sde_plane_rot_state {
 #define SDE_PLANE_DIRTY_SHARPEN	0x4
 #define SDE_PLANE_DIRTY_PERF	0x8
 #define SDE_PLANE_DIRTY_FB_TRANSLATION_MODE	0x10
+#define SDE_PLANE_DIRTY_QOS     0x200
 #define SDE_PLANE_DIRTY_ALL	0xFFFFFFFF
 
 /**
