@@ -664,30 +664,13 @@ BFQ_BFQQ_FNS(softrt_update);
 static struct bfq_group *bfqq_group(struct bfq_queue *bfqq);
 static struct blkcg_gq *bfqg_to_blkg(struct bfq_group *bfqg);
 
-#define bfq_log_bfqq(bfqd, bfqq, fmt, args...)	do {			\
-	char __pbuf[128];						\
-									\
-	assert_spin_locked((bfqd)->queue->queue_lock);			\
-	blkg_path(bfqg_to_blkg(bfqq_group(bfqq)), __pbuf, sizeof(__pbuf)); \
-	pr_crit("bfq%d%c %s " fmt "\n", 			\
-		(bfqq)->pid,						\
-		bfq_bfqq_sync((bfqq)) ? 'S' : 'A',			\
-		__pbuf, ##args);					\
-} while (0)
+#define bfq_log_bfqq(bfqd, bfqq, fmt, args...)	do {} while (0)
 
-#define bfq_log_bfqg(bfqd, bfqg, fmt, args...)	do {			\
-	char __pbuf[128];						\
-									\
-	blkg_path(bfqg_to_blkg(bfqg), __pbuf, sizeof(__pbuf));		\
-	pr_crit("%s " fmt "\n", __pbuf, ##args);	\
-} while (0)
+#define bfq_log_bfqg(bfqd, bfqg, fmt, args...)	do {} while (0)
 
 #else /* CONFIG_BFQ_GROUP_IOSCHED */
 
-#define bfq_log_bfqq(bfqd, bfqq, fmt, args...)		\
-	pr_crit("bfq%d%c " fmt "\n", (bfqq)->pid,		\
-		bfq_bfqq_sync((bfqq)) ? 'S' : 'A',	\
-		##args)
+#define bfq_log_bfqq(bfqd, bfqq, fmt, args...)	do {} while (0)
 #define bfq_log_bfqg(bfqd, bfqg, fmt, args...)		do {} while (0)
 
 #endif /* CONFIG_BFQ_GROUP_IOSCHED */
@@ -700,30 +683,13 @@ static struct blkcg_gq *bfqg_to_blkg(struct bfq_group *bfqg);
 static struct bfq_group *bfqq_group(struct bfq_queue *bfqq);
 static struct blkcg_gq *bfqg_to_blkg(struct bfq_group *bfqg);
 
-#define bfq_log_bfqq(bfqd, bfqq, fmt, args...)	do {			\
-	char __pbuf[128];						\
-									\
-	assert_spin_locked((bfqd)->queue->queue_lock);			\
-	blkg_path(bfqg_to_blkg(bfqq_group(bfqq)), __pbuf, sizeof(__pbuf)); \
-	blk_add_trace_msg((bfqd)->queue, "bfq%d%c %s " fmt, \
-			  (bfqq)->pid,			  \
-			  bfq_bfqq_sync((bfqq)) ? 'S' : 'A',	\
-			  __pbuf, ##args);				\
-} while (0)
+#define bfq_log_bfqq(bfqd, bfqq, fmt, args...)	do {} while (0)
 
-#define bfq_log_bfqg(bfqd, bfqg, fmt, args...)	do {			\
-	char __pbuf[128];						\
-									\
-	blkg_path(bfqg_to_blkg(bfqg), __pbuf, sizeof(__pbuf));		\
-	blk_add_trace_msg((bfqd)->queue, "%s " fmt, __pbuf, ##args);	\
-} while (0)
+#define bfq_log_bfqg(bfqd, bfqg, fmt, args...)	do {} while (0)
 
 #else /* CONFIG_BFQ_GROUP_IOSCHED */
 
-#define bfq_log_bfqq(bfqd, bfqq, fmt, args...)	\
-	blk_add_trace_msg((bfqd)->queue, "bfq%d%c " fmt, (bfqq)->pid,	\
-			bfq_bfqq_sync((bfqq)) ? 'S' : 'A',		\
-				##args)
+#define bfq_log_bfqq(bfqd, bfqq, fmt, args...)	do {} while (0)
 #define bfq_log_bfqg(bfqd, bfqg, fmt, args...)		do {} while (0)
 
 #endif /* CONFIG_BFQ_GROUP_IOSCHED */
@@ -880,8 +846,6 @@ bfq_entity_service_tree(struct bfq_entity *entity)
 			     sched_data->service_tree + idx, idx);
 #ifdef CONFIG_BFQ_GROUP_IOSCHED
 	else {
-		struct bfq_group *bfqg =
-			container_of(entity, struct bfq_group, entity);
 
 		bfq_log_bfqg((struct bfq_data *)bfqg->bfqd, bfqg,
 			     "entity_service_tree %p %d",
