@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2018 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2012-2019 The Linux Foundation. All rights reserved.
  *
  * Previously licensed under the ISC license by Qualcomm Atheros, Inc.
  *
@@ -1289,6 +1289,7 @@ int __wlan_hdd_mgmt_tx( struct wiphy *wiphy, struct net_device *dev,
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,38))
     uint8_t home_ch = 0;
 #endif
+    eHalStatus hal_status;
 
     ENTER();
 
@@ -1313,6 +1314,18 @@ int __wlan_hdd_mgmt_tx( struct wiphy *wiphy, struct net_device *dev,
     hddLog(VOS_TRACE_LEVEL_INFO, "%s: device_mode = %d type: %d",
                             __func__, pAdapter->device_mode, type);
 
+    /* When frame to be transmitted is auth mgmt, then trigger
+     * sme_send_mgmt_tx to send auth frame.
+     */
+    if ((WLAN_HDD_INFRA_STATION == pAdapter->device_mode) &&
+        (type == SIR_MAC_MGMT_FRAME && subType == SIR_MAC_MGMT_AUTH)) {
+         hal_status = sme_send_mgmt_tx(WLAN_HDD_GET_HAL_CTX(pAdapter),
+                                       pAdapter->sessionId, buf, len);
+         if (HAL_STATUS_SUCCESS(hal_status))
+              return 0;
+         else
+              return -EINVAL;
+    }
 
     if ((type == SIR_MAC_MGMT_FRAME) &&
             (subType == SIR_MAC_MGMT_ACTION) &&
@@ -2547,6 +2560,7 @@ hdd_delete_adapter(hdd_context_t *hdd_ctx, hdd_adapter_t *adapter,
 {
 	wlan_hdd_release_intf_addr(hdd_ctx, adapter->macAddressCurrent.bytes);
 	hdd_stop_adapter(hdd_ctx, adapter, VOS_TRUE);
+	hdd_deinit_adapter(hdd_ctx, adapter, TRUE);
 	hdd_close_adapter(hdd_ctx, adapter, rtnl_held);
 }
 
@@ -2762,6 +2776,7 @@ void __hdd_indicate_mgmt_frame(hdd_adapter_t *pAdapter,
     /* Get pAdapter from Destination mac address of the frame */
     if ((type == SIR_MAC_MGMT_FRAME) &&
         (subType != SIR_MAC_MGMT_PROBE_REQ) &&
+        (nFrameLength > WLAN_HDD_80211_FRM_DA_OFFSET + VOS_MAC_ADDR_SIZE) &&
         !vos_is_macaddr_broadcast(
          (v_MACADDR_t *)&pbFrames[WLAN_HDD_80211_FRM_DA_OFFSET]))
     {
@@ -2832,12 +2847,16 @@ void __hdd_indicate_mgmt_frame(hdd_adapter_t *pAdapter,
     cfgState = WLAN_HDD_GET_CFG_STATE_PTR( pAdapter );
 
     if ((type == SIR_MAC_MGMT_FRAME) &&
-        (subType == SIR_MAC_MGMT_ACTION))
+        (subType == SIR_MAC_MGMT_ACTION) &&
+        (nFrameLength > WLAN_HDD_PUBLIC_ACTION_FRAME_OFFSET + 1))
     {
         if(pbFrames[WLAN_HDD_PUBLIC_ACTION_FRAME_OFFSET] == WLAN_HDD_PUBLIC_ACTION_FRAME)
         {
             // public action frame
-            if((pbFrames[WLAN_HDD_PUBLIC_ACTION_FRAME_OFFSET+1] == SIR_MAC_ACTION_VENDOR_SPECIFIC) &&
+            if((WLAN_HDD_PUBLIC_ACTION_FRAME_OFFSET + SIR_MAC_P2P_OUI_SIZE + 2 <
+                nFrameLength) &&
+               (pbFrames[WLAN_HDD_PUBLIC_ACTION_FRAME_OFFSET+1] ==
+                SIR_MAC_ACTION_VENDOR_SPECIFIC) &&
                 vos_mem_compare(&pbFrames[WLAN_HDD_PUBLIC_ACTION_FRAME_OFFSET+2], SIR_MAC_P2P_OUI, SIR_MAC_P2P_OUI_SIZE))
             // P2P action frames
             {

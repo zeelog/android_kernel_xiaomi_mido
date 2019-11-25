@@ -149,6 +149,8 @@ typedef tANI_U8 tSirVersionString[SIR_VERSION_STRING_LEN];
 #define PERIODIC_TX_PTRN_MAX_SIZE 1536
 #define MAXNUM_PERIODIC_TX_PTRNS 6
 
+/* Cache ID length */
+#define CACHE_ID_LEN 2
 
 #ifdef WLAN_FEATURE_EXTSCAN
 
@@ -1077,6 +1079,7 @@ typedef struct sSirSmeJoinReq
     tSirBssType         bsstype;                // add new type for BT -AMP STA and AP Modules
     tANI_U8             dot11mode;              // to support BT-AMP     
     tVOS_CON_MODE       staPersona;             //Persona
+    bool                sae_pmk_cached;
     tANI_BOOLEAN        bOSENAssociation;       //HS2.0
     tANI_BOOLEAN        bWPSAssociation;       //WPS
     ePhyChanBondState   cbMode;                 // Pass CB mode value in Join.
@@ -6449,4 +6452,33 @@ struct sir_feature_caps_params {
 	void *user_data;
 };
 
+/**
+ * struct sae_info - SAE info used for commit/confirm messages
+ * @msg_type: Message type
+ * @msg_len: length of message
+ * @vdev_id: vdev id
+ * @peer_mac_addr: peer MAC address
+ * @ssid: SSID
+ */
+struct sir_sae_info {
+    uint16_t msg_type;
+    uint16_t msg_len;
+    uint32_t vdev_id;
+    v_MACADDR_t peer_mac_addr;
+    tSirMacSSid ssid;
+};
+
+/**
+ * struct sir_sae_msg - SAE msg used for message posting
+ * @message_type: message type
+ * @length: message length
+ * @session_id: SME session id
+ * @sae_status: SAE status, 0: Success, Non-zero: Failure.
+ */
+struct sir_sae_msg {
+    uint16_t message_type;
+    uint16_t length;
+    uint16_t session_id;
+    uint8_t sae_status;
+};
 #endif /* __SIR_API_H */
