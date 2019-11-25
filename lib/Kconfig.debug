@@ -1856,11 +1856,10 @@ config CC_WERROR
 	 to prevent easily-fixable problems from creeping into
 	 the codebase.
 
-	 If unsure, say N.
+	  If unsure, say N.
 
 source "samples/Kconfig"
 
 source "lib/Kconfig.kgdb"
 
 source "lib/Kconfig.ubsan"
-

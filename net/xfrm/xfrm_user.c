@@ -628,24 +628,33 @@ static int xfrm_add_sa(struct sk_buff *skb, struct nlmsghdr *nlh,
 	struct km_event c;
 
 	err = verify_newsa_info(p, attrs);
-	if (err)
+	if (err) {
+		pr_err("kp log: verify_newsa_info failed with err [%d]\n", err);
 		return err;
+	}
 
 	x = xfrm_state_construct(net, p, attrs, &err);
-	if (!x)
+	if (!x) {
+		pr_err("kp log: xfrm_state_construct failed with err [%d]\n", err);
 		return err;
+	}
 
 	xfrm_state_hold(x);
-	if (nlh->nlmsg_type == XFRM_MSG_NEWSA)
+	if (nlh->nlmsg_type == XFRM_MSG_NEWSA) {
 		err = xfrm_state_add(x);
-	else
+		pr_err("kp log: xfrm_state_add failed with err [%d]\n", err);
+	}
+	else {
 		err = xfrm_state_update(x);
+		pr_err("kp log: xfrm_state_update failed with err [%d]\n", err);
+	}
 
 	xfrm_audit_state_add(x, err ? 0 : 1, true);
 
 	if (err < 0) {
 		x->km.state = XFRM_STATE_DEAD;
 		__xfrm_state_put(x);
+		pr_err("kp log: updating xfrm state to be dead\n");
 		goto out;
 	}
 
@@ -703,8 +712,10 @@ static int xfrm_del_sa(struct sk_buff *skb, struct nlmsghdr *nlh,
 	struct xfrm_usersa_id *p = nlmsg_data(nlh);
 
 	x = xfrm_user_state_lookup(net, p, attrs, &err);
-	if (x == NULL)
+	if (x == NULL) {
+		pr_err("kp log: xfrm_user_state_lookup failed\n");
 		return err;
+	}
 
 	if ((err = security_xfrm_state_delete(x)) != 0)
 		goto out;
@@ -716,8 +727,10 @@ static int xfrm_del_sa(struct sk_buff *skb, struct nlmsghdr *nlh,
 
 	err = xfrm_state_delete(x);
 
-	if (err < 0)
+	if (err < 0) {
+		pr_err("kp log: xfrm_state_delete failed with err [%d]\n", err);
 		goto out;
+	}
 
 	c.seq = nlh->nlmsg_seq;
 	c.portid = nlh->nlmsg_pid;
@@ -1417,6 +1430,9 @@ static int validate_tmpl(int nr, struct xfrm_user_tmpl *ut, u16 family)
 		if (ut[i].mode >= XFRM_MODE_MAX)
 			return -EINVAL;
 
+		if (ut[i].mode >= XFRM_MODE_MAX)
+			return -EINVAL;
+
 		prev_family = ut[i].family;
 
 		switch (ut[i].family) {
@@ -1546,15 +1562,21 @@ static int xfrm_add_policy(struct sk_buff *skb, struct nlmsghdr *nlh,
 	int excl;
 
 	err = verify_newpolicy_info(p);
-	if (err)
+	if (err) {
+		pr_err("kp log: verify_newpolicy_info failed with err[%d]\n", err);
 		return err;
+	}
 	err = verify_sec_ctx_len(attrs);
-	if (err)
+	if (err) {
+		pr_err("kp log: verify_sec_ctx_len failed with err[%d]\n", err);
 		return err;
+	}
 
 	xp = xfrm_policy_construct(net, p, attrs, &err);
-	if (!xp)
+	if (!xp) {
+		pr_err("kp log: xfrm_policy_construct failed with err[%d]\n", err);
 		return err;
+	}
 
 	/* shouldn't excl be based on nlh flags??
 	 * Aha! this is anti-netlink really i.e  more pfkey derived
@@ -1565,6 +1587,7 @@ static int xfrm_add_policy(struct sk_buff *skb, struct nlmsghdr *nlh,
 	xfrm_audit_policy_add(xp, err ? 0 : 1, true);
 
 	if (err) {
+		pr_err("kp log: xfrm_policy_insert failed with err[%d]\n", err);
 		security_xfrm_policy_free(xp->security);
 		kfree(xp);
 		return err;
@@ -1836,6 +1859,7 @@ static int xfrm_flush_sa(struct sk_buff *skb, struct nlmsghdr *nlh,
 
 	err = xfrm_state_flush(net, p->proto, true);
 	if (err) {
+		pr_err("kp log: xfrm_state_flush failed with err[%d]\n", err);
 		if (err == -ESRCH) /* empty table */
 			return 0;
 		return err;
@@ -2025,6 +2049,7 @@ static int xfrm_flush_policy(struct sk_buff *skb, struct nlmsghdr *nlh,
 
 	err = xfrm_policy_flush(net, type, true);
 	if (err) {
+		pr_err("kp log: xfrm_policy_flush failed with err [%d]\n", err);
 		if (err == -ESRCH) /* empty table */
 			return 0;
 		return err;

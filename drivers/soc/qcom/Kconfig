@@ -598,15 +598,16 @@ config MSM_EVENT_TIMER
 	  events that require the core to be awake and ready to handle the
 	  event.
 
-config MSM_IPC_ROUTER_HSIC_XPRT
-	depends on USB_QCOM_IPC_BRIDGE
+config MSM_IPC_ROUTER_USB_XPRT
+	depends on USB_QCOM_IPC_BRIDGE || USB_F_IPC
 	depends on IPC_ROUTER
-	bool "MSM HSIC XPRT Layer"
+	bool "MSM USB XPRT Layer"
 	help
-	  HSIC Transport Layer that enables off-chip communication of
-	  IPC Router. When the HSIC endpoint becomes available, this layer
-	  registers the transport with IPC Router and enable message
-	  exchange.
+	  USB Transport Layer that enables off-chip communication of IPC Router.
+	  When the USB endpoint becomes available, this layer registers the
+	  transport with IPC Router and enable message exchange. This layer is
+	  independent of USB host or device mode IPC bridge and can interface
+	  with only one of them on a given platform.
 
 config MSM_SYSMON_GLINK_COMM
 	bool "MSM System Monitor communication support using GLINK transport"
@@ -763,15 +764,6 @@ config MSM_SECURE_BUFFER
 	 memory buffers. This ensures that only the correct clients can
 	 use this memory and no unauthorized access is made to the
 	 buffer
-
-config ICNSS
-	tristate "Platform driver for Q6 integrated connectivity"
-	select CNSS_UTILS
-	---help---
-	  This module adds support for Q6 integrated WLAN connectivity
-	  subsystem. This module is responsible for communicating WLAN on/off
-	  control messages to FW over QMI channel. It is also responsible for
-	  handling WLAN PD restart notifications.
 
 config MSM_BAM_DMUX
 	bool "BAM Data Mux Driver"
