@@ -1268,9 +1268,7 @@ static void armv8pmu_reset(void *info)
 		armv8pmu_disable_event(NULL, idx);
 
 	/* Initialize & Reset PMNC: C and P bits. */
-	armv8pmu_pmcr_write(armv8pmu_pmcr_read() | ARMV8_PMCR_P | ARMV8_PMCR_C);
-
-	armv8pmu_init_usermode();
+	armv8pmu_pmcr_write(ARMV8_PMCR_P | ARMV8_PMCR_C);
 }
 
 static int armv8_pmuv3_map_event(struct perf_event *event)
