@@ -657,6 +657,8 @@ static inline void cfqg_put(struct cfq_group *cfqg)
 
 #define cfq_log_cfqq(cfqd, cfqq, fmt, args...)	do {			\
 	char __pbuf[128];						\
+	if (likely(!blk_trace_note_message_enabled((cfqd)->queue)))	\
+		break;							\
 									\
 	blkg_path(cfqg_to_blkg((cfqq)->cfqg), __pbuf, sizeof(__pbuf));	\
 	blk_add_trace_msg((cfqd)->queue, "cfq%d%c%c %s " fmt, (cfqq)->pid, \
@@ -784,11 +786,14 @@ static inline bool cfqg_is_descendant(struct cfq_group *cfqg,
 static inline void cfqg_get(struct cfq_group *cfqg) { }
 static inline void cfqg_put(struct cfq_group *cfqg) { }
 
-#define cfq_log_cfqq(cfqd, cfqq, fmt, args...)	\
+#define cfq_log_cfqq(cfqd, cfqg, fmt, args...)	do {			\
+	if (likely(!blk_trace_note_message_enabled((cfqd)->queue)))	\
+		break;							\
 	blk_add_trace_msg((cfqd)->queue, "cfq%d%c%c " fmt, (cfqq)->pid,	\
 			cfq_cfqq_sync((cfqq)) ? 'S' : 'A',		\
 			cfqq_type((cfqq)) == SYNC_NOIDLE_WORKLOAD ? 'N' : ' ',\
-				##args)
+				##args);				\
+} while (0)
 #define cfq_log_cfqg(cfqd, cfqg, fmt, args...)		do {} while (0)
 
 static inline void cfqg_stats_update_io_add(struct cfq_group *cfqg,
