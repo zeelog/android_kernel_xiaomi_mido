@@ -324,7 +324,7 @@ static int clock_debug_print_clock(struct clk *c, struct seq_file *m)
 	if (!c || !c->prepare_count)
 		return 0;
 
-	clock_debug_output(m, 0, "\t");
+	clock_debug_output(m, 0, "");
 	do {
 		if (c->vdd_class)
 			clock_debug_output(m, 1, "%s%s:%lu:%lu [%ld, %d]",
