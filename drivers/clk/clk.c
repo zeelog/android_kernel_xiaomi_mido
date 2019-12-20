@@ -2687,7 +2687,7 @@ static int clock_debug_print_clock(struct clk_core *c, struct seq_file *s)
 
 	clk = c->hw->clk;
 
-	clock_debug_output(s, 0, "\t");
+	clock_debug_output(s, 0, "");
 
 	do {
 		if (clk->core->vdd_class)
