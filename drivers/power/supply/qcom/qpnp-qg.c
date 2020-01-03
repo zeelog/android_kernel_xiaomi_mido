@@ -3556,6 +3556,8 @@ static int qg_parse_dt(struct qpnp_qg *chip)
 	else
 		chip->dt.min_sleep_time_secs = temp;
 
+	chip->dt.bass_enable = of_property_read_bool(node, "qcom,bass-enable");
+
 	/* Capacity learning params*/
 	if (!chip->dt.cl_disable) {
 		chip->dt.cl_feedback_on = of_property_read_bool(node,

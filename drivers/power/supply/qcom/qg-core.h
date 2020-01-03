@@ -66,6 +66,7 @@ struct qg_dt {
 	bool			esr_discharge_enable;
 	bool			qg_ext_sense;
 	bool			qg_vbms_mode;
+	bool			bass_enable;
 };
 
 struct qg_esr_data {
@@ -123,6 +124,7 @@ struct qpnp_qg {
 	bool			usb_present;
 	bool			charge_full;
 	bool			force_soc;
+	bool			bass_active;
 	int			charge_status;
 	int			charge_type;
 	int			chg_iterm_ma;
@@ -132,6 +134,7 @@ struct qpnp_qg {
 	int			soh;
 	int			soc_reporting_ready;
 	int			vbms_ibat_ua;
+	int			bsoc_bass_entry;
 	u32			fifo_done_count;
 	u32			wa_flags;
 	u32			seq_no;
