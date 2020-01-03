@@ -46,6 +46,47 @@ module_param_named(
 	maint_soc_update_ms, qg_maint_soc_update_ms, int, 0600
 );
 
+#define BASS_SYS_MSOC_DELTA			2
+static int qg_process_bass_soc(struct qpnp_qg *chip, int sys_soc)
+{
+	int bass_soc = sys_soc, msoc = chip->msoc;
+	int batt_soc = CAP(0, 100, DIV_ROUND_CLOSEST(chip->batt_soc, 100));
+
+	if (!chip->dt.bass_enable)
+		goto exit_soc_scale;
+
+	qg_dbg(chip, QG_DEBUG_SOC, "BASS Entry: sys_soc=%d msoc=%d batt_soc=%d\n",
+			sys_soc, msoc,
+			batt_soc);
+
+	if (((sys_soc - msoc) < BASS_SYS_MSOC_DELTA))
+		goto exit_soc_scale;
+
+	if (!chip->bass_active) {
+		chip->bass_active = true;
+		chip->bsoc_bass_entry = batt_soc;
+	}
+
+	/* Drop the sys_soc by 1% if batt_soc has dropped */
+	if ((chip->bsoc_bass_entry - batt_soc) >= 1) {
+		bass_soc = (msoc > 0) ? msoc - 1 : 0;
+		chip->bass_active = false;
+	}
+
+	qg_dbg(chip, QG_DEBUG_SOC, "BASS Exit: sys_soc=%d msoc=%d bsoc_bass_entry=%d batt_soc=%d bass_soc=%d\n",
+			sys_soc, msoc,
+			chip->bsoc_bass_entry, chip->batt_soc, bass_soc);
+
+	return bass_soc;
+
+exit_soc_scale:
+	chip->bass_active = false;
+	qg_dbg(chip, QG_DEBUG_SOC, "BASS Quit: enabled=%d sys_soc=%d msoc=%d batt_soc=%d\n",
+			chip->dt.bass_enable,
+			sys_soc, msoc, chip->batt_soc);
+	return sys_soc;
+}
+
 int qg_adjust_sys_soc(struct qpnp_qg *chip)
 {
 	int soc, vbat_uv, rc;
@@ -53,6 +94,7 @@ int qg_adjust_sys_soc(struct qpnp_qg *chip)
 
 	chip->sys_soc = CAP(QG_MIN_SOC, QG_MAX_SOC, chip->sys_soc);
 
+	/* TCSS */
 	if (chip->sys_soc < 100) {
 		/* Hold SOC to 1% of VBAT has not dropped below cutoff */
 		rc = qg_get_battery_voltage(chip, &vbat_uv);
@@ -74,6 +116,10 @@ int qg_adjust_sys_soc(struct qpnp_qg *chip)
 
 	qg_dbg(chip, QG_DEBUG_SOC, "last_adj_sys_soc=%d  adj_sys_soc=%d\n",
 					chip->last_adj_ssoc, soc);
+	/* FVSS */
+
+	/* BASS */
+	soc = qg_process_bass_soc(chip, soc);
 	chip->last_adj_ssoc = soc;
 
 	return soc;
