@@ -244,7 +244,7 @@ static int hci_uart_flush(struct hci_dev *hdev)
 	tty_ldisc_flush(tty);
 	tty_driver_flush_buffer(tty);
 
-	if (test_bit(HCI_UART_PROTO_SET, &hu->flags))
+	if (test_bit(HCI_UART_PROTO_READY, &hu->flags))
 		hu->proto->flush(hu);
 
 	return 0;
@@ -354,12 +354,17 @@ static void hci_uart_tty_close(struct tty_struct *tty)
 			hci_unregister_dev(hdev);
 	}
 
-	if (test_and_clear_bit(HCI_UART_PROTO_SET, &hu->flags)) {
-		hci_uart_proto_lock(hu);
+	if (test_and_clear_bit(HCI_UART_PROTO_READY, &hu->flags)) {
+		if (hdev) {
+			if (test_bit(HCI_UART_REGISTERED, &hu->flags))
+				hci_unregister_dev(hdev);
+			hci_free_dev(hdev);
+		}
 		hu->proto->close(hu);
 		hu->proto = NULL;
 		hci_uart_proto_unlock(hu);
 	}
+	clear_bit(HCI_UART_PROTO_SET, &hu->flags);
 
 	cancel_work_sync(&hu->write_work);
 
@@ -391,7 +396,7 @@ static void hci_uart_tty_wakeup(struct tty_struct *tty)
 	if (tty != hu->tty)
 		return;
 
-	if (test_bit(HCI_UART_PROTO_SET, &hu->flags))
+	if (test_bit(HCI_UART_PROTO_READY, &hu->flags))
 		hci_uart_tx_wakeup(hu);
 }
 
@@ -414,7 +419,7 @@ static void hci_uart_tty_receive(struct tty_struct *tty, const u8 *data, char *f
 	if (!hu || tty != hu->tty || !data)
 		return;
 
-	if (!test_bit(HCI_UART_PROTO_SET, &hu->flags))
+	if (!test_bit(HCI_UART_PROTO_READY, &hu->flags))
 		return;
 
 	if (!hu->proto)
@@ -504,6 +509,7 @@ static int hci_uart_set_proto(struct hci_uart *hu, int id)
 		return err;
 	}
 
+	set_bit(HCI_UART_PROTO_READY, &hu->flags);
 	return 0;
 }
 
