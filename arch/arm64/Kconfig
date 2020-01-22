@@ -361,6 +361,37 @@ config ARCH_MSM8994_V1_TLBI_WA
 	  [39:38] bits of VA are tied to zero and due to which TLBI
 	  operations with VA or ASID will not work.
 
+config MACH_XIAOMI
+	bool "Xiaomi devices"
+	help
+	  This enables support for Xiaomi devices.
+
+if MACH_XIAOMI
+
+config MACH_XIAOMI_MSM8953
+	bool
+	select ARCH_MSM
+	select ARCH_MSM8953
+
+choice
+	prompt "Xiaomi device"
+	default MACH_XIAOMI_DUMMY
+
+config MACH_XIAOMI_DUMMY
+	bool "Dummy device"
+	help
+	  A stub configuration that doesn't enable support for anything.
+
+config MACH_XIAOMI_C6
+	bool "C6 board"
+	select MACH_XIAOMI_MSM8953
+	help
+	  This enables support for Xiaomi Redmi Note 4(X).
+
+endchoice
+
+endif
+
 endmenu
 
 menu "Bus support"
