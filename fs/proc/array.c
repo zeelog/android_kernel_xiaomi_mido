@@ -398,11 +398,10 @@ static int do_task_stat(struct seq_file *m, struct pid_namespace *ns,
 	mm = get_task_mm(task);
 	if (mm) {
 		vsize = task_vsize(mm);
-		/*
-		 * esp and eip are intentionally zeroed out.  There is no
-		 * non-racy way to read them without freezing the task.
-		 * Programs that need reliable values can use ptrace(2).
-		 */
+		if (permitted) {
+			eip = KSTK_EIP(task);
+			esp = KSTK_ESP(task);
+		}
 	}
 
 	get_task_comm(tcomm, task);
