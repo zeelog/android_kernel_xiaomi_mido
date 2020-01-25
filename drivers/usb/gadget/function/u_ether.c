@@ -325,11 +325,11 @@ rx_submit(struct eth_dev *dev, struct usb_request *req, gfp_t gfp_flags)
 	else
 		out = NULL;
 
-	if (!out) {
+	if (!out)
+	{
 		spin_unlock_irqrestore(&dev->lock, flags);
 		return -ENOTCONN;
 	}
-
 
 	/* Padding up to RX_EXTRA handles minor disagreements with host.
 	 * Normally we use the USB "terminate on short read" convention;
