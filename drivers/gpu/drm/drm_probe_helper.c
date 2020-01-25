@@ -342,6 +342,9 @@ static void output_poll_execute(struct work_struct *work)
 	changed = dev->mode_config.delayed_event;
 	dev->mode_config.delayed_event = false;
 
+	if (!dev->mode_config.poll_enabled)
+		return;
+
 	if (!drm_kms_helper_poll)
 		goto out;
 
@@ -481,7 +484,11 @@ EXPORT_SYMBOL(drm_kms_helper_poll_init);
  */
 void drm_kms_helper_poll_fini(struct drm_device *dev)
 {
-	drm_kms_helper_poll_disable(dev);
+	if (!dev->mode_config.poll_enabled)
+		return;
+
+	dev->mode_config.poll_enabled = false;
+	cancel_delayed_work_sync(&dev->mode_config.output_poll_work);
 }
 EXPORT_SYMBOL(drm_kms_helper_poll_fini);
 
