@@ -3555,7 +3555,7 @@ static int msm_nand_parse_smem_ptable(int *nr_parts)
 
 	for (i = 0; i < ptable.numparts; i++) {
 		pentry = &ptable.part_entry[i];
-		if (pentry->name == '\0')
+		if (pentry->name == NULL)
 			continue;
 		/* Convert name to lower case and discard the initial chars */
 		mtd_part[i].name        = pentry->name;
