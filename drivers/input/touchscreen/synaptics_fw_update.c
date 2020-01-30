@@ -849,13 +849,6 @@ static enum flash_area fwu_go_nogo(void)
 			__func__);
 		imageFirmwareID = img->firmware_id;
 	} else {
-		if (!fwu->image_name) {
-			dev_info(&i2c_client->dev,
-				"%s: Unknown image file name\n",
-				__func__);
-			flash_area = UI_FIRMWARE;
-			goto exit;
-		}
 		strptr = strnstr(fwu->image_name, "PR",
 				sizeof(fwu->image_name));
 		if (!strptr) {
