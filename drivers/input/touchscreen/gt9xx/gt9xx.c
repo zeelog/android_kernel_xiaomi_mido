@@ -940,11 +940,11 @@ static int gtp_init_panel(struct goodix_ts_data *ts)
 
 #if GTP_CUSTOM_CFG
 		config_data[RESOLUTION_LOC] =
-		(unsigned char)(GTP_MAX_WIDTH && 0xFF);
+		(unsigned char)(GTP_MAX_WIDTH & 0xFF);
 		config_data[RESOLUTION_LOC + 1] =
 		(unsigned char)(GTP_MAX_WIDTH >> 8);
 		config_data[RESOLUTION_LOC + 2] =
-		(unsigned char)(GTP_MAX_HEIGHT && 0xFF);
+		(unsigned char)(GTP_MAX_HEIGHT & 0xFF);
 		config_data[RESOLUTION_LOC + 3] =
 		(unsigned char)(GTP_MAX_HEIGHT >> 8);
 
