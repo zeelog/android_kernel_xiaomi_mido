@@ -225,8 +225,8 @@ static long bgpil_tzapp_comm(struct pil_bg_data *pbd,
 		for (i = 0; i < bg_tz_rsp->bg_info_len; i++) {
 			pr_info("0x%08x ", bg_tz_rsp->bg_info[i]);
 			ascii = (unsigned char *)&bg_tz_rsp->bg_info[i];
-			snprintf(ascii_string, PAGE_SIZE, "%c%c%c%c", ascii[0],
-						ascii[1], ascii[2], ascii[3]);
+			snprintf(ascii_string, sizeof(ascii_string), "%c%c%c%c",
+					ascii[0], ascii[1], ascii[2], ascii[3]);
 			strlcat(fiwmare_version, ascii_string,
 						PAGE_SIZE);
 		}
