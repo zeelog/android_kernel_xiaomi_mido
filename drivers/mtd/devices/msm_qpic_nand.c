@@ -3080,7 +3080,7 @@ int msm_nand_scan(struct mtd_info *mtd)
 		for (i = 0; !flashman && nand_manuf_ids[i].id; ++i)
 			if (nand_manuf_ids[i].id == manid)
 				flashman = &nand_manuf_ids[i];
-		for (i = 0; !flashdev && nand_flash_ids[i].id; ++i) {
+		for (i = 0; !flashdev; ++i) {
 			/*
 			 * If id_len is specified for an entry in the nand ids
 			 * array, then at least 4 bytes of the nand id is
