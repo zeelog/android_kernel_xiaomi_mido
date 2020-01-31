@@ -775,6 +775,9 @@ endif
 # Fix build for GCC 4.7
 EXTRA_CFLAGS += $(call cc-disable-warning, maybe-uninitialized)
 
+# Silence Clang warning
+EXTRA_CFLAGS += $(call cc-disable-warning, enum-conversion)
+
 ifeq ($(CONFIG_WLAN_OFFLOAD_PACKETS),y)
 CDEFINES += -DWLAN_FEATURE_OFFLOAD_PACKETS
 endif
