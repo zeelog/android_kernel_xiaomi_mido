@@ -89,7 +89,7 @@ static int tegra_reset_usb_controller(struct platform_device *pdev)
 	if (!usb1_reset_attempted) {
 		struct reset_control *usb1_reset;
 
-		usb1_reset = of_reset_control_get(phy_np, "usb");
+		usb1_reset = of_reset_control_get(phy_np, "utmi-pads");
 		if (IS_ERR(usb1_reset)) {
 			dev_warn(&pdev->dev,
 				 "can't get utmi-pads reset from the PHY\n");
@@ -451,7 +451,7 @@ static int tegra_ehci_probe(struct platform_device *pdev)
 
 	u_phy = devm_usb_get_phy_by_phandle(&pdev->dev, "nvidia,phy", 0);
 	if (IS_ERR(u_phy)) {
-		err = PTR_ERR(u_phy);
+		err = -EPROBE_DEFER;
 		goto cleanup_clk_en;
 	}
 	hcd->usb_phy = u_phy;

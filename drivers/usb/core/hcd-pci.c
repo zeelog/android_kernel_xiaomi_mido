@@ -74,6 +74,15 @@ static void for_each_companion(struct pci_dev *pdev, struct usb_hcd *hcd,
 		if (companion->bus != pdev->bus ||
 				PCI_SLOT(companion->devfn) != slot)
 			continue;
+
+		/*
+		 * Companion device should be either UHCI,OHCI or EHCI host
+		 * controller, otherwise skip.
+		 */
+		if (companion->class != CL_UHCI && companion->class != CL_OHCI &&
+				companion->class != CL_EHCI)
+			continue;
+
 		companion_hcd = pci_get_drvdata(companion);
 		if (!companion_hcd || !companion_hcd->self.root_hub)
 			continue;
@@ -521,8 +530,6 @@ static int resume_common(struct device *dev, int event)
 				event == PM_EVENT_RESTORE);
 		if (retval) {
 			dev_err(dev, "PCI post-resume error %d!\n", retval);
-			if (hcd->shared_hcd)
-				usb_hc_died(hcd->shared_hcd);
 			usb_hc_died(hcd);
 		}
 	}

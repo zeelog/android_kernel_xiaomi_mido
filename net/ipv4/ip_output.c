@@ -230,6 +230,7 @@ static int ip_finish_output_gso(struct sk_buff *skb)
 	 * from host network stack.
 	 */
 	features = netif_skb_features(skb);
+	BUILD_BUG_ON(sizeof(*IPCB(skb)) > SKB_SGO_CB_OFFSET);
 	segs = skb_gso_segment(skb, features & ~NETIF_F_GSO_MASK);
 	if (IS_ERR_OR_NULL(segs)) {
 		kfree_skb(skb);
@@ -454,6 +455,7 @@ static void ip_copy_metadata(struct sk_buff *to, struct sk_buff *from)
 	to->pkt_type = from->pkt_type;
 	to->priority = from->priority;
 	to->protocol = from->protocol;
+	to->skb_iif = from->skb_iif;
 	skb_dst_drop(to);
 	skb_dst_copy(to, from);
 	to->dev = from->dev;
@@ -895,7 +897,7 @@ static int __ip_append_data(struct sock *sk,
 	    (skb_queue_len(queue) <= 1) &&
 	    (sk->sk_protocol == IPPROTO_UDP) &&
 	    (rt->dst.dev->features & NETIF_F_UFO) && !rt->dst.header_len &&
-	    (sk->sk_type == SOCK_DGRAM))) {
+	    (sk->sk_type == SOCK_DGRAM) && !sk->sk_no_check_tx)) {
 		err = ip_ufo_append_data(sk, queue, getfrag, from, length,
 					 hh_len, fragheaderlen, transhdrlen,
 					 maxfraglen, flags);
@@ -1110,13 +1112,17 @@ static int ip_setup_cork(struct sock *sk, struct inet_cork *cork,
 	rt = *rtp;
 	if (unlikely(!rt))
 		return -EFAULT;
-	/*
-	 * We steal reference to this route, caller should not release it
-	 */
-	*rtp = NULL;
+
 	cork->fragsize = ip_sk_use_pmtu(sk) ?
-			 dst_mtu(&rt->dst) : rt->dst.dev->mtu;
+			 dst_mtu(&rt->dst) : READ_ONCE(rt->dst.dev->mtu);
+
+	if (!inetdev_valid_mtu(cork->fragsize))
+		return -ENETUNREACH;
+
 	cork->dst = &rt->dst;
+	/* We stole this route, caller should not release it. */
+	*rtp = NULL;
+
 	cork->length = 0;
 	cork->ttl = ipc->ttl;
 	cork->tos = ipc->tos;

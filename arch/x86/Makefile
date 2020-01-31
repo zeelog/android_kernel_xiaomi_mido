@@ -27,6 +27,7 @@ REALMODE_CFLAGS	:= $(M16_CFLAGS) -g -Os -D__KERNEL__ \
 		   -mno-mmx -mno-sse \
 		   $(call cc-option, -ffreestanding) \
 		   $(call cc-option, -fno-stack-protector) \
+		   $(call cc-option, -Wno-address-of-packed-member) \
 		   $(call cc-option, -mpreferred-stack-boundary=2)
 export REALMODE_CFLAGS
 
@@ -36,7 +37,7 @@ export REALMODE_CFLAGS
 export BITS
 
 ifdef CONFIG_X86_NEED_RELOCS
-        LDFLAGS_vmlinux := --emit-relocs
+        LDFLAGS_vmlinux := --emit-relocs --discard-none
 endif
 
 ifeq ($(CONFIG_X86_32),y)

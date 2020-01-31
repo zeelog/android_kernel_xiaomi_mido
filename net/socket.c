@@ -543,7 +543,10 @@ static int sockfs_setattr(struct dentry *dentry, struct iattr *iattr)
 	if (!err && (iattr->ia_valid & ATTR_UID)) {
 		struct socket *sock = SOCKET_I(dentry->d_inode);
 
-		sock->sk->sk_uid = iattr->ia_uid;
+		if (sock->sk)
+			sock->sk->sk_uid = iattr->ia_uid;
+		else
+			err = -ENOENT;
 	}
 
 	return err;
@@ -611,12 +614,17 @@ const struct file_operations bad_sock_fops = {
  *	an inode not a file.
  */
 
-void sock_release(struct socket *sock)
+static void __sock_release(struct socket *sock, struct inode *inode)
 {
 	if (sock->ops) {
 		struct module *owner = sock->ops->owner;
 
+		if (inode)
+			mutex_lock(&inode->i_mutex);
 		sock->ops->release(sock);
+		sock->sk = NULL;
+		if (inode)
+			mutex_unlock(&inode->i_mutex);
 		sock->ops = NULL;
 		module_put(owner);
 	}
@@ -633,6 +641,11 @@ void sock_release(struct socket *sock)
 		return;
 	}
 	sock->file = NULL;
+}
+
+void sock_release(struct socket *sock)
+{
+	__sock_release(sock, NULL);
 }
 EXPORT_SYMBOL(sock_release);
 
@@ -1200,7 +1213,7 @@ static int sock_mmap(struct file *file, struct vm_area_struct *vma)
 
 static int sock_close(struct inode *inode, struct file *filp)
 {
-	sock_release(SOCKET_I(inode));
+	__sock_release(SOCKET_I(inode), inode);
 	return 0;
 }
 
@@ -2971,9 +2984,14 @@ static int ethtool_ioctl(struct net *net, struct compat_ifreq __user *ifr32)
 		    copy_in_user(&rxnfc->fs.ring_cookie,
 				 &compat_rxnfc->fs.ring_cookie,
 				 (void __user *)(&rxnfc->fs.location + 1) -
-				 (void __user *)&rxnfc->fs.ring_cookie) ||
-		    copy_in_user(&rxnfc->rule_cnt, &compat_rxnfc->rule_cnt,
-				 sizeof(rxnfc->rule_cnt)))
+				 (void __user *)&rxnfc->fs.ring_cookie))
+			return -EFAULT;
+		if (ethcmd == ETHTOOL_GRXCLSRLALL) {
+			if (put_user(rule_cnt, &rxnfc->rule_cnt))
+				return -EFAULT;
+		} else if (copy_in_user(&rxnfc->rule_cnt,
+					&compat_rxnfc->rule_cnt,
+					sizeof(rxnfc->rule_cnt)))
 			return -EFAULT;
 	}
 

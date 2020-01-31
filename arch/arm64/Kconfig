@@ -82,7 +82,6 @@ config ARM64
 	select PERF_USE_VMALLOC
 	select POWER_RESET
 	select POWER_SUPPLY
-	select RTC_LIB
 	select SPARSE_IRQ
 	select SYSCTL_EXCEPTION_TRACE
 	select HAVE_CONTEXT_TRACKING
@@ -730,16 +729,6 @@ config HW_PERF_EVENTS
 	  Enable hardware performance counter support for perf events. If
 	  disabled, perf events will use software events only.
 
-config PERF_EVENTS_USERMODE
-	bool "Enable usermode access for perf events"
-	depends on PERF_EVENTS
-	help
-	  Enable user-mode access to performance counters for perf events.
-	  If enabled, the access permissions allowing CPU performance
-	  counters to be accessed from user-mode are set.
-
-	  If you want user-mode programs to access perf events, say Y
-
 config PERF_EVENTS_RESET_PMU_DEBUGFS
 	bool "Reset PMU via debugfs node"
 	depends on PERF_EVENTS
@@ -1080,6 +1069,10 @@ config COMPAT
 config SYSVIPC_COMPAT
 	def_bool y
 	depends on COMPAT && SYSVIPC
+
+config KEYS_COMPAT
+	def_bool y
+	depends on COMPAT && KEYS
 
 endmenu
 

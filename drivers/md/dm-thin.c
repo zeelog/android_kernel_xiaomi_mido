@@ -1909,6 +1909,7 @@ static void set_pool_mode(struct pool *pool, enum pool_mode new_mode)
 	case PM_WRITE:
 		if (old_mode != new_mode)
 			notify_of_pool_mode_change(pool, "write");
+		pool->pf.error_if_no_space = pt->requested_pf.error_if_no_space;
 		dm_pool_metadata_read_write(pool->pmd);
 		pool->process_bio = process_bio;
 		pool->process_discard = process_discard;
@@ -2243,7 +2244,7 @@ static struct pool *pool_create(struct mapped_device *pool_md,
 		return (struct pool *)pmd;
 	}
 
-	pool = kmalloc(sizeof(*pool), GFP_KERNEL);
+	pool = kzalloc(sizeof(*pool), GFP_KERNEL);
 	if (!pool) {
 		*error = "Error allocating memory for pool";
 		err_p = ERR_PTR(-ENOMEM);
@@ -2558,6 +2559,13 @@ static int pool_ctr(struct dm_target *ti, unsigned argc, char **argv)
 
 	as.argc = argc;
 	as.argv = argv;
+
+	/* make sure metadata and data are different devices */
+	if (!strcmp(argv[0], argv[1])) {
+		ti->error = "Error setting metadata or data device";
+		r = -EINVAL;
+		goto out_unlock;
+	}
 
 	/*
 	 * Set default pool features.
@@ -3385,6 +3393,12 @@ static int thin_ctr(struct dm_target *ti, unsigned argc, char **argv)
 	tc->sort_bio_list = RB_ROOT;
 
 	if (argc == 3) {
+		if (!strcmp(argv[0], argv[2])) {
+			ti->error = "Error setting origin device";
+			r = -EINVAL;
+			goto bad_origin_dev;
+		}
+
 		r = dm_get_device(ti, argv[2], FMODE_READ, &origin_dev);
 		if (r) {
 			ti->error = "Error opening origin device";

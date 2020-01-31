@@ -514,6 +514,8 @@ static inline int ip_options_echo(struct ip_options *dopt, struct sk_buff *skb)
 }
 
 void ip_options_fragment(struct sk_buff *skb);
+int __ip_options_compile(struct net *net, struct ip_options *opt,
+			 struct sk_buff *skb, __be32 *info);
 int ip_options_compile(struct net *net, struct ip_options *opt,
 		       struct sk_buff *skb);
 int ip_options_get(struct net *net, struct ip_options_rcu **optp,
@@ -556,5 +558,10 @@ extern int sysctl_icmp_msgs_burst;
 #ifdef CONFIG_PROC_FS
 int ip_misc_proc_init(void);
 #endif
+
+static inline bool inetdev_valid_mtu(unsigned int mtu)
+{
+	return likely(mtu >= IPV4_MIN_MTU);
+}
 
 #endif	/* _IP_H */

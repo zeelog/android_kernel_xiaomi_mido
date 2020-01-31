@@ -2281,7 +2281,6 @@ int tcp_disconnect(struct sock *sk, int flags)
 	tp->srtt_us = 0;
 	if ((tp->write_seq += tp->max_window + 2) == 0)
 		tp->write_seq = 1;
-	icsk->icsk_backoff = 0;
 	tp->snd_cwnd = 2;
 	icsk->icsk_probes_out = 0;
 	tp->packets_out = 0;
@@ -3151,6 +3150,7 @@ void __init tcp_init(void)
 	int max_rshare, max_wshare, cnt;
 	unsigned int i;
 
+	BUILD_BUG_ON(TCP_MIN_SND_MSS <= MAX_TCP_OPTION_SPACE);
 	BUILD_BUG_ON(sizeof(struct tcp_skb_cb) > sizeof(skb->cb));
 
 	percpu_counter_init(&tcp_sockets_allocated, 0, GFP_KERNEL);

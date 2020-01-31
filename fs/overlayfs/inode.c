@@ -265,7 +265,8 @@ static bool ovl_can_list(const char *s)
 		return true;
 
 	/* Never list trusted.overlay, list other trusted for superuser only */
-	return !ovl_is_private_xattr(s) && capable(CAP_SYS_ADMIN);
+	return !ovl_is_private_xattr(s) &&
+	       has_capability_noaudit(current, CAP_SYS_ADMIN);
 }
 
 ssize_t ovl_listxattr(struct dentry *dentry, char *list, size_t size)
@@ -376,6 +377,9 @@ struct inode *ovl_d_select_inode(struct dentry *dentry, unsigned file_flags)
 
 		ovl_path_upper(dentry, &realpath);
 	}
+
+	if (realpath.dentry->d_flags & DCACHE_OP_SELECT_INODE)
+		return realpath.dentry->d_op->d_select_inode(realpath.dentry, file_flags);
 
 	return d_backing_inode(realpath.dentry);
 }

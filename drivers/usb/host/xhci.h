@@ -283,6 +283,7 @@ struct xhci_op_regs {
  */
 #define PORT_PLS_MASK	(0xf << 5)
 #define XDEV_U0		(0x0 << 5)
+#define XDEV_U1		(0x1 << 5)
 #define XDEV_U2		(0x2 << 5)
 #define XDEV_U3		(0x3 << 5)
 #define XDEV_RESUME	(0xf << 5)
@@ -1434,7 +1435,7 @@ struct xhci_bus_state {
 
 static inline unsigned int hcd_index(struct usb_hcd *hcd)
 {
-	if (hcd->speed == HCD_USB3)
+	if (hcd->speed >= HCD_USB3)
 		return 0;
 	else
 		return 1;
@@ -1568,6 +1569,8 @@ struct xhci_hcd {
 /* For controllers with a broken beyond repair streams implementation */
 #define XHCI_BROKEN_STREAMS	(1 << 19)
 #define XHCI_PME_STUCK_QUIRK	(1 << 20)
+#define XHCI_SSIC_PORT_UNUSED	(1 << 22)
+#define XHCI_NO_64BIT_SUPPORT	(1 << 23)
 	unsigned int		num_active_eps;
 	unsigned int		limit_active_eps;
 	/* There are two roothubs to keep track of bus suspend info for */
