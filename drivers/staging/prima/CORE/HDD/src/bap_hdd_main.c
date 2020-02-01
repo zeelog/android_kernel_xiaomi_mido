@@ -4266,7 +4266,7 @@ static void bslWriteFinish(struct work_struct *work)
 
 
     // Sanity check inputs
-    if ( pctx != (BslClientCtxType *)hci_get_drvdata(hdev));
+    if ( pctx != (BslClientCtxType *)hci_get_drvdata(hdev))
     {
         VOS_TRACE( VOS_MODULE_ID_BAP, VOS_TRACE_LEVEL_INFO_HIGH, "%s: pctx and hdev not consistent - bad i/p", __func__);
         return; // -EFAULT; /* Bad address */
