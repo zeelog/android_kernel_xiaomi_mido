@@ -839,8 +839,7 @@ int __iw_set_scan(struct net_device *dev, struct iw_request_info *info,
    }
 
    /* push addIEScan in scanRequset if exist */
-   if (pHddCtx->scan_info.scanAddIE.addIEdata && 
-       pHddCtx->scan_info.scanAddIE.length)
+   if (pHddCtx->scan_info.scanAddIE.length)
    { 
        scanRequest.uIEFieldLen = pHddCtx->scan_info.scanAddIE.length;
        scanRequest.pIEField = pHddCtx->scan_info.scanAddIE.addIEdata;
@@ -1287,8 +1286,7 @@ int iw_set_cscan(struct net_device *dev, struct iw_request_info *info,
         }
 
         /* push addIEScan in scanRequset if exist */
-        if (pHddCtx->scan_info.scanAddIE.addIEdata && 
-            pHddCtx->scan_info.scanAddIE.length)
+        if (pHddCtx->scan_info.scanAddIE.length)
         {
             scanRequest.uIEFieldLen = pHddCtx->scan_info.scanAddIE.length;
             scanRequest.pIEField = pHddCtx->scan_info.scanAddIE.addIEdata;

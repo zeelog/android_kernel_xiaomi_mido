@@ -6749,48 +6749,45 @@ eHalStatus csrRoamCopyConnectedProfile(tpAniSirGlobal pMac, tANI_U32 sessionId, 
     do
     {
         vos_mem_set(pDstProfile, sizeof(tCsrRoamProfile), 0);
-        if(pSrcProfile->bssid)
+
+        pDstProfile->BSSIDs.bssid = vos_mem_malloc(sizeof(tCsrBssid));
+        if ( NULL == pDstProfile->BSSIDs.bssid )
+            status = eHAL_STATUS_FAILURE;
+        else
+            status = eHAL_STATUS_SUCCESS;
+        if(!HAL_STATUS_SUCCESS(status))
         {
-            pDstProfile->BSSIDs.bssid = vos_mem_malloc(sizeof(tCsrBssid));
-            if ( NULL == pDstProfile->BSSIDs.bssid )
-                status = eHAL_STATUS_FAILURE;
-            else
-                status = eHAL_STATUS_SUCCESS;
-            if(!HAL_STATUS_SUCCESS(status))
-            {
-                smsLog( pMac, LOGE,
-                    FL("failed to allocate memory for BSSID"
-                    "%02x:%02x:%02x:%02x:%02x:%02x"),
-                    pSrcProfile->bssid[0], pSrcProfile->bssid[1], pSrcProfile->bssid[2],
-                    pSrcProfile->bssid[3], pSrcProfile->bssid[4], pSrcProfile->bssid[5]);
-                break;
-            }
-            pDstProfile->BSSIDs.numOfBSSIDs = 1;
-            vos_mem_copy(pDstProfile->BSSIDs.bssid, pSrcProfile->bssid,
-                         sizeof(tCsrBssid));
+            smsLog( pMac, LOGE,
+                FL("failed to allocate memory for BSSID"
+                "%02x:%02x:%02x:%02x:%02x:%02x"),
+                pSrcProfile->bssid[0], pSrcProfile->bssid[1], pSrcProfile->bssid[2],
+                pSrcProfile->bssid[3], pSrcProfile->bssid[4], pSrcProfile->bssid[5]);
+            break;
         }
-        if(pSrcProfile->SSID.ssId)
+        pDstProfile->BSSIDs.numOfBSSIDs = 1;
+        vos_mem_copy(pDstProfile->BSSIDs.bssid, pSrcProfile->bssid,
+                     sizeof(tCsrBssid));
+
+        pDstProfile->SSIDs.SSIDList = vos_mem_malloc(sizeof(tCsrSSIDInfo));
+        if ( NULL == pDstProfile->SSIDs.SSIDList )
+            status = eHAL_STATUS_FAILURE;
+        else
+            status = eHAL_STATUS_SUCCESS;
+        if(!HAL_STATUS_SUCCESS(status))
         {
-            pDstProfile->SSIDs.SSIDList = vos_mem_malloc(sizeof(tCsrSSIDInfo));
-            if ( NULL == pDstProfile->SSIDs.SSIDList )
-                status = eHAL_STATUS_FAILURE;
-            else
-                status = eHAL_STATUS_SUCCESS;
-            if(!HAL_STATUS_SUCCESS(status))
-            {
-                smsLog( pMac, LOGE,
-                 FL("failed to allocate memory for SSIDList"
-                    "%02x:%02x:%02x:%02x:%02x:%02x"),
-                    pSrcProfile->bssid[0], pSrcProfile->bssid[1], pSrcProfile->bssid[2],
-                    pSrcProfile->bssid[3], pSrcProfile->bssid[4], pSrcProfile->bssid[5]);
-                break;
-            }
-            pDstProfile->SSIDs.numOfSSIDs = 1;
-            pDstProfile->SSIDs.SSIDList[0].handoffPermitted = pSrcProfile->handoffPermitted;
-            pDstProfile->SSIDs.SSIDList[0].ssidHidden = pSrcProfile->ssidHidden;
-            vos_mem_copy(&pDstProfile->SSIDs.SSIDList[0].SSID,
-                         &pSrcProfile->SSID, sizeof(tSirMacSSid));
+            smsLog( pMac, LOGE,
+             FL("failed to allocate memory for SSIDList"
+                "%02x:%02x:%02x:%02x:%02x:%02x"),
+                pSrcProfile->bssid[0], pSrcProfile->bssid[1], pSrcProfile->bssid[2],
+                pSrcProfile->bssid[3], pSrcProfile->bssid[4], pSrcProfile->bssid[5]);
+            break;
         }
+        pDstProfile->SSIDs.numOfSSIDs = 1;
+        pDstProfile->SSIDs.SSIDList[0].handoffPermitted = pSrcProfile->handoffPermitted;
+        pDstProfile->SSIDs.SSIDList[0].ssidHidden = pSrcProfile->ssidHidden;
+        vos_mem_copy(&pDstProfile->SSIDs.SSIDList[0].SSID,
+                     &pSrcProfile->SSID, sizeof(tSirMacSSid));
+
         if(pSrcProfile->nAddIEAssocLength)
         {
             pDstProfile->pAddIEAssoc = vos_mem_malloc(pSrcProfile->nAddIEAssocLength);
