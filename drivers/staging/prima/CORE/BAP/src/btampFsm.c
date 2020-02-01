@@ -98,7 +98,6 @@
 
 // Pick up the DOT11 Frames compiler
 // I just need these one "opaque" type definition in order to use the "frames" code
-typedef struct sAniSirGlobal *tpAniSirGlobal;
 #include "dot11f.h"
 
 #if 0
