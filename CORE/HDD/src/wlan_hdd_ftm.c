@@ -4736,9 +4736,8 @@ static VOS_STATUS wlan_ftm_priv_get_rx_rssi(hdd_adapter_t *pAdapter,char *buf)
         goto done;
     }
 
-   ret = snprintf(buf, WE_FTM_MAX_STR_LEN, " R0:%d, R1:%d",
-                      pMsgBody->GetRxRssi.rssi.rx[0],
-                  pMsgBody->GetRxRssi.rssi.rx[1]);
+   ret = snprintf(buf, WE_FTM_MAX_STR_LEN, " R0:%d",
+                      pMsgBody->GetRxRssi.rssi.rx[0]);
 
    if( ret < 0 || ret >= WE_FTM_MAX_STR_LEN )
    {
