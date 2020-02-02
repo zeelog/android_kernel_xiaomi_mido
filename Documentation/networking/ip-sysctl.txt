@@ -1136,6 +1136,18 @@ promote_secondaries - BOOLEAN
 	promote a corresponding secondary IP address instead of
 	removing all the corresponding secondary IP addresses.
 
+drop_unicast_in_l2_multicast - BOOLEAN
+	Drop any unicast IP packets that are received in link-layer
+	multicast (or broadcast) frames.
+	This behavior (for multicast) is actually a SHOULD in RFC
+	1122, but is disabled by default for compatibility reasons.
+	Default: off (0)
+
+drop_gratuitous_arp - BOOLEAN
+	Drop all gratuitous ARP frames, for example if there's a known
+	good ARP proxy on the network and such frames need not be used
+	(or in the case of 802.11, must not be used to prevent attacks.)
+	Default: off (0)
 
 tag - INTEGER
 	Allows you to write a number, which can be used as required.
@@ -1533,6 +1545,19 @@ use_optimistic - BOOLEAN
 	address selection algorithm.
 		0: disabled (default)
 		1: enabled
+
+drop_unicast_in_l2_multicast - BOOLEAN
+	Drop any unicast IPv6 packets that are received in link-layer
+	multicast (or broadcast) frames.
+
+	By default this is turned off.
+
+drop_unsolicited_na - BOOLEAN
+	Drop all unsolicited neighbor advertisements, for example if there's
+	a known good NA proxy on the network and such frames need not be used
+	(or in the case of 802.11, must not be used to prevent attacks.)
+
+	By default this is turned off.
 
 icmp/*:
 ratelimit - INTEGER
