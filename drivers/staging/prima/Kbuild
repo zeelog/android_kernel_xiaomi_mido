@@ -764,6 +764,7 @@ EXTRA_CFLAGS += $(call cc-disable-warning, maybe-uninitialized) -Wno-unused-func
 
 # Silence Clang warning
 ifeq ($(cc-name),clang)
+EXTRA_CFLAGS += $(call cc-option, -Wframe-larger-than=2048)
 EXTRA_CFLAGS += -Wno-enum-conversion
 endif
 
