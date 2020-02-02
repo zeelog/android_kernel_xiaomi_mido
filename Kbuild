@@ -777,6 +777,7 @@ EXTRA_CFLAGS += $(call cc-disable-warning, maybe-uninitialized)
 
 # Silence Clang warning
 EXTRA_CFLAGS += $(call cc-disable-warning, enum-conversion)
+EXTRA_CFLAGS += $(call cc-option, -Wframe-larger-than=2048)
 
 ifeq ($(CONFIG_WLAN_OFFLOAD_PACKETS),y)
 CDEFINES += -DWLAN_FEATURE_OFFLOAD_PACKETS
