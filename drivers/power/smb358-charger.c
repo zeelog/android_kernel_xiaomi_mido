@@ -2678,7 +2678,7 @@ static int smb358_charger_probe(struct i2c_client *client,
 			chip->adc_param.low_temp = chip->cool_bat_decidegc;
 			chip->adc_param.high_temp = chip->warm_bat_decidegc;
 		}
-		chip->adc_param.timer_interval = ADC_MEAS2_INTERVAL_1S;
+		chip->adc_param.timer_interval = ADC_MEAS1_INTERVAL_1S;
 		chip->adc_param.state_request = ADC_TM_HIGH_LOW_THR_ENABLE;
 		chip->adc_param.btm_ctx = chip;
 		chip->adc_param.threshold_notification =

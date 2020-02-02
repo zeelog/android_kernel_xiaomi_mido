@@ -15,6 +15,7 @@ mdss-mdp-objs += mdss_mdp_intf_cmd.o
 mdss-mdp-objs += mdss_mdp_intf_writeback.o
 mdss-mdp-objs += mdss_rotator.o
 mdss-mdp-objs += mdss_mdp_overlay.o
+CFLAGS_mdss_mdp_overlay.o := $(call cc-option, -Wframe-larger-than=2048)
 mdss-mdp-objs += mdss_mdp_layer.o
 mdss-mdp-objs += mdss_mdp_splash_logo.o
 mdss-mdp-objs += mdss_mdp_cdm.o

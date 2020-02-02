@@ -431,9 +431,9 @@ static int fts_ctpm_check_fw_status(struct i2c_client *client)
 			continue;
 		}
 
-		if ((chip_id1 == chip_types.chip_idh)
+		if (chip_id1 == chip_types.chip_idh
 #if FTS_CHIP_IDC
-			&& (chip_id2 == chip_types.chip_idl)
+			&& chip_id2 == chip_types.chip_idl
 #endif
 		   ) {
 			fw_status = FTS_RUN_IN_APP;

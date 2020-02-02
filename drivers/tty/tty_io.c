@@ -238,7 +238,6 @@ static void tty_del_file(struct file *file)
 /**
  *	tty_name	-	return tty naming
  *	@tty: tty structure
- *	@buf: buffer for output
  *
  *	Convert a tty structure into a name. The name reflects the kernel
  *	naming policy and if udev is in use may not reflect user space
@@ -246,13 +245,11 @@ static void tty_del_file(struct file *file)
  *	Locking: none
  */
 
-char *tty_name(struct tty_struct *tty, char *buf)
+const char *tty_name(const struct tty_struct *tty)
 {
 	if (!tty) /* Hmm.  NULL pointer.  That's fun. */
-		strcpy(buf, "NULL tty");
-	else
-		strcpy(buf, tty->name);
-	return buf;
+		return "NULL tty";
+	return tty->name;
 }
 
 EXPORT_SYMBOL(tty_name);
@@ -711,8 +708,7 @@ static void do_tty_hangup(struct work_struct *work)
 void tty_hangup(struct tty_struct *tty)
 {
 #ifdef TTY_DEBUG_HANGUP
-	char	buf[64];
-	printk(KERN_DEBUG "%s hangup...\n", tty_name(tty, buf));
+	printk(KERN_DEBUG "%s hangup...\n", tty_name(tty));
 #endif
 	schedule_work(&tty->hangup_work);
 }
@@ -731,9 +727,7 @@ EXPORT_SYMBOL(tty_hangup);
 void tty_vhangup(struct tty_struct *tty)
 {
 #ifdef TTY_DEBUG_HANGUP
-	char	buf[64];
-
-	printk(KERN_DEBUG "%s vhangup...\n", tty_name(tty, buf));
+	printk(KERN_DEBUG "%s vhangup...\n", tty_name(tty));
 #endif
 	__tty_hangup(tty, 0);
 }
@@ -772,9 +766,7 @@ void tty_vhangup_self(void)
 static void tty_vhangup_session(struct tty_struct *tty)
 {
 #ifdef TTY_DEBUG_HANGUP
-	char	buf[64];
-
-	printk(KERN_DEBUG "%s vhangup session...\n", tty_name(tty, buf));
+	printk(KERN_DEBUG "%s vhangup session...\n", tty_name(tty));
 #endif
 	__tty_hangup(tty, 1);
 }
@@ -1710,7 +1702,6 @@ int tty_release(struct inode *inode, struct file *filp)
 	struct tty_struct *o_tty;
 	int	pty_master, tty_closing, o_tty_closing, do_sleep;
 	int	idx;
-	char	buf[64];
 	long	timeout = 0;
 	int	once = 1;
 
@@ -1735,7 +1726,7 @@ int tty_release(struct inode *inode, struct file *filp)
 
 #ifdef TTY_DEBUG_HANGUP
 	printk(KERN_DEBUG "%s: %s (tty count=%d)...\n", __func__,
-			tty_name(tty, buf), tty->count);
+			tty_name(tty), tty->count);
 #endif
 
 	if (tty->ops->close)
@@ -1796,7 +1787,7 @@ int tty_release(struct inode *inode, struct file *filp)
 		if (once) {
 			once = 0;
 			printk(KERN_WARNING "%s: %s: read/write wait queue active!\n",
-			       __func__, tty_name(tty, buf));
+			       __func__, tty_name(tty));
 		}
 		tty_unlock_pair(tty, o_tty);
 		mutex_unlock(&tty_mutex);
@@ -1818,13 +1809,13 @@ int tty_release(struct inode *inode, struct file *filp)
 	if (pty_master) {
 		if (--o_tty->count < 0) {
 			printk(KERN_WARNING "%s: bad pty slave count (%d) for %s\n",
-				__func__, o_tty->count, tty_name(o_tty, buf));
+				__func__, o_tty->count, tty_name(o_tty));
 			o_tty->count = 0;
 		}
 	}
 	if (--tty->count < 0) {
 		printk(KERN_WARNING "%s: bad tty->count (%d) for %s\n",
-				__func__, tty->count, tty_name(tty, buf));
+				__func__, tty->count, tty_name(tty));
 		tty->count = 0;
 	}
 
@@ -1874,7 +1865,7 @@ int tty_release(struct inode *inode, struct file *filp)
 		return 0;
 
 #ifdef TTY_DEBUG_HANGUP
-	printk(KERN_DEBUG "%s: %s: final close\n", __func__, tty_name(tty, buf));
+	printk(KERN_DEBUG "%s: %s: final close\n", __func__, tty_name(tty));
 #endif
 	/*
 	 * Ask the line discipline code to release its structures
@@ -1887,7 +1878,8 @@ int tty_release(struct inode *inode, struct file *filp)
 		tty_flush_works(o_tty);
 
 #ifdef TTY_DEBUG_HANGUP
-	printk(KERN_DEBUG "%s: %s: freeing structure...\n", __func__, tty_name(tty, buf));
+	printk(KERN_DEBUG "%s: %s: freeing structure...\n", __func__,
+	       tty_name(tty));
 #endif
 	/*
 	 * The release_tty function takes care of the details of clearing

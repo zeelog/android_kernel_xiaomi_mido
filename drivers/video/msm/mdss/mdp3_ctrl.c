@@ -2335,13 +2335,6 @@ static int mdp3_csc_config(struct mdp3_session_data *session,
 	struct mdp3_dma_ccs ccs;
 	int ret = -EINVAL;
 
-	if (!data->csc_data.csc_mv || !data->csc_data.csc_pre_bv ||
-		!data->csc_data.csc_post_bv || !data->csc_data.csc_pre_lv ||
-			!data->csc_data.csc_post_lv) {
-		pr_err("%s : Invalid csc vectors", __func__);
-		return -EINVAL;
-	}
-
 	mutex_lock(&session->lock);
 	mutex_lock(&session->dma->pp_lock);
 	session->dma->cc_vect_sel = (session->dma->cc_vect_sel + 1) % 2;

@@ -99,6 +99,10 @@ when           who        what, where, why
 // How do I get SAP context from voss context? 
 #define VOS_GET_SAP_CB(ctx) vos_get_context( VOS_MODULE_ID_SAP, ctx) 
 
+#ifdef VOS_GET_HAL_CB
+#undef VOS_GET_HAL_CB
+#endif
+
 #define VOS_GET_HAL_CB(ctx) vos_get_context( VOS_MODULE_ID_PE, ctx) 
 //MAC Address length
 #define ANI_EAPOL_KEY_RSN_NONCE_SIZE      32

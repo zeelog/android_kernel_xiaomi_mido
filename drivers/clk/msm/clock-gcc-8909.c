@@ -1059,7 +1059,7 @@ static struct rcg_clk pclk0_clk_src = {
 	.c = {
 		.dbg_name = "pclk0_clk_src",
 		.ops = &clk_ops_pixel,
-		VDD_DIG_FMAX_MAP1(LOWER, 83333333.33),
+		VDD_DIG_FMAX_MAP1(LOWER, 83333333),
 		CLK_INIT(pclk0_clk_src.c),
 	},
 };
