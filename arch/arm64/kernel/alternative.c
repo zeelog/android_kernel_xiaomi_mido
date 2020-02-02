@@ -41,27 +41,78 @@ struct alt_region {
 /*
  * Check if the target PC is within an alternative block.
  */
+static bool branch_insn_requires_update(struct alt_instr *alt, unsigned long pc)
+{
+	unsigned long replptr;
+
+	if (kernel_text_address(pc))
+		return 1;
+
+	replptr = (unsigned long)ALT_REPL_PTR(alt);
+	if (pc >= replptr && pc <= (replptr + alt->alt_len))
+		return 0;
+
+	/*
+	 * Branching into *another* alternate sequence is doomed, and
+	 * we're not even trying to fix it up.
+	 */
+	BUG();
+}
+
+static u32 get_alt_insn(struct alt_instr *alt, u32 *insnptr, u32 *altinsnptr)
+{
+	u32 insn;
+
+	insn = le32_to_cpu(*altinsnptr);
+
+	if (aarch64_insn_is_branch_imm(insn)) {
+		s32 offset = aarch64_get_branch_offset(insn);
+		unsigned long target;
+
+		target = (unsigned long)altinsnptr + offset;
+
+		/*
+		 * If we're branching inside the alternate sequence,
+		 * do not rewrite the instruction, as it is already
+		 * correct. Otherwise, generate the new instruction.
+		 */
+		if (branch_insn_requires_update(alt, target)) {
+			offset = target - (unsigned long)insnptr;
+			insn = aarch64_set_branch_offset(insn, offset);
+		}
+	}
+
+	return insn;
+}
 
 static void __apply_alternatives(void *alt_region)
 {
 	struct alt_instr *alt;
-	u32 *origptr, *replptr, *endptr;
 	struct alt_region *region = alt_region;
+	u32 *origptr, *replptr;
 
 	for (alt = region->begin; alt < region->end; alt++) {
+		u32 insn;
+		int i, nr_inst;
 
 		if (!cpus_have_cap(alt->cpufeature))
 			continue;
 
-		BUG_ON(alt->alt_len != alt->orig_len);
+		BUG_ON(alt->alt_len > alt->orig_len);
 
 		pr_info_once("patching kernel code\n");
 
-		origptr = (void *)&alt->orig_offset + alt->orig_offset;
-		endptr = (void *)origptr + alt->orig_len;
-		replptr = (void *)&alt->alt_offset + alt->alt_offset;
-		for (; origptr < endptr; origptr++, replptr++)
-			BUG_ON(aarch64_insn_patch_text_nosync(origptr, *replptr));
+		origptr = ALT_ORIG_PTR(alt);
+		replptr = ALT_REPL_PTR(alt);
+		nr_inst = alt->alt_len / sizeof(insn);
+
+		for (i = 0; i < nr_inst; i++) {
+			insn = get_alt_insn(alt, origptr + i, replptr + i);
+			*(origptr + i) = cpu_to_le32(insn);
+		}
+
+		flush_icache_range((uintptr_t)origptr,
+				   (uintptr_t)(origptr + nr_inst));
 	}
 }
 

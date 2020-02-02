@@ -247,6 +247,7 @@ endif
 
 header-y += l2tp.h
 header-y += libc-compat.h
+header-y += lirc.h
 header-y += limits.h
 header-y += llc.h
 header-y += loop.h
@@ -433,7 +434,6 @@ header-y += sonet.h
 header-y += sonypi.h
 header-y += sound.h
 header-y += soundcard.h
-header-y += spcom.h
 header-y += stat.h
 header-y += stddef.h
 header-y += string.h

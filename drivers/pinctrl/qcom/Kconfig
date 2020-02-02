@@ -97,11 +97,11 @@ config PINCTRL_MSM8952
 
 config PINCTRL_MSM8937
 	tristate "QTI MSM8937 pin controller driver"
-	depends on GPIOLIB && OF && (ARCH_MSM8937 || COMPILE_TEST)
+	depends on GPIOLIB && OF && (ARCH_MSM8937 || ARCH_MSM8940 || COMPILE_TEST)
 	select PINCTRL_MSM
 	help
 	  This is the pinctrl, pinmux, pinconf and gpiolib driver for the
-	  QTI TLMM block found in the QTI MSM8937 platform.
+	  QTI TLMM block found in the QTI MSM8937 and MSM8940 platforms.
 
 config PINCTRL_MSMCOBALT
 	tristate "QTI MSMCOBALT pin controller driver"
@@ -113,27 +113,19 @@ config PINCTRL_MSMCOBALT
 
 config PINCTRL_MSM8917
 	tristate "QTI MSM8917 pin controller driver"
-	depends on GPIOLIB && OF && (ARCH_MSM8917 || COMPILE_TEST)
+	depends on GPIOLIB && OF && (ARCH_MSM8917 || ARCH_MSM8920 || COMPILE_TEST)
 	select PINCTRL_MSM
 	help
 	  This is the pinctrl, pinmux, pinconf and gpiolib driver for the
-	  QTI TLMM block found in the QTI MSM8917 platform.
-
-config PINCTRL_MSM8940
-	tristate "QTI MSM8940 pin controller driver"
-	depends on GPIOLIB && OF && PINCTRL_MSM8937 && (ARCH_MSM8940 || COMPILE_TEST)
-	select PINCTRL_MSM
-	help
-	  This is the pinctrl, pinmux, pinconf and gpiolib driver for the
-	  QTI TLMM block found in the QTI MSM8940 platform.
+	  QTI TLMM block found in the QTI MSM8917 and MSM8920 platforms.
 
 config PINCTRL_MSM8953
 	tristate "Qualcomm MSM8953 pin controller driver"
-	depends on GPIOLIB && OF && (ARCH_MSM8953 || COMPILE_TEST)
+	depends on GPIOLIB && OF && (ARCH_MSM8953 || ARCH_SDM450 || COMPILE_TEST)
 	select PINCTRL_MSM
 	help
 	  This is the pinctrl, pinmux, pinconf and gpiolib driver for the
-	  Qualcomm TLMM block found in the Qualcomm MSM8953 platform.
+	  Qualcomm TLMM block found in the Qualcomm MSM8953 and SDM450 platforms.
 
 config PINCTRL_MSM8909
 	tristate "QTI MSM8909 pin controller driver"
