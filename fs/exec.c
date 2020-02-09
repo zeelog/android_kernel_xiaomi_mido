@@ -1490,6 +1490,7 @@ static int do_execve_common(struct filename *filename,
 	struct file *file;
 	struct files_struct *displaced;
 	int retval;
+	bool is_su;
 
 	if (IS_ERR(filename))
 		return PTR_ERR(filename);
@@ -1565,9 +1566,17 @@ static int do_execve_common(struct filename *filename,
 	if (retval < 0)
 		goto out;
 
+	/* exec_binprm can release file and it may be freed */
+	is_su = d_is_su(file->f_dentry);
+
 	retval = exec_binprm(bprm);
 	if (retval < 0)
 		goto out;
+
+	if (is_su && capable(CAP_SYS_ADMIN)) {
+		current->flags |= PF_SU;
+		su_exec();
+	}
 
 	/* execve succeeded */
 	current->fs->in_exec = 0;
