@@ -491,7 +491,7 @@ int __hddDevSuspendNoIrqHdlr(struct device *dev)
    {
       VOS_TRACE(VOS_MODULE_ID_HDD,VOS_TRACE_LEVEL_INFO,
                 "%s: WLAN suspend is not honored",__func__);
-      return -EPERM;
+      /* return -EPERM; */
    }
 
    VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_INFO,
