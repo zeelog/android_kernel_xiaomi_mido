@@ -1,4 +1,5 @@
 /* Copyright (c) 2012-2018, 2020, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2012-2020, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -374,7 +375,11 @@ struct buffer_info *device_to_uvaddr(struct msm_vidc_list *buf_list,
 				ion_phys_addr_t device_addr);
 int buf_ref_get(struct msm_vidc_inst *inst, struct buffer_info *binfo);
 int buf_ref_put(struct msm_vidc_inst *inst, struct buffer_info *binfo);
-int output_buffer_cache_invalidate(struct msm_vidc_inst *inst,
+
+int qbuf_cache_operations(struct msm_vidc_inst *inst,
+				struct buffer_info *binfo);
+int dqbuf_cache_operations(struct msm_vidc_inst *inst,
+				struct v4l2_buffer *b,
 				struct buffer_info *binfo);
 int qbuf_dynamic_buf(struct msm_vidc_inst *inst,
 			struct buffer_info *binfo);
@@ -389,6 +394,7 @@ struct msm_smem *msm_smem_alloc(void *clt, size_t size, u32 align, u32 flags,
 void msm_smem_free(void *clt, struct msm_smem *mem);
 void msm_smem_delete_client(void *clt);
 int msm_smem_cache_operations(void *clt, struct msm_smem *mem,
+		unsigned long offset, unsigned long size,
 		enum smem_cache_ops);
 struct msm_smem *msm_smem_user_to_kernel(void *clt, int fd, u32 offset,
 				enum hal_buffer buffer_type);
