@@ -588,7 +588,7 @@ static int __smem_alloc(struct venus_hfi_device *dev,
 
 	dprintk(VIDC_DBG, "__smem_alloc: ptr = %pK, size = %d\n",
 			alloc->kvaddr, size);
-	rc = msm_smem_cache_operations(dev->hal_client, alloc,
+	rc = msm_smem_cache_operations(dev->hal_client, alloc, 0, alloc->size,
 		SMEM_CACHE_CLEAN);
 	if (rc) {
 		dprintk(VIDC_WARN, "Failed to clean cache\n");

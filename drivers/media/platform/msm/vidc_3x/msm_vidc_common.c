@@ -5190,7 +5190,7 @@ int msm_comm_smem_cache_operations(struct msm_vidc_inst *inst,
 			"%s: invalid params: %pK %pK\n", __func__, inst, mem);
 		return -EINVAL;
 	}
-	return msm_smem_cache_operations(inst->mem_client, mem, cache_ops);
+	return msm_smem_cache_operations(inst->mem_client, mem, 0, mem->size, cache_ops);
 }
 
 struct msm_smem *msm_comm_smem_user_to_kernel(struct msm_vidc_inst *inst,

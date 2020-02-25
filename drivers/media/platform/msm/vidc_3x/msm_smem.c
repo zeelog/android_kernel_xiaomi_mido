@@ -481,79 +481,93 @@ bool msm_smem_compare_buffers(void *clt, int fd, void *priv)
 	return ret;
 }
 
-static int ion_cache_operations(struct smem_client *client,
-	struct msm_smem *mem, enum smem_cache_ops cache_op)
+static int msm_ion_cache_operations(void *ion_client, void *ion_handle,
+		unsigned long offset, unsigned long size,
+		enum smem_cache_ops cache_op)
 {
-	unsigned long ionflag = 0;
 	int rc = 0;
+	unsigned long flags = 0;
 	int msm_cache_ops = 0;
 
-	if (!mem || !client) {
-		dprintk(VIDC_ERR, "Invalid params: %pK, %pK\n",
-			mem, client);
+	if (!ion_client || !ion_handle) {
+		dprintk(VIDC_ERR, "%s: Invalid params: %pK %pK\n",
+			__func__, ion_client, ion_handle);
 		return -EINVAL;
 	}
-	rc = ion_handle_get_flags(client->clnt,	mem->smem_priv,
-		&ionflag);
+
+	rc = ion_handle_get_flags(ion_client, ion_handle, &flags);
 	if (rc) {
 		dprintk(VIDC_ERR,
-			"ion_handle_get_flags failed: %d\n", rc);
-		goto cache_op_failed;
+			"%s: ion_handle_get_flags failed: %d, ion client %pK, ion handle %pK\n",
+			__func__, rc, ion_client, ion_handle);
+		goto exit;
 	}
-	if (ION_IS_CACHED(ionflag)) {
-		switch (cache_op) {
-		case SMEM_CACHE_CLEAN:
-			msm_cache_ops = ION_IOC_CLEAN_CACHES;
-			break;
-		case SMEM_CACHE_INVALIDATE:
-			msm_cache_ops = ION_IOC_INV_CACHES;
-			break;
-		case SMEM_CACHE_CLEAN_INVALIDATE:
-			msm_cache_ops = ION_IOC_CLEAN_INV_CACHES;
-			break;
-		default:
-			dprintk(VIDC_ERR, "cache operation not supported\n");
-			rc = -EINVAL;
-			goto cache_op_failed;
-		}
-		rc = msm_ion_do_cache_op(client->clnt,
-				(struct ion_handle *)mem->smem_priv,
-				0, (unsigned long)mem->size,
-				msm_cache_ops);
-		if (rc) {
-			dprintk(VIDC_ERR,
-					"cache operation failed %d\n", rc);
-			goto cache_op_failed;
-		}
+
+	if (!ION_IS_CACHED(flags))
+		goto exit;
+
+	switch (cache_op) {
+	case SMEM_CACHE_CLEAN:
+		msm_cache_ops = ION_IOC_CLEAN_CACHES;
+		break;
+	case SMEM_CACHE_INVALIDATE:
+		msm_cache_ops = ION_IOC_INV_CACHES;
+		break;
+	case SMEM_CACHE_CLEAN_INVALIDATE:
+		msm_cache_ops = ION_IOC_CLEAN_INV_CACHES;
+		break;
+	default:
+		dprintk(VIDC_ERR, "%s: cache (%d) operation not supported\n",
+			__func__, cache_op);
+		rc = -EINVAL;
+		goto exit;
 	}
-cache_op_failed:
+
+	rc = msm_ion_do_cache_offset_op(ion_client, ion_handle, NULL,
+			offset, size, msm_cache_ops);
+	if (rc) {
+		dprintk(VIDC_ERR,
+			"%s: cache operation failed %d, ion client %pK, ion handle %pK, offset %lu, size %lu, msm_cache_ops %u\n",
+			__func__, rc, ion_client, ion_handle, offset,
+			size, msm_cache_ops);
+		goto exit;
+	}
+
+exit:
 	return rc;
 }
 
 int msm_smem_cache_operations(void *clt, struct msm_smem *mem,
+		unsigned long offset, unsigned long size,
 		enum smem_cache_ops cache_op)
 {
-	struct smem_client *client = clt;
 	int rc = 0;
+	struct smem_client *client = clt;
+	struct ion_handle  *handle = (struct ion_handle *)mem->smem_priv;
 
-	if (!client) {
-		dprintk(VIDC_ERR, "Invalid params: %pK\n",
-			client);
+	if (!client || !handle) {
+		dprintk(VIDC_ERR, "%s: Invalid params: %pK %pK\n",
+			__func__, client, handle);
 		return -EINVAL;
 	}
+
 	switch (client->mem_type) {
 	case SMEM_ION:
-		rc = ion_cache_operations(client, mem, cache_op);
+		rc = msm_ion_cache_operations(client->clnt, handle,
+				offset, size, cache_op);
 		if (rc)
 			dprintk(VIDC_ERR,
-			"Failed cache operations: %d\n", rc);
+			"%s: Failed cache operations: %d\n", __func__, rc);
 		break;
 	default:
-		dprintk(VIDC_ERR, "Mem type not supported\n");
+		dprintk(VIDC_ERR, "%s: Mem type (%d) not supported\n",
+			__func__, client->mem_type);
+		rc = -EINVAL;
 		break;
 	}
 	return rc;
 }
+
 
 void *msm_smem_new_client(enum smem_type mtype,
 		void *platform_resources, enum session_type stype)
