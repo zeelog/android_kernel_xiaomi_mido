@@ -438,6 +438,7 @@ static void kgsl_sync_fence_callback(struct fence *fence, struct fence_cb *cb)
 	}
 }
 
+#ifdef CONFIG_SYNC_DEBUG
 static void kgsl_get_fence_names(struct fence *fence,
 	struct event_fence_info *info_ptr)
 {
@@ -483,6 +484,7 @@ static void kgsl_get_fence_names(struct fence *fence,
 		}
 	}
 }
+#endif
 
 struct kgsl_sync_fence_cb *kgsl_sync_fence_async_wait(int fd,
 	bool (*func)(void *priv), void *priv, struct event_fence_info *info_ptr)
