@@ -166,10 +166,10 @@ static void syncobj_timer(unsigned long data)
 				i, event->context->id, event->timestamp);
 			break;
 		case KGSL_CMD_SYNCPOINT_TYPE_FENCE: {
+#ifdef CONFIG_SYNC_DEBUG
 			int j;
 			struct event_fence_info *info = &event->info;
 
-#ifdef CONFIG_SYNC_DEBUG
 			for (j = 0; j < info->num_fences; j++)
 				dev_err(device->dev, "       [%d] FENCE %s\n",
 					i, info->fences[j].name);
@@ -359,9 +359,9 @@ EXPORT_SYMBOL(kgsl_drawobj_destroy);
 static bool drawobj_sync_fence_func(void *priv)
 {
 	struct kgsl_drawobj_sync_event *event = priv;
-	int i;
 
 #ifdef CONFIG_SYNC_DEBUG
+	int i;
 	for (i = 0; i < event->info.num_fences; i++)
 		trace_syncpoint_fence_expire(event->syncobj,
 			event->info.fences[i].name);
