@@ -13246,25 +13246,13 @@ VOS_STATUS sme_UpdateDSCPtoUPMapping( tHalHandle hHal,
             for (i = 0; i < SME_QOS_WMM_UP_MAX; i++)
             {
                 for (j = pSession->QosMapSet.dscp_range[i][0];
-                               j <= pSession->QosMapSet.dscp_range[i][1]; j++)
-                {
-                   if ((pSession->QosMapSet.dscp_range[i][0] == 255) &&
-                                (pSession->QosMapSet.dscp_range[i][1] == 255))
-                   {
-                       VOS_TRACE(VOS_MODULE_ID_SME, VOS_TRACE_LEVEL_ERROR,
-                               "%s: User Priority %d is not used in mapping",
-                                __func__, i);
-                       break;
-                   }
-                   else
-                   {
+                               j <= pSession->QosMapSet.dscp_range[i][1] &&
+                               j <= WLAN_MAX_DSCP; j++)
                        dscpmapping[j]= i;
-                   }
-                }
             }
             for (i = 0; i< pSession->QosMapSet.num_dscp_exceptions; i++)
             {
-                if (pSession->QosMapSet.dscp_exceptions[i][0] != 255)
+                if (pSession->QosMapSet.dscp_exceptions[i][0] <= WLAN_MAX_DSCP)
                 {
                     dscpmapping[pSession->QosMapSet.dscp_exceptions[i][0] ] =
                                          pSession->QosMapSet.dscp_exceptions[i][1];
@@ -14386,58 +14374,6 @@ eHalStatus sme_DeleteAllTDLSPeers(tHalHandle hHal, uint8_t sessionId)
     vos_mem_copy(pMsg->bssid, pSession->connectedProfile.bssid,
                  sizeof(tSirMacAddr));
     status = palSendMBMessage( pMac->hHdd, pMsg );
-    return status;
-}
-
-
-/**
- * sme_FwMemDumpReq() - Send Fwr mem Dump Request
- * @hal: HAL pointer
- *
- * Return: eHalStatus
- */
-
-eHalStatus sme_FwMemDumpReq(tHalHandle hHal, tAniFwrDumpReq *recv_req)
-{
-
-    eHalStatus status = eHAL_STATUS_SUCCESS;
-    tpAniSirGlobal pMac = PMAC_STRUCT(hHal);
-    vos_msg_t msg;
-    tAniFwrDumpReq * send_req;
-
-    send_req = vos_mem_malloc(sizeof(*send_req));
-    if(!send_req) {
-        VOS_TRACE(VOS_MODULE_ID_SME, VOS_TRACE_LEVEL_ERROR,
-            FL("Mem allo failed for FW_MEM_DUMP"));
-        return eHAL_STATUS_FAILURE;
-    }
-
-    send_req->fwMemDumpReqCallback = recv_req->fwMemDumpReqCallback;
-    send_req->fwMemDumpReqContext = recv_req->fwMemDumpReqContext;
-
-    if (eHAL_STATUS_SUCCESS == sme_AcquireGlobalLock(&pMac->sme))
-    {
-        msg.bodyptr = send_req;
-        msg.type = WDA_FW_MEM_DUMP_REQ;
-        msg.reserved = 0;
-
-        if (VOS_STATUS_SUCCESS != vos_mq_post_message(VOS_MODULE_ID_WDA, &msg))
-        {
-            VOS_TRACE(VOS_MODULE_ID_SME, VOS_TRACE_LEVEL_ERROR,
-            FL("Not able to post WDA_FW_MEM_DUMP"));
-            vos_mem_free(send_req);
-            status = eHAL_STATUS_FAILURE;
-        }
-        sme_ReleaseGlobalLock(&pMac->sme);
-    }
-    else
-    {
-        VOS_TRACE(VOS_MODULE_ID_SME, VOS_TRACE_LEVEL_ERROR,
-        FL("Failed to acquire SME Global Lock"));
-        vos_mem_free(send_req);
-        status = eHAL_STATUS_FAILURE;
-    }
-
     return status;
 }
 
