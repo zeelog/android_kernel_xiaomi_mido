@@ -7185,19 +7185,10 @@ out:
 	return err;
 }
 
-/**
- * ufshcd_ioctl - ufs ioctl callback registered in scsi_host
- * @dev: scsi device required for per LUN queries
- * @cmd: command opcode
- * @buffer: user space buffer for transferring data
- *
- * Supported commands:
- * UFS_IOCTL_QUERY
- */
-static int ufshcd_ioctl(struct scsi_device *dev, int cmd, void __user *buffer)
-{
-	struct ufs_hba *hba = shost_priv(dev->host);
-	int err = 0;
+	/* Add required well known logical units to scsi mid layer */
+	ret = ufshcd_scsi_add_wlus(hba);
+	if (ret)
+		goto out;
 
 	BUG_ON(!hba);
 	if (!buffer) {
