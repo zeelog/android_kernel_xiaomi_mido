@@ -168,7 +168,7 @@ static void cpuidle_idle_call(void)
 
 	if (idle_should_freeze() || dev->use_deepest_state) {
 		if (idle_should_freeze()) {
-			entered_state = cpuidle_enter_freeze(drv, dev);
+			entered_state = cpuidle_enter_s2idle(drv, dev);
 			if (entered_state > 0) {
 				local_irq_enable();
 				goto exit_idle;

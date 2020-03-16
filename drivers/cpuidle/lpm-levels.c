@@ -1550,7 +1550,7 @@ static int cluster_cpuidle_register(struct lpm_cluster *cl)
 			st->target_residency = 0;
 			st->enter = lpm_cpuidle_enter;
 			if (i == lpm_cpu->nlevels - 1)
-				st->enter_freeze = lpm_cpuidle_freeze;
+				st->enter_s2idle = lpm_cpuidle_freeze;
 		}
 
 		lpm_cpu->drv->state_count = lpm_cpu->nlevels;
