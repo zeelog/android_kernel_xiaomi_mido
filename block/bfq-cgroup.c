@@ -740,7 +740,6 @@ static void bfq_pd_offline(struct blkg_policy_data *pd)
 	 * deactivating the group itself.
 	 */
 	for (i = 0; i < BFQ_IOPRIO_CLASSES; i++) {
-		BUG_ON(!bfqg->sched_data.service_tree);
 		st = bfqg->sched_data.service_tree + i;
 		/*
 		 * The idle tree may still contain bfq_queues belonging
