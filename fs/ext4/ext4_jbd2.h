@@ -79,6 +79,13 @@
 
 #define EXT4_INDEX_EXTRA_TRANS_BLOCKS	8
 
+/*
+ * Number of credits needed to perform directory shrinking. For each htree
+ * level, we need 6 blocks (block in question, its parent, last block, last
+ * block's parent, bitmap block, bg summary).
+ */
+#define EXT4_DIR_SHRINK_TRANS_BLOCKS	6U
+
 #ifdef CONFIG_QUOTA
 /* Amount of blocks needed for quota update - we know that the structure was
  * allocated so we need to update only data block */
