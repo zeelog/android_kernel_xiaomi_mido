@@ -57,6 +57,24 @@
 			label = "mpp";
 			/delete-node/ qcom,led_mpp_2;
 		};
+
+		pmi8950_charger: qcom,qpnp-smbcharger {
+			qcom,float-voltage-mv = <4400>;
+			qcom,resume-delta-mv = <50>;
+			qcom,charge-unknown-battery;
+			qcom,override-usb-current;
+			qcom,fastchg-current-comp = <1200>;
+			qcom,float-voltage-comp = <16>;
+			/delete-property/ qcom,autoadjust-vfloat;
+		};
+
+		pmi8950_fg: qcom,fg {
+			qcom,resume-soc = <99>;
+			qcom,fg-cutoff-voltage-mv = <3400>;
+			qcom,fg-cc-cv-threshold-mv = <4380>;
+			qcom,fg-vbat-estimate-diff-mv = <200>;
+			qcom,fg-restore-batt-info;
+		};
 	};
 };
 
@@ -78,25 +96,21 @@
 	};
 };
 
-&qrd_batterydata {
-	qcom,batt-id-range-pct = <5>;
-	#include "batterydata-qrd-sunwoda-4v4-4100mah.dtsi"
-	#include "batterydata-qrd-sunwoda-ATL-4v4-4100mah.dtsi"
-	#include "batterydata-qrd-coslight-4v4-4100mah.dtsi"
-	#include "batterydata-qrd-desay-lisheng-4v4-4100mah.dtsi"
-	#include "batterydata-qrd-desay-4v4-4100mah.dtsi"
-	/delete-node/ qcom,qrd_msm8937_sku1_2920mah;
+/ {
+	qrd_batterydata: qcom,battery-data {
+		qcom,batt-id-range-pct = <5>;
+		#include "batterydata-qrd-sunwoda-4v4-4100mah.dtsi"
+		#include "batterydata-qrd-sunwoda-ATL-4v4-4100mah.dtsi"
+		#include "batterydata-qrd-coslight-4v4-4100mah.dtsi"
+		#include "batterydata-qrd-desay-lisheng-4v4-4100mah.dtsi"
+		#include "batterydata-qrd-desay-4v4-4100mah.dtsi"
+		/delete-node/ qcom,qrd_msm8937_sku1_2920mah;
+	};
 
 };
 
 
 &pmi8950_charger {
-	qcom,float-voltage-mv = <4400>;
-	qcom,resume-delta-mv = <50>;
-	qcom,charge-unknown-battery;
-	qcom,override-usb-current;
-	qcom,fastchg-current-comp = <1200>;
-	qcom,float-voltage-comp = <16>;
 	qcom,thermal-mitigation = <3000 2500 2000 2000 1000 500 0>;
 	/delete-property/ qcom,parallel-usb-min-current-ma;
 	/delete-property/ qcom,parallel-usb-9v-min-current-ma;
@@ -105,19 +119,13 @@
 	/delete-property/ qcom,chg-led-support;
 	/delete-property/ qcom,external-typec;
 	/delete-property/ qcom,typec-psy-name;
-	/delete-property/ qcom,autoadjust-vfloat;
 };
 
 &pmi8950_fg {
-	qcom,resume-soc = <99>;
-	qcom,fg-cutoff-voltage-mv = <3400>;
-	qcom,fg-cc-cv-threshold-mv = <4380>;
-	qcom,fg-vbat-estimate-diff-mv = <200>;
 	qcom,thermal-coefficients = [c8 86 c1 50 d3 37];
 	qcom,cold-bat-decidegc = <0>;
 	qcom,cool-bat-decidegc = <150>;
 	qcom,warm-bat-decidegc = <450>;
-	qcom,fg-restore-batt-info;
 
 };
 
@@ -305,6 +313,8 @@
         };
 
 	i2c@78b7000 {
+                status = "ok";
+
                 focaltech@38 {
                         compatible = "focaltech,5435";
                         reg = <0x38>;
@@ -485,14 +495,6 @@
 };
 
 
-&pm8953_diangu_dig {
-	status = "ok";
-};
-
-&pm8953_diangu_analog {
-	status = "ok";
-};
-
 &ext_codec {
 	status = "disabled";
 };
@@ -523,9 +525,22 @@
 
 &firmware {
 	android {
+		/delete-node/ vbmeta;
+
 		fstab {
 			vendor {
 				dev = "/dev/block/platform/soc/7824900.sdhci/by-name/cust";
+				fsmgr_flags = "wait";
+				status = "ok";
+			};
+
+			system {
+				compatible = "android,system";
+				dev = "/dev/block/platform/soc/7824900.sdhci/by-name/system";
+				type = "ext4";
+				mnt_flags = "ro,barrier=1,discard";
+				fsmgr_flags = "wait";
+				status = "ok";
 			};
 		};
 	};
