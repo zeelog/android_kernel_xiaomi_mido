@@ -46,9 +46,9 @@ static struct usb_interface_descriptor intf_desc = {
 	.bLength            =	sizeof(intf_desc),
 	.bDescriptorType    =	USB_DT_INTERFACE,
 	.bNumEndpoints      =	2,
-	.bInterfaceClass    =	0xFF,
-	.bInterfaceSubClass =	0xFF,
-	.bInterfaceProtocol =	0x30,
+	.bInterfaceClass    =	USB_CLASS_VENDOR_SPEC,
+	.bInterfaceSubClass =	USB_SUBCLASS_VENDOR_SPEC,
+	.bInterfaceProtocol =	0x90,
 };
 
 static struct usb_endpoint_descriptor hs_bulk_in_desc = {
