@@ -658,6 +658,7 @@ static int __linearize(struct x86_emulate_ctxt *ctxt,
 	*max_size = 0;
 	switch (ctxt->mode) {
 	case X86EMUL_MODE_PROT64:
+		*linear = la;
 		if (is_noncanonical_address(la))
 			return emulate_gp(ctxt, 0);
 
@@ -666,6 +667,7 @@ static int __linearize(struct x86_emulate_ctxt *ctxt,
 			goto bad;
 		break;
 	default:
+		*linear = la = (u32)la;
 		usable = ctxt->ops->get_segment(ctxt, &sel, &desc, NULL,
 						addr.seg);
 		if (!usable)
@@ -4394,6 +4396,7 @@ int x86_decode_insn(struct x86_emulate_ctxt *ctxt, void *insn, int insn_len)
 	ctxt->fetch.ptr = ctxt->fetch.data;
 	ctxt->fetch.end = ctxt->fetch.data + insn_len;
 	ctxt->opcode_len = 1;
+	ctxt->intercept = x86_intercept_none;
 	if (insn_len > 0)
 		memcpy(ctxt->fetch.data, insn, insn_len);
 	else {
