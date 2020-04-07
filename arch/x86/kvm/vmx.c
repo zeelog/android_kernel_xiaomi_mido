@@ -1651,38 +1651,48 @@ static void reload_tss(void)
 
 static bool update_transition_efer(struct vcpu_vmx *vmx, int efer_offset)
 {
-	u64 guest_efer;
-	u64 ignore_bits;
+	u64 guest_efer = vmx->vcpu.arch.efer;
+	u64 ignore_bits = 0;
 
-	guest_efer = vmx->vcpu.arch.efer;
+	if (!enable_ept) {
+		/*
+		 * NX is needed to handle CR0.WP=1, CR4.SMEP=1.  Testing
+		 * host CPUID is more efficient than testing guest CPUID
+		 * or CR4.  Host SMEP is anyway a requirement for guest SMEP.
+		 */
+		if (boot_cpu_has(X86_FEATURE_SMEP))
+			guest_efer |= EFER_NX;
+		else if (!(guest_efer & EFER_NX))
+			ignore_bits |= EFER_NX;
+	}
 
 	/*
-	 * NX is emulated; LMA and LME handled by hardware; SCE meaningless
-	 * outside long mode
+	 * LMA and LME handled by hardware; SCE meaningless outside long mode.
 	 */
-	ignore_bits = EFER_NX | EFER_SCE;
+	ignore_bits |= EFER_SCE;
 #ifdef CONFIG_X86_64
 	ignore_bits |= EFER_LMA | EFER_LME;
 	/* SCE is meaningful only in long mode on Intel */
 	if (guest_efer & EFER_LMA)
 		ignore_bits &= ~(u64)EFER_SCE;
 #endif
-	guest_efer &= ~ignore_bits;
-	guest_efer |= host_efer & ignore_bits;
-	vmx->guest_msrs[efer_offset].data = guest_efer;
-	vmx->guest_msrs[efer_offset].mask = ~ignore_bits;
 
 	clear_atomic_switch_msr(vmx, MSR_EFER);
 	/* On ept, can't emulate nx, and must switch nx atomically */
 	if (enable_ept && ((vmx->vcpu.arch.efer ^ host_efer) & EFER_NX)) {
-		guest_efer = vmx->vcpu.arch.efer;
 		if (!(guest_efer & EFER_LMA))
 			guest_efer &= ~EFER_LME;
 		add_atomic_switch_msr(vmx, MSR_EFER, guest_efer, host_efer);
 		return false;
-	}
+	} else {
+		guest_efer &= ~ignore_bits;
+		guest_efer |= host_efer & ignore_bits;
 
-	return true;
+		vmx->guest_msrs[efer_offset].data = guest_efer;
+		vmx->guest_msrs[efer_offset].mask = ~ignore_bits;
+
+		return true;
+	}
 }
 
 static unsigned long segment_base(u16 selector)
@@ -3912,6 +3922,26 @@ static bool cs_ss_rpl_check(struct kvm_vcpu *vcpu)
 
 	return ((cs.selector & SELECTOR_RPL_MASK) ==
 		 (ss.selector & SELECTOR_RPL_MASK));
+}
+
+static bool nested_vmx_check_io_bitmaps(struct kvm_vcpu *vcpu,
+					unsigned int port, int size);
+static bool nested_vmx_exit_handled_io(struct kvm_vcpu *vcpu,
+				       struct vmcs12 *vmcs12)
+{
+	unsigned long exit_qualification;
+	unsigned int port;
+	int size;
+
+	if (!nested_cpu_has(vmcs12, CPU_BASED_USE_IO_BITMAPS))
+		return nested_cpu_has(vmcs12, CPU_BASED_UNCOND_IO_EXITING);
+
+	exit_qualification = vmcs_readl(EXIT_QUALIFICATION);
+
+	port = exit_qualification >> 16;
+	size = (exit_qualification & 7) + 1;
+
+	return nested_vmx_check_io_bitmaps(vcpu, port, size);
 }
 
 /*
@@ -6859,22 +6889,16 @@ static int (*const kvm_vmx_exit_handlers[])(struct kvm_vcpu *vcpu) = {
 static const int kvm_vmx_max_exit_handlers =
 	ARRAY_SIZE(kvm_vmx_exit_handlers);
 
-static bool nested_vmx_exit_handled_io(struct kvm_vcpu *vcpu,
-				       struct vmcs12 *vmcs12)
+/*
+ * Return true if an IO instruction with the specified port and size should cause
+ * a VM-exit into L1.
+ */
+bool nested_vmx_check_io_bitmaps(struct kvm_vcpu *vcpu, unsigned int port,
+				 int size)
 {
-	unsigned long exit_qualification;
+	struct vmcs12 *vmcs12 = get_vmcs12(vcpu);
 	gpa_t bitmap, last_bitmap;
-	unsigned int port;
-	int size;
 	u8 b;
-
-	if (!nested_cpu_has(vmcs12, CPU_BASED_USE_IO_BITMAPS))
-		return nested_cpu_has(vmcs12, CPU_BASED_UNCOND_IO_EXITING);
-
-	exit_qualification = vmcs_readl(EXIT_QUALIFICATION);
-
-	port = exit_qualification >> 16;
-	size = (exit_qualification & 7) + 1;
 
 	last_bitmap = (gpa_t)-1;
 	b = -1;
