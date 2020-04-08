@@ -2758,6 +2758,11 @@ static int goodix_ts_probe(struct i2c_client *client, const struct i2c_device_id
 			destroy_workqueue(gtp_esd_check_workqueue);
 		}
 		#endif
+
+		if (gpio_is_valid(gtp_rst_gpio))
+			gpio_free(gtp_rst_gpio);
+		if (gpio_is_valid(gtp_int_gpio))
+			gpio_free(gtp_int_gpio);
 	kfree(ts);
 	return -EINVAL;
 	}
