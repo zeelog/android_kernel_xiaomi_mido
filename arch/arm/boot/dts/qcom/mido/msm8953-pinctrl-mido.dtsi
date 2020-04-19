@@ -16,7 +16,7 @@
 		goodix_spi_active: goodix_spi_active{
                         mux {
                                 pins = "gpio135", "gpio136", "gpio137", "gpio138";
-                                function = "blsp_spi6";
+                                function = "blsp_spi7";
                         };
                         config {
                                 pins = "gpio135", "gpio136", "gpio137", "gpio138";
