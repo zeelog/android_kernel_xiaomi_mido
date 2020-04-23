@@ -1218,7 +1218,7 @@ static irqreturn_t wcd_mbhc_release_handler(int irq, void *data)
 	if (mbhc->mbhc_detection_logic == WCD_DETECTION_LEGACY &&
 		mbhc->current_plug == MBHC_PLUG_TYPE_HEADPHONE) {
 		wcd_mbhc_find_plug_and_report(mbhc, MBHC_PLUG_TYPE_HEADSET);
-#ifdef CONFIG_MACH_XIAOMI_D2
+#if (defined CONFIG_MACH_XIAOMI_C6) || (defined CONFIG_MACH_XIAOMI_D2)
 		wcd_mbhc_jack_report(mbhc, &mbhc->headset_jack,
 				0, WCD_MBHC_JACK_MASK);
 		msleep(100);
