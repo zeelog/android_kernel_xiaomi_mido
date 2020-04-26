@@ -58,6 +58,9 @@ ifneq ($(CONFIG_PRONTO_WLAN),)
 #Flag to enable offload packets feature
     CONFIG_WLAN_OFFLOAD_PACKETS := y
 
+#Flag to enable hold RX wake lock feature
+    CONFIG_WLAN_FEATURE_HOLD_RX_WAKELOCK := n
+
     endif
 #Flag to enable AP Find feature
 CONFIG_WLAN_FEATURE_AP_FIND := y
