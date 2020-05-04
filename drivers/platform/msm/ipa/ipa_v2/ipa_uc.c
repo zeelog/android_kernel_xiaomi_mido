@@ -363,7 +363,7 @@ static void ipa_uc_event_handler(enum ipa_irq_type interrupt,
 			IPAERR("IPA has encountered a ZIP engine error\n");
 			ipa_ctx->uc_ctx.uc_zip_error = true;
 		}
-		BUG();
+		BUG_ON(evt.params.errorType != IPA_HW_ERROR_NONE);
 	} else if (ipa_ctx->uc_ctx.uc_sram_mmio->eventOp ==
 		IPA_HW_2_CPU_EVENT_LOG_INFO) {
 		IPADBG("uC evt log info ofst=0x%x\n",
@@ -642,7 +642,7 @@ send_cmd:
 					uc_ctx.uc_error_type));
 			}
 			mutex_unlock(&ipa_ctx->uc_ctx.uc_lock);
-			BUG();
+			BUG_ON(ipa_ctx->uc_ctx.uc_error_type != IPA_HW_ERROR_NONE);
 			return -EFAULT;
 		}
 	} else {
@@ -655,7 +655,7 @@ send_cmd:
 					uc_ctx.uc_error_type));
 			}
 			mutex_unlock(&ipa_ctx->uc_ctx.uc_lock);
-			BUG();
+			BUG_ON(ipa_ctx->uc_ctx.uc_error_type != IPA_HW_ERROR_NONE);
 			return -EFAULT;
 		}
 	}
