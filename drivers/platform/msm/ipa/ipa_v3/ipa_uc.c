@@ -347,7 +347,7 @@ static void ipa3_uc_event_handler(enum ipa_irq_type interrupt,
 		ipa3_ctx->uc_ctx.uc_error_type = evt.params.errorType;
 		ipa3_ctx->uc_ctx.uc_error_timestamp =
 			ipahal_read_reg(IPA_TAG_TIMER);
-		BUG();
+		BUG_ON(evt.params.errorType != IPA_HW_ERROR_NONE);
 	} else if (ipa3_ctx->uc_ctx.uc_sram_mmio->eventOp ==
 		IPA_HW_2_CPU_EVENT_LOG_INFO) {
 		IPADBG("uC evt log info ofst=0x%x\n",
@@ -547,7 +547,7 @@ send_cmd:
 					uc_ctx.uc_error_type));
 			}
 			IPA3_UC_UNLOCK(flags);
-			BUG();
+			BUG_ON(ipa3_ctx->uc_ctx.uc_error_type != IPA_HW_ERROR_NONE);
 			return -EFAULT;
 		}
 	} else {
@@ -560,7 +560,7 @@ send_cmd:
 					uc_ctx.uc_error_type));
 			}
 			IPA3_UC_UNLOCK(flags);
-			BUG();
+			BUG_ON(ipa3_ctx->uc_ctx.uc_error_type != IPA_HW_ERROR_NONE);
 			return -EFAULT;
 		}
 	}
