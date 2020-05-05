@@ -887,10 +887,8 @@ void ipa3_uc_rg10_write_reg(enum ipahal_reg_name reg, u32 n, u32 val)
 		paddr, val);
 	ret = ipa3_uc_send_cmd_64b_param(paddr, val,
 		IPA_CPU_2_HW_CMD_REG_WRITE, 0, true, 0);
-	if (ret) {
+	if (ret)
 		IPAERR("failed to send cmd to uC for reg write\n");
-		BUG();
-	}
 }
 
 /**
