@@ -2195,7 +2195,6 @@ int ipa_q6_pre_shutdown_cleanup(void)
 int ipa_q6_post_shutdown_cleanup(void)
 {
 	int client_idx;
-	int res;
 
 	/*
 	 * Do not delay Q6 pipes here. This may result in IPA reading a
@@ -2219,11 +2218,9 @@ int ipa_q6_post_shutdown_cleanup(void)
 		if (IPA_CLIENT_IS_Q6_NON_ZIP_CONS(client_idx) ||
 			IPA_CLIENT_IS_Q6_ZIP_CONS(client_idx) ||
 			IPA_CLIENT_IS_Q6_NON_ZIP_PROD(client_idx) ||
-			IPA_CLIENT_IS_Q6_ZIP_PROD(client_idx)) {
-			res = ipa_uc_reset_pipe(client_idx);
-			if (res)
-				BUG();
-		}
+			IPA_CLIENT_IS_Q6_ZIP_PROD(client_idx))
+			ipa_uc_reset_pipe(client_idx);
+
 	return 0;
 }
 
