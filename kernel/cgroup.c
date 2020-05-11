@@ -4390,11 +4390,13 @@ static void css_free_work_fn(struct work_struct *work)
 
 	if (css->ss) {
 		/* css free path */
-		if (css->parent)
-			css_put(css->parent);
+		struct cgroup_subsys_state *parent = css->parent;
 
 		css->ss->css_free(css);
 		cgroup_put(cgrp);
+
+		if (parent)
+			css_put(parent);
 	} else {
 		/* cgroup free path */
 		atomic_dec(&cgrp->root->nr_cgrps);
@@ -4485,6 +4487,7 @@ static void init_and_link_css(struct cgroup_subsys_state *css,
 	memset(css, 0, sizeof(*css));
 	css->cgroup = cgrp;
 	css->ss = ss;
+	css->id = -1;
 	INIT_LIST_HEAD(&css->sibling);
 	INIT_LIST_HEAD(&css->children);
 	css->serial_nr = css_serial_nr_next++;
