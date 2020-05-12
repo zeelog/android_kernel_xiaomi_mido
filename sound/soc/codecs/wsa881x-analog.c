@@ -819,8 +819,8 @@ static void wsa881x_ocp_ctl_work(struct work_struct *work)
 	else
 		snd_soc_update_bits(codec, WSA881X_SPKR_OCP_CTL, 0xC0, 0xC0);
 
-		schedule_delayed_work(&wsa881x->ocp_ctl_work,
-			msecs_to_jiffies(wsa881x_ocp_poll_timer_sec * 1000));
+	schedule_delayed_work(&wsa881x->ocp_ctl_work,
+		msecs_to_jiffies(wsa881x_ocp_poll_timer_sec * 1000));
 }
 
 static int wsa881x_spkr_pa_event(struct snd_soc_dapm_widget *w,

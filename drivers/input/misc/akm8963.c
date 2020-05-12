@@ -1503,10 +1503,11 @@ static int akm_compass_resume(struct device *dev)
 
 		if (AKM_IS_MAG_DATA_ENABLED() &&
 			akm->use_poll &&
-			akm->pdata->auto_report)
+			akm->pdata->auto_report) {
 			ktime = ktime_set(0,
 			akm->delay[MAG_DATA_FLAG] * NSEC_PER_MSEC);
 			hrtimer_start(&akm->mag_timer, ktime, HRTIMER_MODE_REL);
+		}
 	}
 	dev_dbg(&akm->i2c->dev, "resumed\n");
 

@@ -17202,10 +17202,11 @@ u8 v_mag_sec_if_pow_mode_u8)
 	break;
 	}
 	/* set mag interface auto mode*/
-	if (p_smi130->mag_manual_enable == SMI130_MANUAL_ENABLE)
+	if (p_smi130->mag_manual_enable == SMI130_MANUAL_ENABLE) {
 		com_rslt += smi130_set_mag_manual_enable(
 		SMI130_MANUAL_DISABLE);
 		p_smi130->delay_msec(SMI130_GEN_READ_WRITE_DELAY);
+	}
 	return com_rslt;
 }
 /*!
@@ -17979,31 +17980,32 @@ const s8 *p_offset_s8)
 	results*/
 	SMI130_RETURN_FUNCTION_TYPE com_rslt = E_SMI130_COMM_RES;
 
-	if (p_smi130->mag_manual_enable != SMI130_MANUAL_ENABLE)
+	if (p_smi130->mag_manual_enable != SMI130_MANUAL_ENABLE) {
 		com_rslt = smi130_set_mag_manual_enable(SMI130_MANUAL_ENABLE);
 		p_smi130->delay_msec(SMI130_YAS532_OFFSET_DELAY);
+	}
 
-	    /* Write offset X data*/
-		com_rslt = smi130_set_mag_write_data(p_offset_s8[0]);
-		p_smi130->delay_msec(SMI130_GEN_READ_WRITE_DELAY);
-		/* YAS532 offset x write*/
-		com_rslt += smi130_set_mag_write_addr(SMI130_YAS532_OFFSET_X);
-		p_smi130->delay_msec(SMI130_GEN_READ_WRITE_DELAY);
+	/* Write offset X data*/
+	com_rslt = smi130_set_mag_write_data(p_offset_s8[0]);
+	p_smi130->delay_msec(SMI130_GEN_READ_WRITE_DELAY);
+	/* YAS532 offset x write*/
+	com_rslt += smi130_set_mag_write_addr(SMI130_YAS532_OFFSET_X);
+	p_smi130->delay_msec(SMI130_GEN_READ_WRITE_DELAY);
 
-		/* Write offset Y data*/
-		com_rslt = smi130_set_mag_write_data(p_offset_s8[1]);
-		p_smi130->delay_msec(SMI130_GEN_READ_WRITE_DELAY);
-		/* YAS532 offset y write*/
-		com_rslt += smi130_set_mag_write_addr(SMI130_YAS532_OFFSET_Y);
-		p_smi130->delay_msec(SMI130_GEN_READ_WRITE_DELAY);
+	/* Write offset Y data*/
+	com_rslt = smi130_set_mag_write_data(p_offset_s8[1]);
+	p_smi130->delay_msec(SMI130_GEN_READ_WRITE_DELAY);
+	/* YAS532 offset y write*/
+	com_rslt += smi130_set_mag_write_addr(SMI130_YAS532_OFFSET_Y);
+	p_smi130->delay_msec(SMI130_GEN_READ_WRITE_DELAY);
 
-		/* Write offset Z data*/
-		com_rslt = smi130_set_mag_write_data(p_offset_s8[2]);
-		p_smi130->delay_msec(SMI130_GEN_READ_WRITE_DELAY);
-		/* YAS532 offset z write*/
-		com_rslt += smi130_set_mag_write_addr(SMI130_YAS532_OFFSET_Z);
-		p_smi130->delay_msec(SMI130_GEN_READ_WRITE_DELAY);
-		set_vector(yas532_data_mbl.v_hard_offset_s8, p_offset_s8);
+	/* Write offset Z data*/
+	com_rslt = smi130_set_mag_write_data(p_offset_s8[2]);
+	p_smi130->delay_msec(SMI130_GEN_READ_WRITE_DELAY);
+	/* YAS532 offset z write*/
+	com_rslt += smi130_set_mag_write_addr(SMI130_YAS532_OFFSET_Z);
+	p_smi130->delay_msec(SMI130_GEN_READ_WRITE_DELAY);
+	set_vector(yas532_data_mbl.v_hard_offset_s8, p_offset_s8);
 
 	if (p_smi130->mag_manual_enable == SMI130_MANUAL_ENABLE)
 		com_rslt = smi130_set_mag_manual_enable(SMI130_MANUAL_DISABLE);
@@ -18493,27 +18495,28 @@ u8 v_command_reg_data_u8)
 {
 	SMI130_RETURN_FUNCTION_TYPE com_rslt = E_SMI130_COMM_RES;
 
-	if (p_smi130->mag_manual_enable != SMI130_MANUAL_ENABLE)
-			com_rslt = smi130_set_mag_manual_enable(
-			SMI130_MANUAL_ENABLE);
-			p_smi130->delay_msec(SMI130_GEN_READ_WRITE_DELAY);
-
-		com_rslt = smi130_set_mag_write_data(v_command_reg_data_u8);
+	if (p_smi130->mag_manual_enable != SMI130_MANUAL_ENABLE) {
+		com_rslt = smi130_set_mag_manual_enable(SMI130_MANUAL_ENABLE);
 		p_smi130->delay_msec(SMI130_GEN_READ_WRITE_DELAY);
-		/* YAMAHA YAS532-0x82*/
-		com_rslt += smi130_set_mag_write_addr(
-		SMI130_REG_YAS537_CMDR);
-		/* set the mode to RECORD*/
-		yas537_data_mbl.measure_state = YAS537_MAG_STATE_RECORD_DATA;
-		p_smi130->delay_msec(SMI130_YAS_ACQ_COMMAND_DELAY);
-		com_rslt += smi130_set_mag_read_addr(
-		YAS537_REG_TEMPERATURE_0);
-		p_smi130->delay_msec(SMI130_GEN_READ_WRITE_DELAY);
+	}
 
-	if (p_smi130->mag_manual_enable == SMI130_MANUAL_ENABLE)
+	com_rslt = smi130_set_mag_write_data(v_command_reg_data_u8);
+	p_smi130->delay_msec(SMI130_GEN_READ_WRITE_DELAY);
+	/* YAMAHA YAS532-0x82*/
+	com_rslt += smi130_set_mag_write_addr(
+	SMI130_REG_YAS537_CMDR);
+	/* set the mode to RECORD*/
+	yas537_data_mbl.measure_state = YAS537_MAG_STATE_RECORD_DATA;
+	p_smi130->delay_msec(SMI130_YAS_ACQ_COMMAND_DELAY);
+	com_rslt += smi130_set_mag_read_addr(
+	YAS537_REG_TEMPERATURE_0);
+	p_smi130->delay_msec(SMI130_GEN_READ_WRITE_DELAY);
+
+	if (p_smi130->mag_manual_enable == SMI130_MANUAL_ENABLE) {
 		com_rslt += smi130_set_mag_manual_enable(
 		SMI130_MANUAL_DISABLE);
 		p_smi130->delay_msec(SMI130_GEN_READ_WRITE_DELAY);
+	}
 
 	return com_rslt;
 
