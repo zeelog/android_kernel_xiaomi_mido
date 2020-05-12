@@ -29,8 +29,6 @@
 
 #define MAX_STRING_LEN 256
 #define BOOT_MARKER_MAX_LEN 40
-static struct dentry *dent_bkpi, *dent_bkpi_status;
-static struct boot_marker boot_marker_list;
 
 struct boot_marker {
 	char marker_name[BOOT_MARKER_MAX_LEN];
@@ -38,6 +36,9 @@ struct boot_marker {
 	struct list_head list;
 	struct mutex lock;
 };
+
+static struct dentry *dent_bkpi, *dent_bkpi_status;
+static struct boot_marker boot_marker_list;
 
 static void _create_boot_marker(const char *name,
 					unsigned long long int timer_value)
