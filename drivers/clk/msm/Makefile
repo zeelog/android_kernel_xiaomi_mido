@@ -76,7 +76,3 @@ obj-$(CONFIG_ARCH_SDM450)	+= clock-rcgwr.o
 
 obj-y				+= gdsc.o
 obj-y				+= mdss/
-
-ifdef CONFIG_ARCH_MDM9607
-KBUILD_CFLAGS	+= -fno-cse-follow-jumps
-endif

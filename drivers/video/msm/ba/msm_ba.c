@@ -506,7 +506,7 @@ int msm_ba_streamoff(void *instance, enum v4l2_buf_type i)
 }
 EXPORT_SYMBOL(msm_ba_streamoff);
 
-long msm_ba_private_ioctl(void *instance, int cmd, void *arg)
+long msm_ba_private_ioctl(void *instance, unsigned int cmd, void *arg)
 {
 	long rc = 0;
 	struct msm_ba_inst *inst = instance;

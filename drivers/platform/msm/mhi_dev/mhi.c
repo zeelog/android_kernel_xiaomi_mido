@@ -2108,18 +2108,20 @@ static int mhi_dev_check_tre_bytes_left(struct mhi_dev_channel *ch,
 	 */
 	if (ch->tre_bytes_left == 0) {
 		if (el->tre.chain) {
-			if (el->tre.ieob)
+			if (el->tre.ieob) {
 				mhi_dev_send_completion_event(ch,
 					ring->rd_offset, el->tre.len,
 					MHI_CMD_COMPL_CODE_EOB);
 				*chain = 1;
+			}
 		} else {
-			if (el->tre.ieot)
+			if (el->tre.ieot) {
 				mhi_dev_send_completion_event(
 					ch, ring->rd_offset, el->tre.len,
 					MHI_CMD_COMPL_CODE_EOT);
 				td_done = 1;
 				*chain = 0;
+			}
 		}
 		mhi_dev_ring_inc_index(ring, ring->rd_offset);
 		ch->tre_bytes_left = 0;
