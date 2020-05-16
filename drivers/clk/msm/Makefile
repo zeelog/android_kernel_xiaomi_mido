@@ -19,7 +19,7 @@ obj-$(CONFIG_ARCH_MSM8953)	+= clock-rcgwr.o
 obj-$(CONFIG_ARCH_MSM8937)	+= clock-gcc-8952.o
 obj-$(CONFIG_ARCH_MSM8937)	+= clock-cpu-8939.o
 obj-$(CONFIG_ARCH_MSM8937)	+= clock-rcgwr.o
-obj-$(CONFIG_ARCH_MSM8953)	+= clock-cpu-sdm632.o
+obj-$(CONFIG_ARCH_SDM632)	+= clock-cpu-sdm632.o
 
 # MDM9607
 obj-$(CONFIG_ARCH_MDM9607)      +=clock-gcc-mdm9607.o
