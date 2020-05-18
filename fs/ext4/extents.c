@@ -472,6 +472,10 @@ static int __ext4_ext_check(const char *function, unsigned int line,
 		error_msg = "invalid extent entries";
 		goto corrupted;
 	}
+	if (unlikely(depth > 32)) {
+		error_msg = "too large eh_depth";
+		goto corrupted;
+	}
 	/* Verify checksum on non-root extent tree nodes */
 	if (ext_depth(inode) != depth &&
 	    !ext4_extent_block_csum_verify(inode, eh)) {
@@ -3422,8 +3426,8 @@ static int ext4_ext_convert_to_initialized(handle_t *handle,
 		(unsigned long long)map->m_lblk, map_len);
 
 	sbi = EXT4_SB(inode->i_sb);
-	eof_block = (inode->i_size + inode->i_sb->s_blocksize - 1) >>
-		inode->i_sb->s_blocksize_bits;
+	eof_block = (EXT4_I(inode)->i_disksize + inode->i_sb->s_blocksize - 1)
+			>> inode->i_sb->s_blocksize_bits;
 	if (eof_block < map->m_lblk + map_len)
 		eof_block = map->m_lblk + map_len;
 
@@ -3685,8 +3689,8 @@ static int ext4_split_convert_extents(handle_t *handle,
 		  __func__, inode->i_ino,
 		  (unsigned long long)map->m_lblk, map->m_len);
 
-	eof_block = (inode->i_size + inode->i_sb->s_blocksize - 1) >>
-		inode->i_sb->s_blocksize_bits;
+	eof_block = (EXT4_I(inode)->i_disksize + inode->i_sb->s_blocksize - 1)
+			>> inode->i_sb->s_blocksize_bits;
 	if (eof_block < map->m_lblk + map->m_len)
 		eof_block = map->m_lblk + map->m_len;
 	/*
@@ -4861,6 +4865,9 @@ static long ext4_zero_range(struct file *file, loff_t offset,
 	if (max_blocks > 0) {
 		flags |= (EXT4_GET_BLOCKS_CONVERT_UNWRITTEN |
 			  EXT4_EX_NOCACHE);
+		ret = ext4_update_disksize_before_punch(inode, offset, len);
+		if (ret)
+			goto out_dio;
 
 		/* Now release the pages and zero block aligned part of pages*/
 		truncate_pagecache_range(inode, start, end - 1);

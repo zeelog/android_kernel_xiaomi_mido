@@ -13,53 +13,51 @@ ifeq ($(KERNEL_BUILD),1)
 	WLAN_ROOT := drivers/staging/prima
 endif
 
-ifeq ($(KERNEL_BUILD), 0)
-# These are configurable via Kconfig for kernel-based builds
-# Need to explicitly configure for Android-based builds
+# Flag to enable BlueTooth AMP feature
+CONFIG_PRIMA_WLAN_BTAMP := n
 
-#Flag to enable BlueTooth AMP feature
-    CONFIG_PRIMA_WLAN_BTAMP := n
+# Flag to enable Legacy Fast Roaming(LFR)
+CONFIG_PRIMA_WLAN_LFR := y
 
-#Flag to enable Legacy Fast Roaming(LFR)
-    CONFIG_PRIMA_WLAN_LFR := y
+# Flag to enable SAE
+CONFIG_WLAN_FEATURE_SAE := y
 
-#Flag to enable SAE
-    CONFIG_WLAN_FEATURE_SAE := y
+# Flag to enable OWE
+CONFIG_WLAN_AKM_SUITE_OWE := y
 
-#Flag to enable OWE
-    CONFIG_WLAN_AKM_SUITE_OWE := y
+# Flag to enable Legacy Fast Roaming(LFR) Make Before Break
+CONFIG_PRIMA_WLAN_LFR_MBB := y
 
-#Flag to enable Legacy Fast Roaming(LFR) Make Before Break
-    CONFIG_PRIMA_WLAN_LFR_MBB := y
-
-#JB kernel has PMKSA patches, hence enabling this flag
-    CONFIG_PRIMA_WLAN_OKC := y
+# JB kernel has PMKSA patches, hence enabling this flag
+CONFIG_PRIMA_WLAN_OKC := y
 
 # JB kernel has CPU enablement patches, so enable
-    CONFIG_PRIMA_WLAN_11AC_HIGH_TP := y
+CONFIG_PRIMA_WLAN_11AC_HIGH_TP := y
 
-#Flag to enable mDNS feature
-    CONFIG_MDNS_OFFLOAD_SUPPORT := y
+# Flag to enable mDNS feature
+CONFIG_MDNS_OFFLOAD_SUPPORT := y
 
-#Flag to enable TDLS feature
-    CONFIG_QCOM_TDLS := y
+# Flag to enable TDLS feature
+CONFIG_QCOM_TDLS := y
 
-#Flag to enable Fast Transition (11r) feature
-    CONFIG_QCOM_VOWIFI_11R := y
+# Flag to enable Fast Transition (11r) feature
+CONFIG_QCOM_VOWIFI_11R := y
 
-#Flag to enable Protected Managment Frames (11w) feature
+# Flag to enable Protected Managment Frames (11w) feature
 ifneq ($(CONFIG_PRONTO_WLAN),)
-    CONFIG_WLAN_FEATURE_11W := y
-    endif
+CONFIG_WLAN_FEATURE_11W := y
+endif
 
-#Flag to enable new Linux Regulatory implementation
-    CONFIG_ENABLE_LINUX_REG := y
+# Flag to enable new Linux Regulatory implementation
+CONFIG_ENABLE_LINUX_REG := y
 
-#Flag to enable offload packets feature
-    CONFIG_WLAN_OFFLOAD_PACKETS := y
+# Flag to enable offload packets feature
+CONFIG_WLAN_OFFLOAD_PACKETS := y
 
-    endif
-#Flag to enable AP Find feature
+# Flag to enable hold RX wake lock feature
+CONFIG_WLAN_FEATURE_HOLD_RX_WAKELOCK := n
+
+# Flag to enable AP Find feature
 CONFIG_WLAN_FEATURE_AP_FIND := y
 
 # Flag to enable feature Software AP Authentication Offload
@@ -75,13 +73,13 @@ CONFIG_QCOM_ESE_UPLOAD := n
 #Whether to build debug version
 BUILD_DEBUG_VERSION := 0
 
-#Enable this flag to build driver in diag version
+# Enable this flag to build driver in diag version
 BUILD_DIAG_VERSION := 1
 
-#Do we panic on bug?  default is to warn
+# Do we panic on bug?  default is to warn
 PANIC_ON_BUG := 1
 
-#Re-enable wifi on WDI timeout
+# Re-enable wifi on WDI timeout
 RE_ENABLE_WIFI_ON_WDI_TIMEOUT := 0
 
 ifeq ($(CONFIG_CFG80211),y)
@@ -126,10 +124,10 @@ BAP_DIR :=	CORE/BAP
 BAP_INC_DIR :=	$(BAP_DIR)/inc
 BAP_SRC_DIR :=	$(BAP_DIR)/src
 
-BAP_INC := 	-I$(WLAN_ROOT)/$(BAP_INC_DIR) \
+BAP_INC :=	-I$(WLAN_ROOT)/$(BAP_INC_DIR) \
 		-I$(WLAN_ROOT)/$(BAP_SRC_DIR)
 
-BAP_OBJS := 	$(BAP_SRC_DIR)/bapApiData.o \
+BAP_OBJS :=	$(BAP_SRC_DIR)/bapApiData.o \
 		$(BAP_SRC_DIR)/bapApiDebug.o \
 		$(BAP_SRC_DIR)/bapApiExt.o \
 		$(BAP_SRC_DIR)/bapApiHCBB.o \
@@ -156,10 +154,10 @@ DXE_DIR :=	CORE/DXE
 DXE_INC_DIR :=	$(DXE_DIR)/inc
 DXE_SRC_DIR :=	$(DXE_DIR)/src
 
-DXE_INC := 	-I$(WLAN_ROOT)/$(DXE_INC_DIR) \
+DXE_INC :=	-I$(WLAN_ROOT)/$(DXE_INC_DIR) \
 		-I$(WLAN_ROOT)/$(DXE_SRC_DIR)
 
-DXE_OBJS = 	$(DXE_SRC_DIR)/wlan_qct_dxe.o \
+DXE_OBJS =	$(DXE_SRC_DIR)/wlan_qct_dxe.o \
 		$(DXE_SRC_DIR)/wlan_qct_dxe_cfg_i.o
 
 ############ HDD ############
@@ -167,10 +165,10 @@ HDD_DIR :=	CORE/HDD
 HDD_INC_DIR :=	$(HDD_DIR)/inc
 HDD_SRC_DIR :=	$(HDD_DIR)/src
 
-HDD_INC := 	-I$(WLAN_ROOT)/$(HDD_INC_DIR) \
+HDD_INC :=	-I$(WLAN_ROOT)/$(HDD_INC_DIR) \
 		-I$(WLAN_ROOT)/$(HDD_SRC_DIR)
 
-HDD_OBJS := 	$(HDD_SRC_DIR)/wlan_hdd_assoc.o \
+HDD_OBJS :=	$(HDD_SRC_DIR)/wlan_hdd_assoc.o \
 		$(HDD_SRC_DIR)/wlan_hdd_cfg.o \
 		$(HDD_SRC_DIR)/wlan_hdd_debugfs.o \
 		$(HDD_SRC_DIR)/wlan_hdd_dev_pwr.o \
@@ -191,7 +189,7 @@ HDD_OBJS := 	$(HDD_SRC_DIR)/wlan_hdd_assoc.o \
 		$(HDD_SRC_DIR)/wlan_hdd_wowl.o
 
 ifeq ($(CONFIG_PRIMA_WLAN_BTAMP),y)
-HDD_OBJS += 	$(HDD_SRC_DIR)/bap_hdd_main.o
+HDD_OBJS +=	$(HDD_SRC_DIR)/bap_hdd_main.o
 endif
 
 ifeq ($(HAVE_CFG80211),1)
@@ -208,7 +206,7 @@ MAC_DIR :=	CORE/MAC
 MAC_INC_DIR :=	$(MAC_DIR)/inc
 MAC_SRC_DIR :=	$(MAC_DIR)/src
 
-MAC_INC := 	-I$(WLAN_ROOT)/$(MAC_INC_DIR) \
+MAC_INC :=	-I$(WLAN_ROOT)/$(MAC_INC_DIR) \
 		-I$(WLAN_ROOT)/$(MAC_SRC_DIR)/dph \
 		-I$(WLAN_ROOT)/$(MAC_SRC_DIR)/include \
 		-I$(WLAN_ROOT)/$(MAC_SRC_DIR)/pe/include \
@@ -290,7 +288,7 @@ MAC_SCH_OBJS := $(MAC_SRC_DIR)/pe/sch/schApi.o \
 
 MAC_RRM_OBJS :=	$(MAC_SRC_DIR)/pe/rrm/rrmApi.o
 
-MAC_OBJS := 	$(MAC_CFG_OBJS) \
+MAC_OBJS :=	$(MAC_CFG_OBJS) \
 		$(MAC_DPH_OBJS) \
 		$(MAC_LIM_OBJS) \
 		$(MAC_PMM_OBJS) \
@@ -302,7 +300,7 @@ SAP_DIR :=	CORE/SAP
 SAP_INC_DIR :=	$(SAP_DIR)/inc
 SAP_SRC_DIR :=	$(SAP_DIR)/src
 
-SAP_INC := 	-I$(WLAN_ROOT)/$(SAP_INC_DIR) \
+SAP_INC :=	-I$(WLAN_ROOT)/$(SAP_INC_DIR) \
 		-I$(WLAN_ROOT)/$(SAP_SRC_DIR)
 
 SAP_OBJS :=	$(SAP_SRC_DIR)/sapApiLinkCntl.o \
@@ -315,7 +313,7 @@ SME_DIR :=	CORE/SME
 SME_INC_DIR :=	$(SME_DIR)/inc
 SME_SRC_DIR :=	$(SME_DIR)/src
 
-SME_INC := 	-I$(WLAN_ROOT)/$(SME_INC_DIR) \
+SME_INC :=	-I$(WLAN_ROOT)/$(SME_INC_DIR) \
 		-I$(WLAN_ROOT)/$(SME_SRC_DIR)/csr
 
 SME_CCM_OBJS := $(SME_SRC_DIR)/ccm/ccmApi.o \
@@ -380,7 +378,7 @@ SVC_DIR :=	CORE/SVC
 SVC_INC_DIR :=	$(SVC_DIR)/inc
 SVC_SRC_DIR :=	$(SVC_DIR)/src
 
-SVC_INC := 	-I$(WLAN_ROOT)/$(SVC_INC_DIR) \
+SVC_INC :=	-I$(WLAN_ROOT)/$(SVC_INC_DIR) \
 		-I$(WLAN_ROOT)/$(SVC_DIR)/external
 
 BTC_SRC_DIR :=	$(SVC_SRC_DIR)/btc
@@ -403,7 +401,7 @@ SVC_OBJS :=	$(BTC_OBJS) \
 ############ SYS ############
 SYS_DIR :=	CORE/SYS
 
-SYS_INC := 	-I$(WLAN_ROOT)/$(SYS_DIR)/common/inc \
+SYS_INC :=	-I$(WLAN_ROOT)/$(SYS_DIR)/common/inc \
 		-I$(WLAN_ROOT)/$(SYS_DIR)/legacy/src/pal/inc \
 		-I$(WLAN_ROOT)/$(SYS_DIR)/legacy/src/platform/inc \
 		-I$(WLAN_ROOT)/$(SYS_DIR)/legacy/src/system/inc \
@@ -430,10 +428,10 @@ TL_DIR :=	CORE/TL
 TL_INC_DIR :=	$(TL_DIR)/inc
 TL_SRC_DIR :=	$(TL_DIR)/src
 
-TL_INC := 	-I$(WLAN_ROOT)/$(TL_INC_DIR) \
+TL_INC :=	-I$(WLAN_ROOT)/$(TL_INC_DIR) \
 		-I$(WLAN_ROOT)/$(TL_SRC_DIR)
 
-TL_OBJS := 	$(TL_SRC_DIR)/wlan_qct_tl.o \
+TL_OBJS :=	$(TL_SRC_DIR)/wlan_qct_tl.o \
 		$(TL_SRC_DIR)/wlan_qct_tl_ba.o \
 		$(TL_SRC_DIR)/wlan_qct_tl_hosupport.o \
                $(TL_SRC_DIR)/wlan_qct_tl_trace.o
@@ -443,7 +441,7 @@ VOSS_DIR :=	CORE/VOSS
 VOSS_INC_DIR :=	$(VOSS_DIR)/inc
 VOSS_SRC_DIR :=	$(VOSS_DIR)/src
 
-VOSS_INC := 	-I$(WLAN_ROOT)/$(VOSS_INC_DIR) \
+VOSS_INC :=	-I$(WLAN_ROOT)/$(VOSS_INC_DIR) \
 		-I$(WLAN_ROOT)/$(VOSS_SRC_DIR)
 
 VOSS_OBJS :=    $(VOSS_SRC_DIR)/vos_api.o \
@@ -474,7 +472,7 @@ WDA_DIR :=	CORE/WDA
 WDA_INC_DIR :=	$(WDA_DIR)/inc
 WDA_SRC_DIR :=	$(WDA_DIR)/src
 
-WDA_INC := 	-I$(WLAN_ROOT)/$(WDA_INC_DIR) \
+WDA_INC :=	-I$(WLAN_ROOT)/$(WDA_INC_DIR) \
 		-I$(WLAN_ROOT)/$(WDA_INC_DIR)/legacy \
 		-I$(WLAN_ROOT)/$(WDA_SRC_DIR)
 
@@ -570,7 +568,7 @@ OBJS :=		$(BAP_OBJS) \
 		$(WDI_OBJS)
 
 ifeq ($(CONFIG_PRIMA_WLAN_BTAMP),y)
-OBJS += 	$(BAP_OBJS)
+OBJS +=		$(BAP_OBJS)
 endif
 
 EXTRA_CFLAGS += $(INCS)
@@ -668,7 +666,7 @@ CDEFINES += -DFEATURE_WLAN_ESE_UPLOAD
 endif
 endif
 
-#normally, TDLS negative behavior is not needed
+# normally, TDLS negative behavior is not needed
 ifeq ($(CONFIG_QCOM_TDLS),y)
 CDEFINES += -DFEATURE_WLAN_TDLS
 CDEFINES += -DCONFIG_TDLS_IMPLICIT

@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2019, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2013-2019, 2020, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -997,13 +997,14 @@ static int mdp3_ctrl_on(struct msm_fb_data_type *mfd)
 			mdp3_session->in_splash_screen) {
 			/* Turn on panel so that it can exit low power mode */
 			mdp3_clk_enable(1, 0);
+		}
 		rc = panel->event_handler(panel,
 				MDSS_EVENT_LINK_READY, NULL);
 		rc |= panel->event_handler(panel,
 				MDSS_EVENT_UNBLANK, NULL);
 		rc |= panel->event_handler(panel,
 				MDSS_EVENT_PANEL_ON, NULL);
-		if (mdss_fb_is_power_on_lp(mfd))
+		if (mdss_fb_is_power_on_lp(mfd)) {
 			rc |= mdp3_enable_panic_ctrl();
 			mdp3_clk_enable(0, 0);
 		}
@@ -1069,7 +1070,7 @@ static int mdp3_ctrl_on(struct msm_fb_data_type *mfd)
 			rc |= panel->event_handler(panel,
 					MDSS_EVENT_PANEL_CLK_CTRL,
 					(void *)&clk_ctrl);
-	}
+		}
 	}
 	if (rc) {
 		pr_err("fail to turn on the panel\n");
@@ -1098,8 +1099,7 @@ static int mdp3_ctrl_on(struct msm_fb_data_type *mfd)
 	mdp3_session->first_commit = true;
 	if (mfd->panel_info->panel_dead)
 		mdp3_session->esd_recovery = true;
-
-		mdp3_session->status = 1;
+	mdp3_session->status = 1;
 
 	mdp3_ctrl_pp_resume(mfd);
 
@@ -2334,6 +2334,11 @@ static int mdp3_csc_config(struct mdp3_session_data *session,
 	struct mdp3_dma_color_correct_config config;
 	struct mdp3_dma_ccs ccs;
 	int ret = -EINVAL;
+
+	if (!data) {
+		pr_err("%s : Invalid csc vectors", __func__);
+		return -EINVAL;
+	}
 
 	mutex_lock(&session->lock);
 	mutex_lock(&session->dma->pp_lock);
