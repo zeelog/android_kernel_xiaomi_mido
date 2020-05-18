@@ -1054,8 +1054,7 @@ static int mdp3_ctrl_on(struct msm_fb_data_type *mfd)
 	mdp3_session->first_commit = true;
 	if (mfd->panel_info->panel_dead)
 		mdp3_session->esd_recovery = true;
-
-		mdp3_session->status = 1;
+	mdp3_session->status = 1;
 
 	mdp3_ctrl_pp_resume(mfd);
 

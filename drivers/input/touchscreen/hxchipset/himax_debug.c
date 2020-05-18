@@ -780,7 +780,7 @@ static int himax_diag_seq_read(struct seq_file *s, void *v)
 		for (loop_i = 0; loop_i < 128 ; loop_i++) {
 			if ((loop_i % 16) == 0)
 				seq_puts(s, "LineStart:");
-				seq_printf(s, "%4d", diag_coor[loop_i]);
+			seq_printf(s, "%4d", diag_coor[loop_i]);
 			if ((loop_i % 16) == 15)
 				seq_putc(s, '\n');
 		}

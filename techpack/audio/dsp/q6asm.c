@@ -1783,7 +1783,7 @@ static int32_t q6asm_srvc_callback(struct apr_client_data *data, void *priv)
 		if ((session_id > 0 && session_id <= SESSION_MAX))
 			spin_unlock_irqrestore(
 				&(session[session_id].session_lock), flags);
-			return 0;
+		return 0;
 	}
 	port = &ac->port[dir];
 
