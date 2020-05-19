@@ -96,6 +96,10 @@
 	};
 
 	qcom,pmi8950@2 {
+		pmi8950_vadc: vadc@3100 {
+			status = "disabled";
+		};
+
 		pmi8950_gpios: gpios {
 			gpio@c000 {
 				status = "okay";
@@ -490,5 +494,11 @@
 		pinctrl-1 = <&fpc_reset_reset>;
 		pinctrl-2 = <&fpc_reset_active>;
 		pinctrl-3 = <&fpc_irq_active>;
+	};
+};
+
+&thermal_zones {
+	chg-temp-adc {
+		status = "disabled";
 	};
 };
