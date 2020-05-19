@@ -12,9 +12,6 @@
  */
 
 &int_codec {
-	status = "ok";
-	/* already defined in msm8953-audio.dtsi */
-	qcom,msm-hs-micbias-type = "internal";
 	qcom,msm-spk-ext-pa = <&tlmm 96 0>;
 	qcom,audio-routing =
 		"RX_BIAS", "MCLK",
@@ -26,9 +23,29 @@
 		"AMIC1", "MIC BIAS External",
 		"AMIC2", "MIC BIAS Internal2",
 		"AMIC3", "MIC BIAS External";
-	/delete-property/asoc-wsa-codec-names;
-	/delete-property/asoc-wsa-codec-prefixes;
-	/delete-property/msm-vdd-wsa-switch-supply;
-	/delete-property/qcom,msm-vdd-wsa-switch-voltage;
-	/delete-property/qcom,msm-vdd-wsa-switch-current;
+	/delete-property/ asoc-wsa-codec-names;
+	/delete-property/ asoc-wsa-codec-prefixes;
+	/delete-property/ msm-vdd-wsa-switch-supply;
+	/delete-property/ qcom,msm-vdd-wsa-switch-voltage;
+	/delete-property/ qcom,msm-vdd-wsa-switch-current;
+};
+
+&wsa881x_i2c_f {
+        status = "disabled";
+};
+
+&wsa881x_i2c_45 {
+        status = "disabled";
+};
+
+&wsa881x_analog_vi_gpio {
+        status = "disabled";
+};
+
+&wsa881x_analog_clk_gpio {
+        status = "disabled";
+};
+
+&wsa881x_analog_reset_gpio {
+        status = "disabled";
 };
