@@ -359,6 +359,21 @@ extern struct workqueue_struct *system_freezable_wq;
 extern struct workqueue_struct *system_power_efficient_wq;
 extern struct workqueue_struct *system_freezable_power_efficient_wq;
 
+static inline struct workqueue_struct * __deprecated __system_nrt_wq(void)
+{
+	return system_wq;
+}
+
+static inline struct workqueue_struct * __deprecated __system_nrt_freezable_wq(void)
+{
+	return system_freezable_wq;
+}
+
+/* equivlalent to system_wq and system_freezable_wq, deprecated */
+#define system_nrt_wq			__system_nrt_wq()
+#define system_nrt_freezable_wq		__system_nrt_freezable_wq()
+
+
 extern bool wq_online;
 
 extern struct workqueue_struct *
