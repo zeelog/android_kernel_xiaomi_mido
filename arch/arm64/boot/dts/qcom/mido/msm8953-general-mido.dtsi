@@ -464,4 +464,8 @@
 	pa-therm1-adc {
 		status = "disabled";
 	};
+
+	xo-therm-adc {
+		polling-delay = <1000>;
+	};
 };
