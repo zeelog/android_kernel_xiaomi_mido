@@ -116,7 +116,6 @@
 			qcom,resume-delta-mv = <50>;
 			qcom,thermal-mitigation = <3000 2500 2000 2000 1000 500 0>;
 			qcom,charge-unknown-battery;
-			qcom,override-usb-current;
 			qcom,fastchg-current-comp = <1200>;
 			qcom,float-voltage-comp = <16>;
 			/delete-property/ qcom,parallel-usb-min-current-ma;
