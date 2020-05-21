@@ -92,6 +92,3 @@ endif
 # Module information used by KBuild framework
 obj-$(CONFIG_SND_SOC_BG_CODEC) += bg_codec_dlkm.o
 bg_codec_dlkm-y := $(BG_CODEC_CDC_OBJS)
-
-# inject some build related information
-DEFINES += -DBUILD_TIMESTAMP=\"$(shell date -u +'%Y-%m-%dT%H:%M:%SZ')\"
