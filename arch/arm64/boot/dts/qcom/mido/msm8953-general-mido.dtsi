@@ -114,7 +114,7 @@
 		qpnp_smbcharger: qcom,qpnp-smbcharger {
 			qcom,float-voltage-mv = <4400>;
 			qcom,resume-delta-mv = <50>;
-			qcom,thermal-mitigation = <3000 2500 2000 2000 1000 500 0>;
+			qcom,thermal-mitigation = <1500 1200 900 600 300 0>;
 			qcom,charge-unknown-battery;
 			qcom,fastchg-current-comp = <1200>;
 			qcom,float-voltage-comp = <16>;
