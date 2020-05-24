@@ -552,11 +552,11 @@ void hdd_copy_ht_caps(struct ieee80211_ht_cap *hdd_ht_cap,
         hdd_ht_cap->mcs.rx_mask[i] =
             roam_ht_cap->supportedMCSSet[i];
 
-        hdd_ht_cap->mcs.rx_highest =
-            ((short) (roam_ht_cap->supportedMCSSet[11]) << 8) |
-            ((short) (roam_ht_cap->supportedMCSSet[10]));
-        hdd_ht_cap->mcs.tx_params =
-            roam_ht_cap->supportedMCSSet[12];
+    hdd_ht_cap->mcs.rx_highest =
+        ((short) (roam_ht_cap->supportedMCSSet[11]) << 8) |
+        ((short) (roam_ht_cap->supportedMCSSet[10]));
+    hdd_ht_cap->mcs.tx_params =
+        roam_ht_cap->supportedMCSSet[12];
 
 }
 
@@ -594,7 +594,7 @@ void hdd_copy_vht_caps(struct ieee80211_vht_cap *hdd_vht_cap,
     temp_vht_cap = roam_vht_cap->supportedChannelWidthSet &
         (IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK >>
             VHT_CAP_SUPP_CHAN_WIDTH_MASK_SHIFT);
-    if (temp_vht_cap)
+    if (temp_vht_cap) {
         if (roam_vht_cap->supportedChannelWidthSet &
             (IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ >>
             VHT_CAP_SUPP_CHAN_WIDTH_MASK_SHIFT))
@@ -607,6 +607,7 @@ void hdd_copy_vht_caps(struct ieee80211_vht_cap *hdd_vht_cap,
             hdd_vht_cap->vht_cap_info |=
             temp_vht_cap <<
             IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ;
+    }
     if (roam_vht_cap->ldpcCodingCap)
         hdd_vht_cap->vht_cap_info |= IEEE80211_VHT_CAP_RXLDPC;
     if (roam_vht_cap->shortGI80MHz)
@@ -4959,7 +4960,7 @@ int hdd_set_csr_auth_type ( hdd_adapter_t  *pAdapter, eCsrAuthType RSNAuthType)
                 hddLog( LOG1, "%s: set authType to CCKM WPA. AKM also 802.1X.", __func__);
                 pRoamProfile->AuthType.authType[0] = eCSR_AUTH_TYPE_CCKM_WPA;
             } else
-            if ((RSNAuthType == eCSR_AUTH_TYPE_CCKM_WPA)) {
+            if (RSNAuthType == eCSR_AUTH_TYPE_CCKM_WPA) {
                 hddLog( LOG1, "%s: Last chance to set authType to CCKM WPA.", __func__);
                 pRoamProfile->AuthType.authType[0] = eCSR_AUTH_TYPE_CCKM_WPA;
             } else
@@ -4983,7 +4984,7 @@ int hdd_set_csr_auth_type ( hdd_adapter_t  *pAdapter, eCsrAuthType RSNAuthType)
                 hddLog( LOG1, "%s: set authType to CCKM RSN. AKM also 802.1X.", __func__);
                 pRoamProfile->AuthType.authType[0] = eCSR_AUTH_TYPE_CCKM_RSN;
             } else
-            if ((RSNAuthType == eCSR_AUTH_TYPE_CCKM_RSN)) {
+            if (RSNAuthType == eCSR_AUTH_TYPE_CCKM_RSN) {
                 hddLog( LOG1, "%s: Last chance to set authType to CCKM RSN.", __func__);
                 pRoamProfile->AuthType.authType[0] = eCSR_AUTH_TYPE_CCKM_RSN;
             } else

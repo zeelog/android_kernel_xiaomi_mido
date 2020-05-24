@@ -769,9 +769,10 @@ static int gf_remove(struct platform_device *pdev)
 	if (gf_dev->irq)
 		free_irq(gf_dev->irq, gf_dev);
 
-	if (gf_dev->input != NULL)
+	if (gf_dev->input != NULL) {
 		input_unregister_device(gf_dev->input);
 		input_free_device(gf_dev->input);
+	}
 
 	/* prevent new opens */
 	mutex_lock(&device_list_lock);
@@ -780,8 +781,7 @@ static int gf_remove(struct platform_device *pdev)
 	clear_bit(MINOR(gf_dev->devt), minors);
 	if (gf_dev->users == 0)
 		kfree(gf_dev);
-
-		mutex_unlock(&device_list_lock);
+	mutex_unlock(&device_list_lock);
 
 	wake_lock_destroy(&gf_dev->ttw_wl);
 
