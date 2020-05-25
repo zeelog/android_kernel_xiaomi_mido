@@ -14,6 +14,12 @@ config IPA
 	  Kernel and user-space processes can call the IPA driver
 	  to configure IPA core.
 
+config IPA_WAKELOCK
+	bool
+	default n
+	help
+	  Allow IPA to adquire wakelocks.
+
 config RMNET_IPA
 	tristate "IPA RMNET WWAN Network Device"
 	depends on IPA && MSM_QMI_INTERFACE

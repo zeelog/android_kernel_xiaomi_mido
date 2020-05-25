@@ -4166,6 +4166,7 @@ void ipa3_dec_client_disable_clks_no_block(
 		&ipa_dec_clients_disable_clks_on_wq_work);
 }
 
+#ifdef CONFIG_IPA_WAKELOCK
 /**
  * ipa3_inc_acquire_wakelock() - Increase active clients counter, and
  * acquire wakelock if necessary
@@ -4206,6 +4207,10 @@ void ipa3_dec_release_wakelock(void)
 		__pm_relax(&ipa3_ctx->w_lock);
 	spin_unlock_irqrestore(&ipa3_ctx->wakelock_ref_cnt.spinlock, flags);
 }
+#else
+void ipa3_inc_acquire_wakelock(void) {}
+void ipa3_dec_release_wakelock(void) {}
+#endif
 
 int ipa3_set_clock_plan_from_pm(int idx)
 {
