@@ -72,6 +72,20 @@
 			};
 		};
 
+		pm8953_vadc: vadc@3100 {
+			chan@36 {
+				qcom,decimation = <1>;
+				qcom,fast-avg-setup = <5>;
+			};
+		};
+
+		pm8953_adc_tm: vadc@3400 {
+			chan@36 {
+				qcom,decimation = <1>;
+				qcom,fast-avg-setup = <5>;
+			};
+		};
+
 		/delete-node/ qcom,pm8953_typec@bf00;
 
 		qcom,leds@a100 {
