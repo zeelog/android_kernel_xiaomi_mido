@@ -763,6 +763,7 @@ EXTRA_CFLAGS += $(call cc-disable-warning, maybe-uninitialized) -Wno-unused-func
 ifeq ($(cc-name),clang)
 EXTRA_CFLAGS += $(call cc-option, -Wframe-larger-than=2048)
 EXTRA_CFLAGS += -Wno-enum-conversion
+EXTRA_CFLAGS += $(call cc-disable-warning, void-pointer-to-enum-cast)
 endif
 
 ifeq ($(CONFIG_WLAN_OFFLOAD_PACKETS),y)

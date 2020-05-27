@@ -1,3 +1,8 @@
+# Silence Clang Warning
+ifeq ($(cc-name),clang)
+EXTRA_CFLAGS += $(call cc-disable-warning, void-pointer-to-enum-cast)
+endif
+
 obj-$(CONFIG_IPA) += ipat.o
 ipat-y := ipa.o ipa_debugfs.o ipa_hdr.o ipa_flt.o ipa_rt.o ipa_dp.o ipa_client.o \
 	ipa_utils.o ipa_nat.o ipa_intf.o teth_bridge.o ipa_interrupts.o \

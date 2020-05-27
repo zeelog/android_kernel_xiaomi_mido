@@ -1,6 +1,10 @@
 #
 # Makefile for the kernel DVB device drivers.
 #
+# Silence Clang Warning
+ifeq ($(cc-name),clang)
+EXTRA_CFLAGS += $(call cc-disable-warning, void-pointer-to-enum-cast)
+endif
 
 dvb-net-$(CONFIG_DVB_NET) := dvb_net.o
 
