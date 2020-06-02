@@ -1,5 +1,4 @@
-/*
- * Copyright (c) 2019, 2020, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2020 The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -11,21 +10,9 @@
  * GNU General Public License for more details.
  */
 
-#include "sdm429w-pm660.dtsi"
+#ifndef __TUSB1064_H_
+#define __TUSB1064_H_
 
-&pm660_misc {
-	qcom,support-twm-config;
-};
+void tusb1064_usb_event(bool flip);
 
-&pm660_pbs {
-	status = "okay";
-};
-
-&pm660_pon {
-	qcom,support-twm-config;
-	qcom,pbs-client = <&pm660_pbs>;
-};
-
-&pm660_fg {
-	qcom,fg-disable-in-twm;
-};
+#endif /* __TUSB1064_H_ */

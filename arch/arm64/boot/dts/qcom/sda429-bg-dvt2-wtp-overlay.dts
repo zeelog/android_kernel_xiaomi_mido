@@ -18,10 +18,10 @@
 #include "sdm429-bg-soc.dtsi"
 
 / {
-	model = "Qualcomm Technologies, Inc. SDA429 QRD BG WTP Overlay";
-	compatible = "qcom,sdm429w-qrd", "qcom,sdm429w", "qcom,qrd";
+	model = "Qualcomm Technologies, Inc. SDA429 BG DVT2 WTP Overlay";
+	compatible = "qcom,sdm429w-qrd", "qcom,sda429w", "qcom,qrd";
 	qcom,msm-id = <437 0x0>;
-	qcom,board-id = <0x00010b 8>;
+	qcom,board-id = <0x00010b 0xA>;
 	qcom,pmic-id = <0x0002001b 0x0 0x0 0x0>;
 };
 

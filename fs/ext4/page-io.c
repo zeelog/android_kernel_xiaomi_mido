@@ -480,12 +480,12 @@ int ext4_bio_write_page(struct ext4_io_submit *io,
 			gfp_flags = GFP_NOWAIT | __GFP_NOWARN;
 	retry_encrypt:
 		if (!fscrypt_using_hardware_encryption(inode)) {
-			data_page = fscrypt_encrypt_page(inode, page, PAGE_SIZE, 0,
-							page->index, gfp_flags);
+			data_page = fscrypt_encrypt_page(inode, page,
+				 PAGE_SIZE, 0, page->index, gfp_flags);
 			if (IS_ERR(data_page)) {
 				ret = PTR_ERR(data_page);
-				if (ret == -ENOMEM &&
-				    (io->io_bio || wbc->sync_mode == WB_SYNC_ALL)) {
+				if (ret == -ENOMEM && (io->io_bio ||
+					wbc->sync_mode == WB_SYNC_ALL)) {
 					gfp_flags = GFP_NOFS;
 					if (io->io_bio)
 						ext4_io_submit(io);
