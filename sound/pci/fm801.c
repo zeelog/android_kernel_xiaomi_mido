@@ -1193,6 +1193,8 @@ static int snd_fm801_free(struct fm801 *chip)
 	cmdw |= 0x00c3;
 	fm801_writew(chip, IRQ_MASK, cmdw);
 
+	devm_free_irq(&chip->pci->dev, chip->irq, chip);
+
       __end_hw:
 #ifdef CONFIG_SND_FM801_TEA575X_BOOL
 	if (!(chip->tea575x_tuner & TUNER_DISABLED)) {
@@ -1294,6 +1296,8 @@ static int snd_fm801_create(struct snd_card *card,
 			return -ENODEV;
 		}
 	} else if ((tea575x_tuner & TUNER_TYPE_MASK) == 0) {
+		unsigned int tuner_only = tea575x_tuner & TUNER_ONLY;
+
 		/* autodetect tuner connection */
 		for (tea575x_tuner = 1; tea575x_tuner <= 3; tea575x_tuner++) {
 			chip->tea575x_tuner = tea575x_tuner;
@@ -1308,6 +1312,8 @@ static int snd_fm801_create(struct snd_card *card,
 			dev_err(card->dev, "TEA575x radio not found\n");
 			chip->tea575x_tuner = TUNER_DISABLED;
 		}
+
+		chip->tea575x_tuner |= tuner_only;
 	}
 	if (!(chip->tea575x_tuner & TUNER_DISABLED)) {
 		strlcpy(chip->tea.card, get_tea575x_gpio(chip)->name,

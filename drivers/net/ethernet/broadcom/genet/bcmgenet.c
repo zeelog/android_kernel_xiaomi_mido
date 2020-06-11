@@ -756,7 +756,11 @@ static void bcmgenet_get_ethtool_stats(struct net_device *dev,
 		else
 			p = (char *)priv;
 		p += s->stat_offset;
-		data[i] = *(u32 *)p;
+		if (sizeof(unsigned long) != sizeof(u32) &&
+		    s->stat_sizeof == sizeof(unsigned long))
+			data[i] = *(unsigned long *)p;
+		else
+			data[i] = *(u32 *)p;
 	}
 }
 
@@ -1057,7 +1061,7 @@ static int bcmgenet_xmit_single(struct net_device *dev,
 
 	tx_cb_ptr->skb = skb;
 
-	skb_len = skb_headlen(skb) < ETH_ZLEN ? ETH_ZLEN : skb_headlen(skb);
+	skb_len = skb_headlen(skb);
 
 	mapping = dma_map_single(kdev, skb->data, skb_len, DMA_TO_DEVICE);
 	ret = dma_mapping_error(kdev, mapping);
@@ -1291,7 +1295,8 @@ static int bcmgenet_rx_refill(struct bcmgenet_priv *priv, struct enet_cb *cb)
 	dma_addr_t mapping;
 	int ret;
 
-	skb = netdev_alloc_skb(priv->dev, priv->rx_buf_len + SKB_ALIGNMENT);
+	skb = __netdev_alloc_skb(priv->dev, priv->rx_buf_len + SKB_ALIGNMENT,
+				 GFP_ATOMIC | __GFP_NOWARN);
 	if (!skb)
 		return -ENOMEM;
 
