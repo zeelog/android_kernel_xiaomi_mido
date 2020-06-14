@@ -259,7 +259,7 @@ struct qdisc_skb_cb {
 
 static inline void qdisc_cb_private_validate(const struct sk_buff *skb, int sz)
 {
-	struct qdisc_skb_cb *qcb;
+	struct qdisc_skb_cb __maybe_unused *qcb;
 
 	BUILD_BUG_ON(sizeof(skb->cb) < offsetof(struct qdisc_skb_cb, data) + sz);
 	BUILD_BUG_ON(sizeof(qcb->data) < sz);
@@ -656,9 +656,11 @@ static inline struct sk_buff *qdisc_peek_dequeued(struct Qdisc *sch)
 	/* we can reuse ->gso_skb because peek isn't called for root qdiscs */
 	if (!sch->gso_skb) {
 		sch->gso_skb = sch->dequeue(sch);
-		if (sch->gso_skb)
+		if (sch->gso_skb) {
 			/* it's still part of the queue */
+			qdisc_qstats_backlog_inc(sch, sch->gso_skb);
 			sch->q.qlen++;
+		}
 	}
 
 	return sch->gso_skb;
@@ -671,6 +673,7 @@ static inline struct sk_buff *qdisc_dequeue_peeked(struct Qdisc *sch)
 
 	if (skb) {
 		sch->gso_skb = NULL;
+		qdisc_qstats_backlog_dec(sch, skb);
 		sch->q.qlen--;
 	} else {
 		skb = sch->dequeue(sch);

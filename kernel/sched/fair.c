@@ -1125,8 +1125,6 @@ static void task_numa_assign(struct task_numa_env *env,
 {
 	if (env->best_task)
 		put_task_struct(env->best_task);
-	if (p)
-		get_task_struct(p);
 
 	env->best_task = p;
 	env->best_imp = imp;
@@ -1193,20 +1191,30 @@ static void task_numa_compare(struct task_numa_env *env,
 	long load;
 	long imp = env->p->numa_group ? groupimp : taskimp;
 	long moveimp = imp;
+	bool assigned = false;
 
 	rcu_read_lock();
 
 	raw_spin_lock_irq(&dst_rq->lock);
 	cur = dst_rq->curr;
 	/*
-	 * No need to move the exiting task, and this ensures that ->curr
-	 * wasn't reaped and thus get_task_struct() in task_numa_assign()
-	 * is safe under RCU read lock.
-	 * Note that rcu_read_lock() itself can't protect from the final
-	 * put_task_struct() after the last schedule().
+	 * No need to move the exiting task or idle task.
 	 */
 	if ((cur->flags & PF_EXITING) || is_idle_task(cur))
 		cur = NULL;
+	else {
+		/*
+		 * The task_struct must be protected here to protect the
+		 * p->numa_faults access in the task_weight since the
+		 * numa_faults could already be freed in the following path:
+		 * finish_task_switch()
+		 *     --> put_task_struct()
+		 *         --> __put_task_struct()
+		 *             --> task_numa_free()
+		 */
+		get_task_struct(cur);
+	}
+
 	raw_spin_unlock_irq(&dst_rq->lock);
 
 	/*
@@ -1290,6 +1298,7 @@ balance:
 		 */
 		if (!load_too_imbalanced(src_load, dst_load, env)) {
 			imp = moveimp - 1;
+			put_task_struct(cur);
 			cur = NULL;
 			goto assign;
 		}
@@ -1315,9 +1324,16 @@ balance:
 		env->dst_cpu = select_idle_sibling(env->p, env->dst_cpu);
 
 assign:
+	assigned = true;
 	task_numa_assign(env, cur, imp);
 unlock:
 	rcu_read_unlock();
+	/*
+	 * The dst_rq->curr isn't assigned. The protection for task_struct is
+	 * finished.
+	 */
+	if (cur && !assigned)
+		put_task_struct(cur);
 }
 
 static void task_numa_find_cpu(struct task_numa_env *env,
@@ -2166,8 +2182,18 @@ static long calc_cfs_shares(struct cfs_rq *cfs_rq, struct task_group *tg)
 {
 	long tg_weight, load, shares;
 
-	tg_weight = calc_tg_weight(tg, cfs_rq);
-	load = cfs_rq->load.weight;
+	/*
+	 * This really should be: cfs_rq->avg.load_avg, but instead we use
+	 * cfs_rq->load.weight, which is its upper bound. This helps ramp up
+	 * the shares for small weight interactive tasks.
+	 */
+	load = scale_load_down(cfs_rq->load.weight);
+
+	tg_weight = atomic_long_read(&tg->load_avg);
+
+	/* Ensure tg_weight >= load */
+	tg_weight -= cfs_rq->tg_load_contrib;
+	tg_weight += load;
 
 	shares = (tg->shares * load);
 	if (tg_weight)
@@ -2186,6 +2212,7 @@ static inline long calc_cfs_shares(struct cfs_rq *cfs_rq, struct task_group *tg)
 	return tg->shares;
 }
 # endif /* CONFIG_SMP */
+
 static void reweight_entity(struct cfs_rq *cfs_rq, struct sched_entity *se,
 			    unsigned long weight)
 {
