@@ -860,7 +860,7 @@ static int mdss_rotator_init_queue(struct mdss_rot_mgr *mgr)
 	for (i = 0; i < mgr->queue_count; i++) {
 		snprintf(name, sizeof(name), "rot_thread_%d", i);
 		pr_info("work thread name=%s\n", name);
-		init_kthread_worker(&mgr->queues[i].worker);
+		kthread_init_worker(&mgr->queues[i].worker);
 		mgr->queues[i].thread = kthread_run(kthread_worker_fn,
 						     &mgr->queues[i].worker,
 						     name);
@@ -1038,7 +1038,7 @@ static void mdss_rotator_queue_request(struct mdss_rot_mgr *mgr,
 		entry = req->entries + i;
 		queue = entry->queue;
 		entry->output_fence = NULL;
-		queue_kthread_work(&queue->worker, &entry->commit_work);
+		kthread_queue_work(&queue->worker, &entry->commit_work);
 	}
 }
 
@@ -1547,7 +1547,7 @@ static int mdss_rotator_add_request(struct mdss_rot_mgr *mgr,
 
 		entry->request = req;
 
-		init_kthread_work(&entry->commit_work,
+		kthread_init_work(&entry->commit_work,
 				  mdss_rotator_work_handler);
 
 		ret = mdss_rotator_create_fence(entry);
@@ -1600,7 +1600,7 @@ static void mdss_rotator_cancel_request(struct mdss_rot_mgr *mgr,
 	 */
 	for (i = req->count - 1; i >= 0; i--) {
 		entry = req->entries + i;
-		flush_kthread_work(&entry->commit_work);
+		kthread_flush_work(&entry->commit_work);
 	}
 
 	for (i = req->count - 1; i >= 0; i--) {
