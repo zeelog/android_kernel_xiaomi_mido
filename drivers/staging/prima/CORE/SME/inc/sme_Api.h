@@ -4146,4 +4146,22 @@ static inline eHalStatus sme_handle_sae_msg(tHalHandle hal, uint8_t session_id,
 }
 #endif
 
+#define MAX_BSSID_AVOID_LIST 16
+
+struct roam_ext_params {
+    uint8_t blacklist_timedout;
+    uint8_t num_bssid_avoid_list;
+    v_MACADDR_t bssid_avoid_list[MAX_BSSID_AVOID_LIST];
+};
+
+/**
+ * sme_UpdateBlacklist() - Send blacklist bssid received from user space
+ * @hal: The handle returned by mac_open
+ * @session_id: session id
+ * @roam_ext_params: list of blacklist Bssid
+ *
+ * Return: HAL_STATUS
+ */
+eHalStatus sme_UpdateBlacklist(tHalHandle hHal, uint8_t session_id,
+                               struct roam_ext_params *roam_params);
 #endif //#if !defined( __SME_API_H )
