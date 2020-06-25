@@ -633,6 +633,8 @@ typedef enum
 
    WLAN_HAL_VOWIFI_IND                       = 360,
    WLAN_HAL_QPOWER_ENABLE_BY_HOST_IND        = 361,
+   WLAN_HAL_BLACK_LIST_SSID_REQ              = 362,
+   WLAN_HAL_BLACK_LIST_SSID_RSP              = 363,
 
    WLAN_HAL_MSG_MAX = WLAN_HAL_MSG_TYPE_MAX_ENUM_SIZE
 }tHalHostMsgType;
@@ -6934,6 +6936,7 @@ typedef enum {
     /* 70 reserved for WIFI_DUAL_BAND_ENABLE */
     PROBE_RSP_TEMPLATE_VER1 = 71,
     STA_MONITOR_SCC         = 72,
+    BSSID_BLACKLIST         = 73,
     MAX_FEATURE_SUPPORTED  = 128,
 } placeHolderInCapBitmap;
 

@@ -174,19 +174,64 @@ safeChannelType safeChannels[NUM_20MHZ_RF_CHANNELS] =
 int __hdd_hostapd_open (struct net_device *dev)
 {
    hdd_adapter_t *pAdapter =  WLAN_HDD_GET_PRIV_PTR(dev);
+   hdd_context_t *pHddCtx;
+   VOS_STATUS status;
+   v_BOOL_t in_standby = TRUE;
+   hdd_adapter_list_node_t *pAdapterNode = NULL, *pNext = NULL;
 
    ENTER();
 
-   if(!test_bit(SOFTAP_BSS_STARTED, &pAdapter->event_flags))
-   {
-       //WMM_INIT OR BSS_START not completed
-       hddLog( LOGW, "Ignore hostadp open request");
-       EXIT();
-       return 0;
+   if (test_bit(DEVICE_IFACE_OPENED, &pAdapter->event_flags)) {
+          hddLog(VOS_TRACE_LEVEL_DEBUG, "%s: session already opened for the adapter",
+                 __func__);
+          return 0;
    }
 
-   MTRACE(vos_trace(VOS_MODULE_ID_HDD,
-                    TRACE_CODE_HDD_HOSTAPD_OPEN_REQUEST, NO_SESSION, 0));
+   pHddCtx = (hdd_context_t*)pAdapter->pHddCtx;
+   MTRACE(vos_trace(VOS_MODULE_ID_HDD, TRACE_CODE_HDD_OPEN_REQUEST,
+                    pAdapter->sessionId, pAdapter->device_mode));
+   if (NULL == pHddCtx)
+   {
+      VOS_TRACE( VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_FATAL,
+         "%s: HDD context is Null", __func__);
+      return -ENODEV;
+   }
+   status = hdd_get_front_adapter ( pHddCtx, &pAdapterNode );
+   while ( (NULL != pAdapterNode) && (VOS_STATUS_SUCCESS == status) )
+   {
+      if (test_bit(DEVICE_IFACE_OPENED, &pAdapterNode->pAdapter->event_flags))
+      {
+         hddLog(VOS_TRACE_LEVEL_INFO, "%s: chip already out of standby",
+                __func__);
+         in_standby = FALSE;
+         break;
+      }
+      else
+      {
+         status = hdd_get_next_adapter ( pHddCtx, pAdapterNode, &pNext );
+         pAdapterNode = pNext;
+      }
+   }
+
+   if (TRUE == in_standby)
+   {
+       if (VOS_STATUS_SUCCESS != wlan_hdd_exit_lowpower(pHddCtx, pAdapter))
+       {
+           hddLog(VOS_TRACE_LEVEL_ERROR, "%s: Failed to bring "
+                   "wlan out of power save", __func__);
+           return -EINVAL;
+       }
+   }
+
+   status = hdd_init_ap_mode( pAdapter, false);
+   if( VOS_STATUS_SUCCESS != status ) {
+          hddLog(VOS_TRACE_LEVEL_ERROR, "%s: Failed to create session for station mode",
+                 __func__);
+          return -EINVAL;
+   }
+
+   set_bit(DEVICE_IFACE_OPENED, &pAdapter->event_flags);
+
    //Turn ON carrier state
    netif_carrier_on(dev);
    //Enable all Tx queues
@@ -238,6 +283,14 @@ int __hdd_hostapd_stop (struct net_device *dev)
 
    //Turn OFF carrier state
    netif_carrier_off(dev);
+
+  if (test_bit(SME_SESSION_OPENED, &adapter->event_flags)) {
+     hdd_stop_adapter(hdd_ctx, adapter, VOS_TRUE);
+     hdd_deinit_adapter(hdd_ctx, adapter, TRUE);
+  }
+
+ clear_bit(DEVICE_IFACE_OPENED, &adapter->event_flags);
+ adapter->dev->wireless_handlers = NULL;
 
    if (!hdd_is_cli_iface_up(hdd_ctx))
        sme_ScanFlushResult(hdd_ctx->hHal, 0);
@@ -668,9 +721,10 @@ static int hdd_hostapd_ioctl(struct net_device *dev,
 static int __hdd_hostapd_set_mac_address(struct net_device *dev, void *addr)
 {
    struct sockaddr *psta_mac_addr = addr;
-   hdd_adapter_t *pAdapter;
+   hdd_adapter_t *pAdapter, *adapter_temp;
    hdd_context_t *pHddCtx;
-   int ret = 0;
+   int ret = 0, i;
+   v_MACADDR_t mac_addr;
 
    ENTER();
    pAdapter = WLAN_HDD_GET_PRIV_PTR(dev);
@@ -683,10 +737,49 @@ static int __hdd_hostapd_set_mac_address(struct net_device *dev, void *addr)
    pHddCtx = WLAN_HDD_GET_CTX(pAdapter);
    ret = wlan_hdd_validate_context(pHddCtx);
    if (0 != ret)
-   {
        return ret;
+
+
+   memcpy(&mac_addr, psta_mac_addr->sa_data, sizeof(mac_addr));
+   if(vos_is_macaddr_zero(&mac_addr)) {
+        hddLog(VOS_TRACE_LEVEL_ERROR, "Zero Mac address");
+        return -EINVAL;
    }
+
+   if (vos_is_macaddr_broadcast(&mac_addr)) {
+        hddLog(VOS_TRACE_LEVEL_ERROR,"MAC is Broadcast");
+        return -EINVAL;
+   }
+
+   if (vos_is_macaddr_multicast(&mac_addr)) {
+        hddLog(VOS_TRACE_LEVEL_ERROR, "Multicast Mac address");
+        return -EINVAL;
+   }
+
+
+   adapter_temp = hdd_get_adapter_by_macaddr(pHddCtx, mac_addr.bytes);
+   if (adapter_temp) {
+         if (!strcmp(adapter_temp->dev->name, dev->name))
+            return 0;
+        hddLog(VOS_TRACE_LEVEL_ERROR,
+              "%s: WLAN Mac Addr: "
+               MAC_ADDRESS_STR, __func__,
+               MAC_ADDR_ARRAY(mac_addr.bytes));
+         return -EINVAL;
+   }
+
+  for (i = 0; i < VOS_MAX_CONCURRENCY_PERSONA; i++) {
+          if (!vos_mem_compare(&pAdapter->macAddressCurrent.bytes,
+              &pHddCtx->cfg_ini->intfMacAddr[i].bytes[0], VOS_MAC_ADDR_SIZE)) {
+              memcpy(&pHddCtx->cfg_ini->intfMacAddr[i].bytes[0], mac_addr.bytes,
+                     VOS_MAC_ADDR_SIZE);
+              break;
+        }
+  }
+
+   memcpy(&pAdapter->macAddressCurrent, psta_mac_addr->sa_data, ETH_ALEN);
    memcpy(dev->dev_addr, psta_mac_addr->sa_data, ETH_ALEN);
+
    EXIT();
    return 0;
 }

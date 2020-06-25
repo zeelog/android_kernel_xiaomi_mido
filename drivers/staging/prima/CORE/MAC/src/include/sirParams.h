@@ -159,6 +159,9 @@ typedef enum {
    /*70 reserved for WIFI_DUAL_BAND_ENABLE */
    PROBE_RSP_TEMPLATE_VER1 = 71,
    STA_MONITOR_SCC = 72,
+#ifdef FEATURE_WLAN_LFR
+   BSSID_BLACKLIST = 73,
+#endif
    //MAX_FEATURE_SUPPORTED = 128
 } placeHolderInCapBitmap;
 
@@ -826,6 +829,7 @@ struct sir_mgmt_msg {
 #define SIR_HAL_VOWIFI_MODE                (SIR_HAL_ITC_MSG_TYPES_BEGIN + 306)
 #define SIR_HAL_QPOWER                     (SIR_HAL_ITC_MSG_TYPES_BEGIN + 307)
 
+#define SIR_HAL_BLACKLIST_REQ              (SIR_HAL_ITC_MSG_TYPES_BEGIN + 308)
 
 #define SIR_HAL_MSG_TYPES_END              (SIR_HAL_MSG_TYPES_BEGIN + 0x1FF)
 
