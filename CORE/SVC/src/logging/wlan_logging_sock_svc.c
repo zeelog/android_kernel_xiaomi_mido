@@ -1962,7 +1962,8 @@ void wlan_process_done_indication(uint8 type, uint32 reason_code)
 				spin_unlock_irqrestore(
 					&gwlan_logging.bug_report_lock,
 					flags);
-				pr_info("%s: Ignoring Fatal event from firmware for reason %d\n",
+				pr_debug_ratelimited(
+					"%s: Ignoring Fatal event from firmware for reason %d\n",
 					__func__, reason_code);
 				return;
 			}
