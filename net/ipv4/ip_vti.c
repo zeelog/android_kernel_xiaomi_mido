@@ -51,7 +51,7 @@ static int vti_net_id __read_mostly;
 static int vti_tunnel_init(struct net_device *dev);
 
 static int vti_input(struct sk_buff *skb, int nexthdr, __be32 spi,
-		     int encap_type)
+		     int encap_type, bool update_skb_dev)
 {
 	struct ip_tunnel *tunnel;
 	const struct iphdr *iph = ip_hdr(skb);
@@ -66,32 +66,8 @@ static int vti_input(struct sk_buff *skb, int nexthdr, __be32 spi,
 
 		XFRM_TUNNEL_SKB_CB(skb)->tunnel.ip4 = tunnel;
 
-		return xfrm_input(skb, nexthdr, spi, encap_type);
-	}
-
-	return -EINVAL;
-drop:
-	kfree_skb(skb);
-	return 0;
-}
-
-static int vti_input_ipip(struct sk_buff *skb, int nexthdr, __be32 spi,
-		     int encap_type)
-{
-	struct ip_tunnel *tunnel;
-	const struct iphdr *iph = ip_hdr(skb);
-	struct net *net = dev_net(skb->dev);
-	struct ip_tunnel_net *itn = net_generic(net, vti_net_id);
-
-	tunnel = ip_tunnel_lookup(itn, skb->dev->ifindex, TUNNEL_NO_KEY,
-				  iph->saddr, iph->daddr, 0);
-	if (tunnel) {
-		if (!xfrm4_policy_check(NULL, XFRM_POLICY_IN, skb))
-			goto drop;
-
-		XFRM_TUNNEL_SKB_CB(skb)->tunnel.ip4 = tunnel;
-
-		skb->dev = tunnel->dev;
+		if (update_skb_dev)
+			skb->dev = tunnel->dev;
 
 		return xfrm_input(skb, nexthdr, spi, encap_type);
 	}
@@ -102,20 +78,28 @@ drop:
 	return 0;
 }
 
-static int vti_rcv(struct sk_buff *skb)
+static int vti_input_proto(struct sk_buff *skb, int nexthdr, __be32 spi,
+			   int encap_type)
 {
-	XFRM_SPI_SKB_CB(skb)->family = AF_INET;
-	XFRM_SPI_SKB_CB(skb)->daddroff = offsetof(struct iphdr, daddr);
-
-	return vti_input(skb, ip_hdr(skb)->protocol, 0, 0);
+	return vti_input(skb, nexthdr, spi, encap_type, false);
 }
 
-static int vti_rcv_ipip(struct sk_buff *skb)
+static int vti_rcv(struct sk_buff *skb, __be32 spi, bool update_skb_dev)
 {
 	XFRM_SPI_SKB_CB(skb)->family = AF_INET;
 	XFRM_SPI_SKB_CB(skb)->daddroff = offsetof(struct iphdr, daddr);
 
-	return vti_input_ipip(skb, ip_hdr(skb)->protocol, ip_hdr(skb)->saddr, 0);
+	return vti_input(skb, ip_hdr(skb)->protocol, spi, 0, update_skb_dev);
+}
+
+static int vti_rcv_proto(struct sk_buff *skb)
+{
+	return vti_rcv(skb, 0, false);
+}
+
+static int vti_rcv_tunnel(struct sk_buff *skb)
+{
+	return vti_rcv(skb, ip_hdr(skb)->saddr, true);
 }
 
 static int vti_rcv_cb(struct sk_buff *skb, int err)
@@ -452,31 +436,31 @@ static void __net_init vti_fb_tunnel_init(struct net_device *dev)
 }
 
 static struct xfrm4_protocol vti_esp4_protocol __read_mostly = {
-	.handler	=	vti_rcv,
-	.input_handler	=	vti_input,
+	.handler	=	vti_rcv_proto,
+	.input_handler	=	vti_input_proto,
 	.cb_handler	=	vti_rcv_cb,
 	.err_handler	=	vti4_err,
 	.priority	=	100,
 };
 
 static struct xfrm4_protocol vti_ah4_protocol __read_mostly = {
-	.handler	=	vti_rcv,
-	.input_handler	=	vti_input,
+	.handler	=	vti_rcv_proto,
+	.input_handler	=	vti_input_proto,
 	.cb_handler	=	vti_rcv_cb,
 	.err_handler	=	vti4_err,
 	.priority	=	100,
 };
 
 static struct xfrm4_protocol vti_ipcomp4_protocol __read_mostly = {
-	.handler	=	vti_rcv,
-	.input_handler	=	vti_input,
+	.handler	=	vti_rcv_proto,
+	.input_handler	=	vti_input_proto,
 	.cb_handler	=	vti_rcv_cb,
 	.err_handler	=	vti4_err,
 	.priority	=	100,
 };
 
 static struct xfrm_tunnel ipip_handler __read_mostly = {
-	.handler	=	vti_rcv_ipip,
+	.handler	=	vti_rcv_tunnel,
 	.err_handler	=	vti4_err,
 	.priority	=	0,
 };
@@ -611,12 +595,41 @@ static struct rtnl_link_ops vti_link_ops __read_mostly = {
 	.fill_info	= vti_fill_info,
 };
 
+static bool is_vti_tunnel(const struct net_device *dev)
+{
+	return dev->netdev_ops == &vti_netdev_ops;
+}
+
+static int vti_device_event(struct notifier_block *unused,
+			    unsigned long event, void *ptr)
+{
+	struct net_device *dev = netdev_notifier_info_to_dev(ptr);
+	struct ip_tunnel *tunnel = netdev_priv(dev);
+
+	if (!is_vti_tunnel(dev))
+		return NOTIFY_DONE;
+
+	switch (event) {
+	case NETDEV_DOWN:
+		if (!net_eq(tunnel->net, dev_net(dev)))
+			xfrm_garbage_collect(tunnel->net);
+		break;
+	}
+	return NOTIFY_DONE;
+}
+
+static struct notifier_block vti_notifier_block __read_mostly = {
+	.notifier_call = vti_device_event,
+};
+
 static int __init vti_init(void)
 {
 	const char *msg;
 	int err;
 
 	pr_info("IPv4 over IPsec tunneling driver\n");
+
+	register_netdevice_notifier(&vti_notifier_block);
 
 	msg = "tunnel device";
 	err = register_pernet_device(&vti_net_ops);
@@ -657,6 +670,7 @@ xfrm_proto_ah_failed:
 xfrm_proto_esp_failed:
 	unregister_pernet_device(&vti_net_ops);
 pernet_dev_failed:
+	unregister_netdevice_notifier(&vti_notifier_block);
 	pr_err("vti init: failed to register %s\n", msg);
 	return err;
 }
@@ -669,6 +683,7 @@ static void __exit vti_fini(void)
 	xfrm4_protocol_deregister(&vti_ah4_protocol, IPPROTO_AH);
 	xfrm4_protocol_deregister(&vti_esp4_protocol, IPPROTO_ESP);
 	unregister_pernet_device(&vti_net_ops);
+	unregister_netdevice_notifier(&vti_notifier_block);
 }
 
 module_init(vti_init);

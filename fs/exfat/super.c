@@ -373,21 +373,6 @@ static inline unsigned long __exfat_init_name_hash(const struct dentry *unused)
 #endif
 
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 4, 21)
-       /* EMPTY */
-#else /* LINUX_VERSION_CODE < KERNEL_VERSION(4, 4, 21) */
-static inline void inode_lock(struct inode *inode)
-{
-	       mutex_lock(&inode->i_mutex);
-}
-
-static inline void inode_unlock(struct inode *inode)
-{
-	       mutex_unlock(&inode->i_mutex);
-}
-#endif
-
-
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 16, 0)
 static inline int exfat_remount_syncfs(struct super_block *sb)
 {
