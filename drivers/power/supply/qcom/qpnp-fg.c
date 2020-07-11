@@ -511,15 +511,19 @@ struct fg_chip {
 	struct power_supply	*batt_psy;
 	struct power_supply	*usb_psy;
 	struct power_supply	*dc_psy;
+	#if 0
 	struct fg_wakeup_source	memif_wakeup_source;
+	#endif
 	struct fg_wakeup_source	profile_wakeup_source;
 	struct fg_wakeup_source	empty_check_wakeup_source;
 	struct fg_wakeup_source	resume_soc_wakeup_source;
 	struct fg_wakeup_source	gain_comp_wakeup_source;
 	struct fg_wakeup_source	capacity_learning_wakeup_source;
 	bool			first_profile_loaded;
+	#if 0
 	struct fg_wakeup_source	update_temp_wakeup_source;
 	struct fg_wakeup_source	update_sram_wakeup_source;
+	#endif
 	bool			fg_restarting;
 	bool			profile_loaded;
 	bool			soc_reporting_ready;
@@ -7497,10 +7501,14 @@ static void fg_cleanup(struct fg_chip *chip)
 	mutex_destroy(&chip->ima_recovery_lock);
 	wakeup_source_trash(&chip->resume_soc_wakeup_source.source);
 	wakeup_source_trash(&chip->empty_check_wakeup_source.source);
+	#if 0
 	wakeup_source_trash(&chip->memif_wakeup_source.source);
+	#endif
 	wakeup_source_trash(&chip->profile_wakeup_source.source);
+	#if 0
 	wakeup_source_trash(&chip->update_temp_wakeup_source.source);
 	wakeup_source_trash(&chip->update_sram_wakeup_source.source);
+	#endif
 	wakeup_source_trash(&chip->gain_comp_wakeup_source.source);
 	wakeup_source_trash(&chip->capacity_learning_wakeup_source.source);
 	wakeup_source_trash(&chip->esr_extract_wakeup_source.source);
@@ -8727,14 +8735,18 @@ static int fg_probe(struct platform_device *pdev)
 
 	wakeup_source_init(&chip->empty_check_wakeup_source.source,
 			"qpnp_fg_empty_check");
+	#if 0
 	wakeup_source_init(&chip->memif_wakeup_source.source,
 			"qpnp_fg_memaccess");
+	#endif
 	wakeup_source_init(&chip->profile_wakeup_source.source,
 			"qpnp_fg_profile");
+	#if 0
 	wakeup_source_init(&chip->update_temp_wakeup_source.source,
 			"qpnp_fg_update_temp");
 	wakeup_source_init(&chip->update_sram_wakeup_source.source,
 			"qpnp_fg_update_sram");
+	#endif
 	wakeup_source_init(&chip->resume_soc_wakeup_source.source,
 			"qpnp_fg_set_resume_soc");
 	wakeup_source_init(&chip->gain_comp_wakeup_source.source,
@@ -8956,10 +8968,14 @@ of_init_fail:
 	mutex_destroy(&chip->ima_recovery_lock);
 	wakeup_source_trash(&chip->resume_soc_wakeup_source.source);
 	wakeup_source_trash(&chip->empty_check_wakeup_source.source);
+	#if 0
 	wakeup_source_trash(&chip->memif_wakeup_source.source);
+	#endif
 	wakeup_source_trash(&chip->profile_wakeup_source.source);
+	#if 0
 	wakeup_source_trash(&chip->update_temp_wakeup_source.source);
 	wakeup_source_trash(&chip->update_sram_wakeup_source.source);
+	#endif
 	wakeup_source_trash(&chip->gain_comp_wakeup_source.source);
 	wakeup_source_trash(&chip->capacity_learning_wakeup_source.source);
 	wakeup_source_trash(&chip->esr_extract_wakeup_source.source);
