@@ -1936,7 +1936,7 @@ void wlan_process_done_indication(uint8 type, uint32 reason_code)
 
 	if ((type == WLAN_FW_LOGS) && reason_code &&
 				 vos_isFatalEventEnabled() &&
-				 vos_is_wlan_logging_enabled())
+				 vos_is_wlan_logging_enabled() && reason_code != 4105)
 	{
 		if(wlan_is_log_report_in_progress() == TRUE)
 		{
