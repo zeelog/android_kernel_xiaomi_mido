@@ -593,7 +593,7 @@ static int smd_tty_port_activate(struct tty_port *tport,
 	}
 
 	res = wait_event_interruptible_timeout(info->ch_opened_wait_queue,
-					       info->is_open, (2 * HZ));
+					       info->is_open, (msecs_to_jiffies(2000)));
 	if (res == 0)
 		res = -ETIMEDOUT;
 	if (res < 0) {

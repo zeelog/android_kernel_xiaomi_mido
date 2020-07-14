@@ -58,7 +58,7 @@ struct mdss_hw mdss_dsi1_hw = {
 
 #define DSI_EVENT_Q_MAX	4
 
-#define DSI_BTA_EVENT_TIMEOUT (HZ / 10)
+#define DSI_BTA_EVENT_TIMEOUT (100)
 
 /* Mutex common for both the controllers */
 static struct mutex dsi_mtx;
@@ -1577,7 +1577,7 @@ int mdss_dsi_bta_status_check(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 	wmb(); /* ensure write is finished before progressing */
 
 	ret = wait_for_completion_killable_timeout(&ctrl_pdata->bta_comp,
-						DSI_BTA_EVENT_TIMEOUT);
+						msecs_to_jiffies(DSI_BTA_EVENT_TIMEOUT));
 	if (ret <= 0) {
 		u32 reg_val, status;
 

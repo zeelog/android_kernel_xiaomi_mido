@@ -2720,7 +2720,7 @@ static int goodix_ts_probe(struct i2c_client *client, const struct i2c_device_id
 	spin_lock_init(&ts->irq_lock);
 
 #if GTP_ESD_PROTECT
-	ts->clk_tick_cnt = 2 * HZ;
+	ts->clk_tick_cnt = msecs_to_jiffies(2000);
 	GTP_DEBUG("Clock ticks for an esd cycle: %d", ts->clk_tick_cnt);
 	spin_lock_init(&ts->esd_lock);
 #endif
