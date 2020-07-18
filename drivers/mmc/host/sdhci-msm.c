@@ -3944,7 +3944,7 @@ void sdhci_msm_dump_vendor_regs(struct sdhci_host *host)
 				debug_reg[i+2], debug_reg[i+3]);
 	if (host->is_crypto_en) {
 		sdhci_msm_ice_get_status(host, &sts);
-		pr_info("%s: ICE status %x\n", mmc_hostname(host->mmc), sts);
+		pr_debug("%s: ICE status %x\n", mmc_hostname(host->mmc), sts);
 		sdhci_msm_ice_print_regs(host);
 	}
 }
@@ -5514,7 +5514,7 @@ defer_disable_host_irq:
 	if (host->is_crypto_en) {
 		ret = sdhci_msm_ice_suspend(host);
 		if (ret < 0)
-			pr_err("%s: failed to suspend crypto engine %d\n",
+			pr_debug("%s: failed to suspend crypto engine %d\n",
 					mmc_hostname(host->mmc), ret);
 	}
 	trace_sdhci_msm_runtime_suspend(mmc_hostname(host->mmc), 0,
@@ -5533,13 +5533,13 @@ static int sdhci_msm_runtime_resume(struct device *dev)
 	if (host->is_crypto_en) {
 		ret = sdhci_msm_enable_controller_clock(host);
 		if (ret) {
-			pr_err("%s: Failed to enable reqd clocks\n",
+			pr_debug("%s: Failed to enable reqd clocks\n",
 					mmc_hostname(host->mmc));
 			goto skip_ice_resume;
 		}
 		ret = sdhci_msm_ice_resume(host);
 		if (ret)
-			pr_err("%s: failed to resume crypto engine %d\n",
+			pr_debug("%s: failed to resume crypto engine %d\n",
 					mmc_hostname(host->mmc), ret);
 	}
 skip_ice_resume:
