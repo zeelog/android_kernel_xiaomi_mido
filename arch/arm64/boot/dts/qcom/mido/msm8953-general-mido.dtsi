@@ -109,10 +109,6 @@
 	};
 
 	qcom,pmi8950@2 {
-		pmi8950_vadc: vadc@3100 {
-			status = "disabled";
-		};
-
 		pmi8950_gpios: gpios {
 			pinctrl-names = "default";
 			pinctrl-0 = <&pwm_ir_default>;
@@ -455,10 +451,6 @@
 };
 
 &thermal_zones {
-	chg-temp-adc {
-		status = "disabled";
-	};
-
 	pa-therm1-adc {
 		status = "disabled";
 	};
