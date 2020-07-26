@@ -101,6 +101,7 @@
 		CPU2: cpu@2 {
 			device_type = "cpu";
 			compatible = "arm,cortex-a53","arm,armv8";
+			clock-frequency = <2016000000>;
 			enable-method = "psci";
 			reg = <0x2>;
 			efficiency = <1024>;
