@@ -264,7 +264,7 @@ static int msm_smd_probe(struct platform_device *pdev)
 
 	ret = request_irq(irq_line,
 			private_irq->irq_handler,
-			IRQF_TRIGGER_RISING | IRQF_NO_SUSPEND | IRQF_SHARED,
+			IRQF_TRIGGER_RISING | IRQF_NO_SUSPEND,
 			node->name,
 			&pdev->dev);
 	if (ret < 0) {
@@ -272,10 +272,10 @@ static int msm_smd_probe(struct platform_device *pdev)
 		return ret;
 	}
 
-	ret = enable_irq_wake(irq_line);
+	/*ret = enable_irq_wake(irq_line);
 	if (ret < 0)
 		pr_err("%s: enable_irq_wake() failed on %d\n", __func__,
-				irq_line);
+				irq_line);*/
 
 	smd_set_edge_subsys_name(edge, subsys_name);
 	smd_proc_set_skip_pil(smd_edge_to_remote_pid(edge), skip_pil);
