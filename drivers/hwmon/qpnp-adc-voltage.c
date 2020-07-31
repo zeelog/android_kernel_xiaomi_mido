@@ -342,11 +342,11 @@ static int32_t qpnp_vadc_status_debug(struct qpnp_vadc_chip *vadc)
 		for (i = 0; i < QPNP_VADC_REG_DUMP; i++) {
 			rc = qpnp_vadc_read_reg(vadc, offset, buf, 8);
 			if (rc) {
-				pr_err("debug register dump failed\n");
+				pr_debug("debug register dump failed\n");
 				return rc;
 			}
 			offset += QPNP_VADC_OFFSET_DUMP;
-			pr_err("row%d: 0%x 0%x 0%x 0%x 0%x 0%x 0%x 0%x\n",
+			pr_debug("row%d: 0%x 0%x 0%x 0%x 0%x 0%x 0%x 0%x\n",
 				i, buf[0], buf[1], buf[2], buf[3], buf[4],
 				buf[5], buf[6], buf[7]);
 		}
@@ -386,7 +386,7 @@ static int qpnp_vadc_hc_check_conversion_status(struct qpnp_vadc_chip *vadc,
 				QPNP_VADC_HC1_CONV_TIME_MAX_US);
 		count++;
 		if (count > retry) {
-			pr_err("retry error exceeded\n");
+			pr_debug("retry error exceeded\n");
 			rc = qpnp_vadc_status_debug(vadc);
 			if (rc < 0)
 				pr_err("VADC disable failed with %d\n", rc);
@@ -1575,7 +1575,7 @@ int32_t qpnp_vbat_sns_comp_result(struct qpnp_vadc_chip *vadc,
 	rc = qpnp_vadc_conv_seq_request(vadc, ADC_SEQ_NONE,
 			DIE_TEMP, &die_temp_result);
 	if (rc < 0) {
-		pr_err("Error reading die_temp\n");
+		pr_debug("Error reading die_temp\n");
 		return rc;
 	}
 
@@ -2135,7 +2135,7 @@ recalibrate:
 					QPNP_VADC_CONV_TIME_MAX);
 			count++;
 			if (count > QPNP_VADC_ERR_COUNT) {
-				pr_err("retry error exceeded\n");
+				pr_debug("retry error exceeded\n");
 				rc = qpnp_vadc_status_debug(vadc);
 				if (rc < 0)
 					pr_err("VADC disable failed\n");
@@ -2306,7 +2306,7 @@ int32_t qpnp_vadc_read(struct qpnp_vadc_chip *vadc,
 		rc = qpnp_vadc_conv_seq_request(vadc, ADC_SEQ_NONE,
 				DIE_TEMP, &die_temp_result);
 		if (rc < 0) {
-			pr_err("Error reading die_temp\n");
+			pr_debug("Error reading die_temp\n");
 			return rc;
 		}
 
@@ -2322,7 +2322,7 @@ int32_t qpnp_vadc_read(struct qpnp_vadc_chip *vadc,
 			vadc->vadc_chg_vote =
 				power_supply_get_by_name("battery");
 			if (!vadc->vadc_chg_vote) {
-				pr_err("no vadc_chg_vote found\n");
+				pr_debug("no vadc_chg_vote found\n");
 				return -EINVAL;
 			}
 		}
@@ -2340,7 +2340,7 @@ int32_t qpnp_vadc_read(struct qpnp_vadc_chip *vadc,
 		rc = qpnp_vadc_conv_seq_request(vadc, ADC_SEQ_NONE,
 				channel, result);
 		if (rc < 0)
-			pr_err("Error reading die_temp\n");
+			pr_debug("Error reading die_temp\n");
 
 		ret.intval = 0;
 		rc = power_supply_set_property(vadc->vadc_chg_vote,
@@ -2668,7 +2668,7 @@ static ssize_t qpnp_adc_show(struct device *dev,
 	rc = qpnp_vadc_read(vadc, attr->index, &result);
 
 	if (rc) {
-		pr_err("VADC read error with %d\n", rc);
+		pr_debug("VADC read error with %d\n", rc);
 		return 0;
 	}
 
@@ -2722,7 +2722,7 @@ static int qpnp_vadc_get_temp(void *data, int *temp)
 				vadc_therm->vadc_channel, &result);
 	if (rc) {
 		if (rc != -EPROBE_DEFER)
-			pr_err("VADC read error with %d\n", rc);
+			pr_debug("VADC read error with %d\n", rc);
 		return rc;
 	}
 
