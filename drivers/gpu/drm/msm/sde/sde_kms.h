@@ -21,7 +21,6 @@
 
 #include <linux/msm_ion.h>
 #include <linux/pm_domain.h>
-#include <linux/pm_qos.h>
 
 #include "msm_drv.h"
 #include "msm_kms.h"
@@ -229,7 +228,6 @@ struct sde_kms {
 
 	struct msm_gem_address_space *aspace[MSM_SMMU_DOMAIN_MAX];
 	struct sde_power_client *core_client;
-	struct pm_qos_request pm_qos_cpu_req;
 
 	struct ion_client *iclient;
 	struct sde_power_event *power_event;
