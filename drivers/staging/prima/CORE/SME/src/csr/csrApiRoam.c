@@ -18966,6 +18966,11 @@ eHalStatus csrIsFullPowerNeeded( tpAniSirGlobal pMac, tSmeCmd *pCommand,
             fNeedFullPower = eANI_BOOLEAN_TRUE;
         }
 
+        else if (pCommand->command == eSmeCommandOlpcMode)
+        {
+            fNeedFullPower = eANI_BOOLEAN_TRUE;
+        }
+
         break;
     case REQUEST_STOP_UAPSD:
     case REQUEST_EXIT_WOWL:
