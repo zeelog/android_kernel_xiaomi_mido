@@ -27,7 +27,6 @@
 #include "adsp_err.h"
 
 /* For legacy version retrieval */
-#include <dsp/q6lsm.h>
 #include <dsp/q6adm-v2.h>
 #include <dsp/q6afe-v2.h>
 
@@ -674,8 +673,6 @@ EXPORT_SYMBOL(q6core_get_fwk_version_size);
 static int q6core_get_legacy_avcs_fwk_version(uint32_t service_id)
 {
 	switch (service_id) {
-	case APRV2_IDS_SERVICE_ID_ADSP_LSM_V:
-		return LSM_API_VERSION_V2;
 	case APRV2_IDS_SERVICE_ID_ADSP_ADM_V:
 		return ADSP_ADM_API_VERSION_V1;
 	case APRV2_IDS_SERVICE_ID_ADSP_ASM_V:
