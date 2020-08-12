@@ -11,8 +11,10 @@ endif
 
 # Build/Package options for 8916, 8974, 8226, 8610, 8909, 8952, 8937, 8953 targets
 ifneq (,$(filter msm8916 msm8974 msm8226 msm8610 msm8909 msm8952 msm8937 msm8953 titanium,$(TARGET_BOARD_PLATFORM)))
+ifneq ($(TARGET_SUPPORTS_ANDROID_WEAR_KERNEL_4_14),true)
 WLAN_CHIPSET := pronto
 WLAN_SELECT := CONFIG_PRONTO_WLAN=m
+endif
 endif
 
 # Build/Package only in case of supported target
@@ -136,7 +138,7 @@ endif
 include $(CLEAR_VARS)
 LOCAL_MODULE              := $(WLAN_CHIPSET)_wlan.ko
 LOCAL_MODULE_KBUILD_NAME  := wlan.ko
-LOCAL_MODULE_TAGS         := debug
+LOCAL_MODULE_TAGS         := optional
 LOCAL_MODULE_DEBUG_ENABLE := true
 ifeq ($(PRODUCT_VENDOR_MOVE_ENABLED), true)
     ifeq ($(WIFI_DRIVER_INSTALL_TO_KERNEL_OUT),true)

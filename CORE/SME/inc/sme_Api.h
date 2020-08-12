@@ -233,6 +233,7 @@ sme_SetLinkLayerStatsIndCB
 
 void sme_set_vowifi_mode(tpAniSirGlobal pMac, bool enable);
 void sme_set_qpower(tpAniSirGlobal pMac, uint8_t enable);
+void sme_set_olpc_mode(tpAniSirGlobal pMac, bool enable);
 
 #ifdef WLAN_FEATURE_EXTSCAN
 /* ---------------------------------------------------------------------------
@@ -4164,4 +4165,14 @@ struct roam_ext_params {
  */
 eHalStatus sme_UpdateBlacklist(tHalHandle hHal, uint8_t session_id,
                                struct roam_ext_params *roam_params);
+
+/**
+ * sme_update_olpc_mode() - Send OLPC mode command received from user space
+ * @hal: The handle returned by mac_open
+ * @enable: OLPC mode enable/disable
+ *
+ * Return: HAL_STATUS
+ */
+eHalStatus sme_update_olpc_mode(tHalHandle hHal, bool enable);
+
 #endif //#if !defined( __SME_API_H )
