@@ -122,10 +122,10 @@ int xhci_halt(struct xhci_hcd *xhci)
 
 	xhci->cmd_ring_state = CMD_RING_STATE_STOPPED;
 
-	if (timer_pending(&xhci->cmd_timer)) {
+	if (delayed_work_pending(&xhci->cmd_timer)) {
 		xhci_dbg_trace(xhci, trace_xhci_dbg_init,
 				"Cleanup command queue");
-		del_timer(&xhci->cmd_timer);
+		cancel_delayed_work(&xhci->cmd_timer);
 		xhci_cleanup_command_queue(xhci);
 	}
 
@@ -1343,6 +1343,7 @@ static int xhci_check_maxpacket(struct xhci_hcd *xhci, unsigned int slot_id,
 				xhci->devs[slot_id]->out_ctx, ep_index);
 
 		ep_ctx = xhci_get_ep_ctx(xhci, command->in_ctx, ep_index);
+		ep_ctx->ep_info &= cpu_to_le32(~EP_STATE_MASK);/* must clear */
 		ep_ctx->ep_info2 &= cpu_to_le32(~MAX_PACKET_MASK);
 		ep_ctx->ep_info2 |= cpu_to_le32(MAX_PACKET(max_packet_size));
 
