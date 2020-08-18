@@ -135,7 +135,7 @@ install_bp_hardening_cb(const struct arm64_cpu_capabilities *entry,
 
 #include <asm/psci.h>
 
-static void enable_psci_bp_hardening(void *data)
+static int enable_psci_bp_hardening(void *data)
 {
 	const struct arm64_cpu_capabilities *entry = data;
 
@@ -145,6 +145,7 @@ static void enable_psci_bp_hardening(void *data)
 				       __psci_hyp_bp_inval_start,
 				       __psci_hyp_bp_inval_end);
 
+	return 0;
 }
 
 static void qcom_link_stack_sanitization(void)
@@ -166,7 +167,7 @@ static void qcom_bp_hardening(void)
 		psci_ops.get_version();
 }
 
-static void enable_qcom_bp_hardening(void *data)
+static int enable_qcom_bp_hardening(void *data)
 {
 	const struct arm64_cpu_capabilities *entry = data;
 
@@ -174,6 +175,8 @@ static void enable_qcom_bp_hardening(void *data)
 				(bp_hardening_cb_t)qcom_bp_hardening,
 				 __psci_hyp_bp_inval_start,
 				 __psci_hyp_bp_inval_end);
+
+	return 0;
 }
 #endif	/* CONFIG_HARDEN_BRANCH_PREDICTOR */
 

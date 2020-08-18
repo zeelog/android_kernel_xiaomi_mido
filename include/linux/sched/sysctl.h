@@ -169,6 +169,7 @@ extern int sched_max_latency_sysctl(struct ctl_table *table, int write,
 #endif
 #endif
 
+extern int sysctl_sched_rr_timeslice;
 extern int sched_rr_timeslice;
 
 extern int sched_rr_handler(struct ctl_table *table, int write,
