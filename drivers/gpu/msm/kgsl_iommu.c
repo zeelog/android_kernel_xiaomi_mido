@@ -914,8 +914,6 @@ static int kgsl_iommu_fault_handler(struct iommu_domain *domain,
 				KGSL_LOG_DUMP(ctx->kgsldev, "*EMPTY*\n");
 		}
 	}
-	if (fault_ret_flag)
-		return ret;
 
 
 	/*
