@@ -1126,7 +1126,7 @@
 
 		trips {
 			cpus_trip: cpus-trip {
-				temperature = <43000>;
+				temperature = <60000>;
 				hysteresis = <0>;
 				type = "passive";
 			};
