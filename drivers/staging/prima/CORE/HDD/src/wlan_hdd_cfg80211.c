@@ -9419,7 +9419,11 @@ int wlan_hdd_cfg80211_init(struct device *dev,
 #ifdef FEATURE_WLAN_SCAN_PNO
     if (pCfg->configPNOScanSupport)
     {
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 0))
+	wiphy->max_sched_scan_reqs = 1;
+#else
         wiphy->flags |= WIPHY_FLAG_SUPPORTS_SCHED_SCAN;
+#endif
         wiphy->max_sched_scan_ssids = SIR_PNO_MAX_SUPP_NETWORKS;
         wiphy->max_match_sets       = SIR_PNO_MAX_SUPP_NETWORKS;
         wiphy->max_sched_scan_ie_len = SIR_MAC_MAX_IE_LENGTH;
@@ -11069,6 +11073,12 @@ int wlan_hdd_restore_channels(hdd_context_t *hdd_ctx)
 	status = sme_update_channel_list((tpAniSirGlobal)hdd_ctx->hHal);
 	if (status)
 		hddLog(VOS_TRACE_LEVEL_ERROR, "Can't Restore channel list");
+	else
+		/*
+		 * Free the cache channels when the
+		 * disabled channels are restored
+		 */
+		wlan_hdd_free_cache_channels(hdd_ctx);
 	EXIT();
 
 	return 0;
@@ -12926,14 +12936,24 @@ done:
  * FUNCTION: wlan_hdd_cfg80211_change_iface
  * wrapper function to protect the actual implementation from SSR.
  */
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 0))
+int wlan_hdd_cfg80211_change_iface(struct wiphy *wiphy,
+                                   struct net_device *ndev,
+                                   enum nl80211_iftype type,
+                                   struct vif_params *params)
+#else
 int wlan_hdd_cfg80211_change_iface( struct wiphy *wiphy,
                                     struct net_device *ndev,
                                     enum nl80211_iftype type,
                                     u32 *flags,
                                     struct vif_params *params
                                   )
+#endif
 {
     int ret;
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 0))
+    u32 *flags = NULL;
+#endif
 
     vos_ssr_protect(__func__);
     ret = __wlan_hdd_cfg80211_change_iface(wiphy, ndev, type, flags, params);
@@ -20581,8 +20601,13 @@ error:
  * FUNCTION: wlan_hdd_cfg80211_sched_scan_stop
  * NL interface to disable PNO
  */
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 0))
+static int wlan_hdd_cfg80211_sched_scan_stop(struct wiphy *wiphy,
+          struct net_device *dev, u64 reqid)
+#else
 static int wlan_hdd_cfg80211_sched_scan_stop(struct wiphy *wiphy,
           struct net_device *dev)
+#endif
 {
     int ret;
 
