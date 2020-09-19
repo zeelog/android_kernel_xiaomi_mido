@@ -111,13 +111,16 @@
 
 	qcom,pmi8950@2 {
 		pmi8950_gpios: gpios {
-			gpio@c000 {
+			pinctrl-names = "default";
+			pinctrl-0 = <&pwm_ir_default>;
+
+			pwm_ir_default: pmi8950_gpio1 {
 				status = "okay";
-				qcom,mode = <1>;
-				qcom,pull = <4>;
-				qcom,src-sel = <2>;
-				qcom,master-en = <1>;
-				qcom,out-strength = <2>;
+				pins = "gpio1";
+				output-low;
+				bias-pull-down;
+				function = "func1";
+				qcom,drive-strength = <2>;
 			};
 		};
 
