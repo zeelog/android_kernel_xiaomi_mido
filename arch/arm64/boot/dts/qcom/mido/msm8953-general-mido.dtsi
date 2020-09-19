@@ -65,13 +65,6 @@
 			};
 		};
 
-		pm8953_gpios: gpios {
-			gpio@c700 {
-				status = "okay";
-				qcom,master-en = <0>;
-			};
-		};
-
 		pm8953_vadc: vadc@3100 {
 			chan@36 {
 				qcom,decimation = <1>;
