@@ -55,8 +55,7 @@
 #include <linux/platform_device.h>
 #endif
 
-#define WAKELOCK_HOLD_TIME 2000 /* in ms */
-#define GF_SPIDEV_NAME "goodix,fingerprint"
+#define GF_SPIDEV_NAME     "goodix,fingerprint"
 /*device name after register in charater*/
 #define GF_DEV_NAME            "goodix_fp"
 #define	GF_INPUT_NAME	    "gf3208"	/*"goodix_fp" */
@@ -104,7 +103,6 @@ static LIST_HEAD(device_list);
 static DEFINE_MUTEX(device_list_lock);
 static struct gf_dev gf;
 static struct class *gf_class;
-static struct wakeup_source ttw_ws;
 static int driver_init_partial(struct gf_dev *gf_dev);
 
 static void gf_enable_irq(struct gf_dev *gf_dev)
@@ -417,7 +415,7 @@ static irqreturn_t gf_irq(int irq, void *handle)
 	char temp = GF_NET_EVENT_IRQ;
 	gf_dbg("enter irq %s\n", __func__);
 
-	__pm_wakeup_event(&ttw_ws, WAKELOCK_HOLD_TIME);
+	__pm_wakeup_event(&gf_dev->ttw_wl, 1000);
 
 	sendnlmsg(&temp);
 #elif defined (GF_FASYNC)
@@ -725,8 +723,7 @@ static int gf_probe(struct platform_device *pdev)
 
 		gf_reg_key_kernel(gf_dev);
 
-		wakeup_source_init(&ttw_ws, "ttw_ws");
-
+		wakeup_source_init(&gf_dev->ttw_wl, "goodix_ttw_wl");
 	}
 
 	pr_warn("--------gf_probe end---OK.--------\n");
@@ -779,11 +776,11 @@ static int gf_remove(struct platform_device *pdev)
 	list_del(&gf_dev->device_entry);
 	device_destroy(gf_class, gf_dev->devt);
 	clear_bit(MINOR(gf_dev->devt), minors);
-	if (gf_dev->users == 0) {
+	if (gf_dev->users == 0)
 		kfree(gf_dev);
-		mutex_unlock(&device_list_lock);
-	}
-	wakeup_source_trash(&ttw_ws);
+	mutex_unlock(&device_list_lock);
+
+	wakeup_source_trash(&gf_dev->ttw_wl);
 
 	FUNC_EXIT();
 	return 0;
