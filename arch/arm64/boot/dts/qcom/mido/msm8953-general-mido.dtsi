@@ -10,6 +10,8 @@
  * GNU General Public License for more details.
  */
 
+#include <dt-bindings/pinctrl/qcom,pmic-gpio.h>
+
 / {
 	qrd_batterydata: qcom,battery-data {
 		qcom,batt-id-range-pct = <5>;
@@ -113,7 +115,7 @@
 				output-low;
 				bias-pull-down;
 				function = "func1";
-				qcom,drive-strength = <2>;
+				qcom,drive-strength = <PMIC_GPIO_STRENGTH_MED>;
 			};
 		};
 
