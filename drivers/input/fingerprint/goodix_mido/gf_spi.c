@@ -81,6 +81,22 @@ struct gf_key_map key_map[] = {
 	  {  "CAMERA", KEY_CAMERA },
 };
 
+/**************************debug******************************/
+/*#define GF_DEBUG*/
+#undef  GF_DEBUG
+
+#ifdef GF_DEBUG
+#define gf_dbg(fmt, args...) do { \
+					pr_warn("gf:" fmt, ##args);\
+		} while (0)
+#define FUNC_ENTRY()  pr_warn("gf:%s, entry\n", __func__)
+#define FUNC_EXIT()  pr_warn("gf:%s, exit\n", __func__)
+#else
+#define gf_dbg(fmt, args...)
+#define FUNC_ENTRY()
+#define FUNC_EXIT()
+#endif
+
 /*Global variables*/
 /*static MODE g_mode = GF_IMAGE_MODE;*/
 static DECLARE_BITMAP(minors, N_SPI_MINORS);
@@ -256,6 +272,7 @@ static long gf_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 #ifdef AP_CONTROL_CLK
 	unsigned int speed = 0;
 #endif
+	FUNC_ENTRY();
 	if (_IOC_TYPE(cmd) != GF_IOC_MAGIC)
 		return -ENODEV;
 
@@ -312,7 +329,7 @@ static long gf_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		break;
 	case GF_IOC_COOLBOOT:
 		gf_power_off(gf_dev);
-		usleep_range(5000, 6000);
+		mdelay(5);
 		gf_power_on(gf_dev);
 		break;
 	case GF_IOC_SENDKEY:
@@ -375,9 +392,11 @@ static long gf_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		gf_dev->device_available = 0;
 		break;
 	default:
+		gf_dbg("Unsupport cmd:0x%x\n", cmd);
 		break;
 	}
 
+	FUNC_EXIT();
 	return retval;
 }
 
@@ -393,11 +412,16 @@ static irqreturn_t gf_irq(int irq, void *handle)
 {
 
 #if defined(GF_NETLINK_ENABLE)
+
 	struct gf_dev *gf_dev = &gf;
 	char temp = GF_NET_EVENT_IRQ;
+	gf_dbg("enter irq %s\n", __func__);
+
 	__pm_wakeup_event(&ttw_ws, WAKELOCK_HOLD_TIME);
+
 	sendnlmsg(&temp);
 #elif defined (GF_FASYNC)
+
 	struct gf_dev *gf_dev = &gf;
 	if (gf_dev->async)
 		kill_fasync(&gf_dev->async, SIGIO, POLL_IN);
@@ -410,6 +434,7 @@ static irqreturn_t gf_irq(int irq, void *handle)
 static int driver_init_partial(struct gf_dev *gf_dev)
 {
 	int ret = 0;
+	FUNC_ENTRY();
 	pr_warn("--------driver_init_partial start.--------\n");
 
 	gf_dev->device_available = 1;
@@ -434,6 +459,7 @@ static int driver_init_partial(struct gf_dev *gf_dev)
 	}
 	gf_hw_reset(gf_dev, 360);
 
+	FUNC_EXIT();
 	return 0;
 
 error:
@@ -451,10 +477,12 @@ static int gf_open(struct inode *inode, struct file *filp)
 	struct gf_dev *gf_dev;
 	int status = -ENXIO;
 
+	FUNC_ENTRY();
 	mutex_lock(&device_list_lock);
 
 	list_for_each_entry(gf_dev, &device_list, device_entry) {
 		if (gf_dev->devt == inode->i_rdev) {
+			gf_dbg("Found\n");
 			status = 0;
 			break;
 		}
@@ -465,11 +493,16 @@ static int gf_open(struct inode *inode, struct file *filp)
 			gf_dev->users++;
 			filp->private_data = gf_dev;
 			nonseekable_open(inode, filp);
-			/*power the sensor*/
-			gf_dev->device_available = 1;
+			gf_dbg("Succeed to open device. irq = %d\n",
+							gf_dev->irq);
+				/*power the sensor*/
+				 gf_dev->device_available = 1;
 		}
+	} else {
+		gf_dbg("No device for minor %d\n", iminor(inode));
 	}
 	mutex_unlock(&device_list_lock);
+	FUNC_EXIT();
 	return status;
 }
 
@@ -479,7 +512,10 @@ static int gf_fasync(int fd, struct file *filp, int mode)
 	struct gf_dev *gf_dev = filp->private_data;
 	int ret;
 
+	FUNC_ENTRY();
 	ret = fasync_helper(fd, filp, mode, &gf_dev->async);
+	FUNC_EXIT();
+	gf_dbg("ret = %d\n", ret);
 	return ret;
 }
 #endif
@@ -489,20 +525,28 @@ static int gf_release(struct inode *inode, struct file *filp)
 	struct gf_dev *gf_dev;
 	int status = 0;
 
+	FUNC_ENTRY();
 	mutex_lock(&device_list_lock);
 	gf_dev = filp->private_data;
 	filp->private_data = NULL;
 
 	gf_dev->users--;
 	if (!gf_dev->users) {
+
+		gf_dbg("disble_irq. irq = %d\n", gf_dev->irq);
 		gf_disable_irq(gf_dev);
+
+
 		devm_free_irq(&gf_dev->spi->dev, gf_dev->irq, gf_dev);
+
+
 
 		/*power off the sensor*/
 		gf_dev->device_available = 0;
 		gf_power_off(gf_dev);
 	}
 	mutex_unlock(&device_list_lock);
+	FUNC_EXIT();
 
 	return status;
 }
@@ -605,6 +649,7 @@ static int gf_probe(struct platform_device *pdev)
 	unsigned long minor;
 	int gf_notifier_init = 0;
 
+	FUNC_ENTRY();
 
 	pr_warn("--------gf_probe start.--------\n");
 	/* Initialize the driver data */
@@ -707,6 +752,7 @@ gfspi_probe_clk_init_failed:
 			input_unregister_device(gf_dev->input);
 	}
 
+	FUNC_EXIT();
 	return status;
 }
 
@@ -717,8 +763,7 @@ static int gf_remove(struct platform_device *pdev)
 #endif
 {
 	struct gf_dev *gf_dev = &gf;
-
-	wakeup_source_trash(&ttw_ws);
+	FUNC_ENTRY();
 
 	/* make sure ops on existing fds can abort cleanly */
 	if (gf_dev->irq)
@@ -734,10 +779,34 @@ static int gf_remove(struct platform_device *pdev)
 	list_del(&gf_dev->device_entry);
 	device_destroy(gf_class, gf_dev->devt);
 	clear_bit(MINOR(gf_dev->devt), minors);
-	if (gf_dev->users == 0)
+	if (gf_dev->users == 0) {
 		kfree(gf_dev);
-	mutex_unlock(&device_list_lock);
+		mutex_unlock(&device_list_lock);
+	}
+	wakeup_source_trash(&ttw_ws);
 
+	FUNC_EXIT();
+	return 0;
+}
+
+#if defined(USE_SPI_BUS)
+static int gf_suspend(struct spi_device *spi, pm_message_t mesg)
+#elif defined(USE_PLATFORM_BUS)
+static int gf_suspend(struct platform_device *pdev, pm_message_t state)
+#endif
+{
+
+	gf_dbg("gf_suspend_test.\n");
+	return 0;
+}
+
+#if defined(USE_SPI_BUS)
+static int gf_resume(struct spi_device *spi)
+#elif defined(USE_PLATFORM_BUS)
+static int gf_resume(struct platform_device *pdev)
+#endif
+{
+	gf_dbg("gf_resume_test.\n");
 	return 0;
 }
 
@@ -761,11 +830,15 @@ static struct platform_driver gf_driver = {
 		   },
 	.probe = gf_probe,
 	.remove = gf_remove,
+	.suspend = gf_suspend,
+	.resume = gf_resume,
 };
 
 static int __init gf_init(void)
 {
 	int status;
+	FUNC_ENTRY();
+
 	pr_warn("--------gf_init start.--------\n");
 	/* Claim our 256 reserved device numbers.  Then register a class
 	 * that will key udev/mdev to add/remove /dev nodes.  Last, register
@@ -776,12 +849,14 @@ static int __init gf_init(void)
 	status = register_chrdev(SPIDEV_MAJOR, CHRD_DRIVER_NAME, &gf_fops);
 	if (status < 0) {
 		pr_warn("Failed to register char device!\n");
+		FUNC_EXIT();
 		return status;
 	}
 	gf_class = class_create(THIS_MODULE, CLASS_NAME);
 	if (IS_ERR(gf_class)) {
 		unregister_chrdev(SPIDEV_MAJOR, gf_driver.driver.name);
 		pr_warn("Failed to create class.\n");
+		FUNC_EXIT();
 		return PTR_ERR(gf_class);
 	}
 #if defined(USE_PLATFORM_BUS)
@@ -799,6 +874,7 @@ static int __init gf_init(void)
 	netlink_init();
 #endif
 	pr_info(" status = 0x%x\n", status);
+	FUNC_EXIT();
 
 	pr_warn("--------gf_init end---OK.--------\n");
 	return 0;
@@ -811,6 +887,8 @@ static void __exit gf_exit(void)
 #ifdef CONFIG_FB
 	struct gf_dev *gf_dev = &gf;
 #endif
+
+	FUNC_ENTRY();
 
 #ifdef CONFIG_FB
 	if (fb_unregister_client(&gf_dev->gf_notifier))
@@ -827,6 +905,7 @@ static void __exit gf_exit(void)
 #endif
 	class_destroy(gf_class);
 	unregister_chrdev(SPIDEV_MAJOR, gf_driver.driver.name);
+	FUNC_EXIT();
 }
 
 module_exit(gf_exit);

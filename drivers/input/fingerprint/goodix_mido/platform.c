@@ -162,7 +162,7 @@ static int hw_reset(struct  gf_dev *gf_dev)
 	int rc = select_pin_ctl(gf_dev, "goodixfp_reset_reset");
 	if (rc)
 		goto exit;
-	usleep_range(3000, 4000);
+	 mdelay(3);
 
 	rc = select_pin_ctl(gf_dev, "goodixfp_reset_active");
 	if (rc)
@@ -186,7 +186,7 @@ int gf_hw_reset(struct gf_dev *gf_dev, unsigned int delay_ms)
 		return -EPERM;
 	}
 	hw_reset(gf_dev);
-	usleep_range(delay_ms*1000, delay_ms*1100);
+	mdelay(delay_ms);
 	return 0;
 }
 
