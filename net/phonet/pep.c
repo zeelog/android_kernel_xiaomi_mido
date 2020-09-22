@@ -1167,7 +1167,7 @@ disabled:
 	/* Wait until flow control allows TX */
 	done = atomic_read(&pn->tx_credits);
 	while (!done) {
-		DEFINE_WAIT_FUNC(wait, woken_wake_function);
+		DEFINE_WAIT(wait);
 
 		if (!timeo) {
 			err = -EAGAIN;
@@ -1178,9 +1178,10 @@ disabled:
 			goto out;
 		}
 
-		add_wait_queue(sk_sleep(sk), &wait);
-		done = sk_wait_event(sk, &timeo, atomic_read(&pn->tx_credits), &wait);
-		remove_wait_queue(sk_sleep(sk), &wait);
+		prepare_to_wait(sk_sleep(sk), &wait,
+				TASK_INTERRUPTIBLE);
+		done = sk_wait_event(sk, &timeo, atomic_read(&pn->tx_credits));
+		finish_wait(sk_sleep(sk), &wait);
 
 		if (sk->sk_state != TCP_ESTABLISHED)
 			goto disabled;

@@ -941,16 +941,14 @@ static inline void sock_rps_reset_rxhash(struct sock *sk)
 #endif
 }
 
-#define sk_wait_event(__sk, __timeo, __condition, __wait)		\
+#define sk_wait_event(__sk, __timeo, __condition)			\
 	({	int __rc;						\
 		release_sock(__sk);					\
 		__rc = __condition;					\
 		if (!__rc) {						\
-			*(__timeo) = wait_woken(__wait,			\
-						TASK_INTERRUPTIBLE,	\
-						*(__timeo));		\
+			*(__timeo) = schedule_timeout(*(__timeo));	\
 		}							\
-		sched_annotate_sleep();					\
+		sched_annotate_sleep();						\
 		lock_sock(__sk);					\
 		__rc = __condition;					\
 		__rc;							\

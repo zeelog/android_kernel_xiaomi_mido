@@ -53,8 +53,8 @@ void sk_stream_write_space(struct sock *sk)
  */
 int sk_stream_wait_connect(struct sock *sk, long *timeo_p)
 {
-	DEFINE_WAIT_FUNC(wait, woken_wake_function);
 	struct task_struct *tsk = current;
+	DEFINE_WAIT(wait);
 	int done;
 
 	do {
@@ -68,13 +68,13 @@ int sk_stream_wait_connect(struct sock *sk, long *timeo_p)
 		if (signal_pending(tsk))
 			return sock_intr_errno(*timeo_p);
 
-		add_wait_queue(sk_sleep(sk), &wait);
+		prepare_to_wait(sk_sleep(sk), &wait, TASK_INTERRUPTIBLE);
 		sk->sk_write_pending++;
 		done = sk_wait_event(sk, timeo_p,
 				     !sk->sk_err &&
 				     !((1 << sk->sk_state) &
-				       ~(TCPF_ESTABLISHED | TCPF_CLOSE_WAIT)), &wait);
-		remove_wait_queue(sk_sleep(sk), &wait);
+				       ~(TCPF_ESTABLISHED | TCPF_CLOSE_WAIT)));
+		finish_wait(sk_sleep(sk), &wait);
 		sk->sk_write_pending--;
 	} while (!done);
 	return 0;
@@ -94,16 +94,16 @@ static inline int sk_stream_closing(struct sock *sk)
 void sk_stream_wait_close(struct sock *sk, long timeout)
 {
 	if (timeout) {
-		DEFINE_WAIT_FUNC(wait, woken_wake_function);
-
-		add_wait_queue(sk_sleep(sk), &wait);
+		DEFINE_WAIT(wait);
 
 		do {
-			if (sk_wait_event(sk, &timeout, !sk_stream_closing(sk), &wait))
+			prepare_to_wait(sk_sleep(sk), &wait,
+					TASK_INTERRUPTIBLE);
+			if (sk_wait_event(sk, &timeout, !sk_stream_closing(sk)))
 				break;
 		} while (!signal_pending(current) && timeout);
 
-		remove_wait_queue(sk_sleep(sk), &wait);
+		finish_wait(sk_sleep(sk), &wait);
 	}
 }
 EXPORT_SYMBOL(sk_stream_wait_close);
@@ -118,15 +118,15 @@ int sk_stream_wait_memory(struct sock *sk, long *timeo_p)
 	int err = 0;
 	long vm_wait = 0;
 	long current_timeo = *timeo_p;
-	DEFINE_WAIT_FUNC(wait, woken_wake_function);
+	DEFINE_WAIT(wait);
 
 	if (sk_stream_memory_free(sk))
 		current_timeo = vm_wait = (prandom_u32() % (HZ / 5)) + 2;
 
-	add_wait_queue(sk_sleep(sk), &wait);
-
 	while (1) {
 		sk_set_bit(SOCKWQ_ASYNC_NOSPACE, sk);
+
+		prepare_to_wait(sk_sleep(sk), &wait, TASK_INTERRUPTIBLE);
 
 		if (sk->sk_err || (sk->sk_shutdown & SEND_SHUTDOWN))
 			goto do_error;
@@ -143,7 +143,7 @@ int sk_stream_wait_memory(struct sock *sk, long *timeo_p)
 		sk_wait_event(sk, &current_timeo, sk->sk_err ||
 						  (sk->sk_shutdown & SEND_SHUTDOWN) ||
 						  (sk_stream_memory_free(sk) &&
-						  !vm_wait), &wait);
+						  !vm_wait));
 		sk->sk_write_pending--;
 
 		if (vm_wait) {
@@ -157,7 +157,7 @@ int sk_stream_wait_memory(struct sock *sk, long *timeo_p)
 		*timeo_p = current_timeo;
 	}
 out:
-	remove_wait_queue(sk_sleep(sk), &wait);
+	finish_wait(sk_sleep(sk), &wait);
 	return err;
 
 do_error:
