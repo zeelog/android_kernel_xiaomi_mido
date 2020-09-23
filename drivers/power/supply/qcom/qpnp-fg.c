@@ -2658,7 +2658,7 @@ out:
 
 // Read the beat count and write it into the beat_count arg;
 // return non-zero on failure.
-static int read_beat(struct fg_chip *chip, u8 *beat_count)
+int read_beat(struct fg_chip *chip, u8 *beat_count)
 {
 	int rc = fg_read(chip, beat_count,
 			 chip->mem_base + MEM_INTF_FG_BEAT_COUNT, 1);
