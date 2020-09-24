@@ -2674,7 +2674,7 @@ try_again:
 		} else {
 			pr_err("Beat count not updating\n");
 			fg_check_ima_error_handling(chip);
-			goto out;
+			return;
 		}
 	} else {
 		chip->last_beat_count = beat_count;
@@ -2683,7 +2683,6 @@ resched:
 	queue_delayed_work(system_power_efficient_wq,
 		&chip->check_sanity_work,
 		msecs_to_jiffies(SANITY_CHECK_PERIOD_MS));
-out:
 }
 
 #define SRAM_TIMEOUT_MS			3000
@@ -3085,11 +3084,11 @@ static void slope_limiter_work(struct work_struct *work)
 		else
 			status = HIGH_TEMP_DISCHARGE;
 	} else {
-		goto out;
+		return;
 	}
 
 	if (status == chip->slope_limit_sts)
-		goto out;
+		return;
 
 	val = chip->slope_limit_coeffs[status];
 	val *= MICRO_UNIT;
@@ -3100,14 +3099,13 @@ static void slope_limiter_work(struct work_struct *work)
 	if (rc) {
 		pr_err("Couldn't write to slope_limiter_coeff_reg, rc=%d\n",
 			rc);
-		goto out;
+		return;
 	}
 
 	chip->slope_limit_sts = status;
 	if (fg_debug_mask & FG_STATUS)
 		pr_info("Slope limit sts: %d val: %lld buf[%x %x] written\n",
 			status, val, buf[0], buf[1]);
-out:
 }
 
 static int lookup_ocv_for_soc(struct fg_chip *chip, int soc)
@@ -4928,7 +4926,7 @@ static void iadc_gain_comp_work(struct work_struct *work)
 	bool otg_present = is_otg_present(chip);
 
 	if (!chip->init_done)
-		goto done;
+		return;
 
 	if (!input_present && !otg_present) {
 		/* read VBAT_FILTERED */
@@ -4936,7 +4934,7 @@ static void iadc_gain_comp_work(struct work_struct *work)
 						VBAT_FILTERED_OFFSET, 0);
 		if (rc) {
 			pr_err("Failed to read VBAT: rc=%d\n", rc);
-			goto done;
+			return;
 		}
 		temp = (reg[2] << 16) | (reg[1] << 8) | reg[0];
 		vbat_filtered = div_u64((u64)temp * LSB_24B_NUMRTR,
@@ -4946,7 +4944,7 @@ static void iadc_gain_comp_work(struct work_struct *work)
 		rc = fg_mem_read(chip, reg, K_VCOR_REG, 2, 0, 0);
 		if (rc) {
 			pr_err("Failed to KVCOR rc=%d\n", rc);
-			goto done;
+			return;
 		}
 		kvcor = half_float(reg);
 
@@ -4961,7 +4959,7 @@ static void iadc_gain_comp_work(struct work_struct *work)
 		rc = fg_mem_write(chip, reg, GAIN_REG, 2, GAIN_OFFSET, 0);
 		if (rc) {
 			pr_err("Failed to write gain reg rc=%d\n", rc);
-			goto done;
+			return;
 		}
 
 		if (fg_debug_mask & FG_STATUS)
@@ -4973,7 +4971,7 @@ static void iadc_gain_comp_work(struct work_struct *work)
 						GAIN_REG, 2, GAIN_OFFSET, 0);
 		if (rc) {
 			pr_err("unable to write gain comp: %d\n", rc);
-			goto done;
+			return;
 		}
 
 		if (fg_debug_mask & FG_STATUS)
@@ -4982,8 +4980,6 @@ static void iadc_gain_comp_work(struct work_struct *work)
 					chip->iadc_comp_data.dfl_gain_reg[0]);
 		chip->iadc_comp_data.gain_active = false;
 	}
-
-done:
 }
 
 static void cc_soc_store_work(struct work_struct *work)
@@ -5450,14 +5446,14 @@ static void set_resume_soc_work(struct work_struct *work)
 
 	if (is_input_present(chip) && !chip->resume_soc_lowered) {
 		if (!chip->charge_done)
-			goto done;
+			return;
 		resume_soc_raw = get_monotonic_soc_raw(chip)
 			- (0xFF - settings[FG_MEM_RESUME_SOC].value);
 		if (resume_soc_raw > 0 && resume_soc_raw < FULL_SOC_RAW) {
 			rc = fg_set_resume_soc(chip, resume_soc_raw);
 			if (rc) {
 				pr_err("Couldn't set resume SOC for FG\n");
-				goto done;
+				return;
 			}
 			if (fg_debug_mask & FG_STATUS) {
 				pr_info("resume soc lowered to 0x%02x\n",
@@ -5475,7 +5471,7 @@ static void set_resume_soc_work(struct work_struct *work)
 			rc = fg_set_resume_soc(chip, resume_soc_raw);
 			if (rc) {
 				pr_err("Couldn't set resume SOC for FG\n");
-				goto done;
+				return;
 			}
 			if (fg_debug_mask & FG_STATUS) {
 				pr_info("resume soc set to 0x%02x\n",
@@ -5486,7 +5482,6 @@ static void set_resume_soc_work(struct work_struct *work)
 		}
 		chip->resume_soc_lowered = false;
 	}
-done:
 }
 
 #define OCV_COEFFS_START_REG		0x4C0
@@ -6571,7 +6566,7 @@ static void check_empty_work(struct work_struct *work)
 	/* handle empty soc based on vbatt-low interrupt */
 	if (chip->use_vbat_low_empty_soc) {
 		if (fg_get_vbatt_status(chip, &vbatt_low_sts))
-			goto out;
+			return;
 
 		msoc = get_monotonic_soc_raw(chip);
 
@@ -6598,8 +6593,6 @@ static void check_empty_work(struct work_struct *work)
 		if (chip->power_supply_registered)
 			power_supply_changed(chip->bms_psy);
 	}
-
-out:
 }
 
 static void batt_profile_init(struct work_struct *work)
