@@ -111,7 +111,7 @@ int sdhci_msm_ice_get_dev(struct sdhci_host *host)
 	struct sdhci_msm_host *msm_host = pltfm_host->priv;
 
 	if (!msm_host || !msm_host->pdev) {
-		pr_debug("%s: invalid msm_host %p or msm_host->pdev\n",
+		pr_err("%s: invalid msm_host %p or msm_host->pdev\n",
 			__func__, msm_host);
 		return -EINVAL;
 	}
@@ -191,7 +191,7 @@ int sdhci_msm_ice_init(struct sdhci_host *host)
 					msm_host,
 					sdhci_msm_ice_error_cb);
 		if (err) {
-			pr_debug("%s: ice init err %d\n",
+			pr_err("%s: ice init err %d\n",
 				mmc_hostname(host->mmc), err);
 			sdhci_msm_ice_print_regs(host);
 			if (msm_host->ice_hci_support)
@@ -224,7 +224,7 @@ int sdhci_msm_ice_get_cfg(struct sdhci_msm_host *msm_host, struct request *req,
 						msm_host->ice.pdev,
 						req, &ice_set, false);
 		if (err) {
-			pr_debug("%s: ice config failed %d\n",
+			pr_err("%s: ice config failed %d\n",
 					mmc_hostname(msm_host->mmc), err);
 			return err;
 		}
@@ -342,7 +342,7 @@ int sdhci_msm_ice_cfg(struct sdhci_host *host, struct mmc_request *mrq,
 	struct request *req;
 
 	if (msm_host->ice.state != SDHCI_MSM_ICE_STATE_ACTIVE) {
-		pr_debug("%s: ice is in invalid state %d\n",
+		pr_err("%s: ice is in invalid state %d\n",
 			mmc_hostname(host->mmc), msm_host->ice.state);
 		return -EINVAL;
 	}
@@ -396,7 +396,7 @@ int sdhci_msm_ice_cmdq_cfg(struct sdhci_host *host,
 	u32 cdu_sz = SDHCI_MSM_ICE_TR_DATA_UNIT_512_B;
 
 	if (msm_host->ice.state != SDHCI_MSM_ICE_STATE_ACTIVE) {
-		pr_debug("%s: ice is in invalid state %d\n",
+		pr_err("%s: ice is in invalid state %d\n",
 			mmc_hostname(host->mmc), msm_host->ice.state);
 		return -EINVAL;
 	}
@@ -448,7 +448,7 @@ int sdhci_msm_ice_cfg_end(struct sdhci_host *host, struct mmc_request *mrq)
 		return 0;
 
 	if (msm_host->ice.state != SDHCI_MSM_ICE_STATE_ACTIVE) {
-		pr_debug("%s: ice is in invalid state %d\n",
+		pr_err("%s: ice is in invalid state %d\n",
 			mmc_hostname(host->mmc), msm_host->ice.state);
 		return -EINVAL;
 	}
@@ -458,7 +458,7 @@ int sdhci_msm_ice_cfg_end(struct sdhci_host *host, struct mmc_request *mrq)
 		if (msm_host->ice.vops->config_end) {
 			err = msm_host->ice.vops->config_end(req);
 			if (err) {
-				pr_debug("%s: ice config end failed %d\n",
+				pr_err("%s: ice config end failed %d\n",
 						mmc_hostname(host->mmc), err);
 				return err;
 			}
@@ -475,7 +475,7 @@ int sdhci_msm_ice_reset(struct sdhci_host *host)
 	int err = 0;
 
 	if (msm_host->ice.state != SDHCI_MSM_ICE_STATE_ACTIVE) {
-		pr_debug("%s: ice is in invalid state before reset %d\n",
+		pr_err("%s: ice is in invalid state before reset %d\n",
 			mmc_hostname(host->mmc), msm_host->ice.state);
 		return -EINVAL;
 	}
@@ -483,7 +483,7 @@ int sdhci_msm_ice_reset(struct sdhci_host *host)
 	if (msm_host->ice.vops->reset) {
 		err = msm_host->ice.vops->reset(msm_host->ice.pdev);
 		if (err) {
-			pr_debug("%s: ice reset failed %d\n",
+			pr_err("%s: ice reset failed %d\n",
 					mmc_hostname(host->mmc), err);
 			sdhci_msm_ice_print_regs(host);
 			return err;
@@ -495,7 +495,7 @@ int sdhci_msm_ice_reset(struct sdhci_host *host)
 		sdhci_msm_enable_ice_hci(host, true);
 
 	if (msm_host->ice.state != SDHCI_MSM_ICE_STATE_ACTIVE) {
-		pr_debug("%s: ice is in invalid state after reset %d\n",
+		pr_err("%s: ice is in invalid state after reset %d\n",
 			mmc_hostname(host->mmc), msm_host->ice.state);
 		return -EINVAL;
 	}
@@ -510,7 +510,7 @@ int sdhci_msm_ice_resume(struct sdhci_host *host)
 
 	if (msm_host->ice.state !=
 			SDHCI_MSM_ICE_STATE_SUSPENDED) {
-		pr_debug("%s: ice is in invalid state before resume %d\n",
+		pr_err("%s: ice is in invalid state before resume %d\n",
 			mmc_hostname(host->mmc), msm_host->ice.state);
 		return -EINVAL;
 	}
@@ -518,7 +518,7 @@ int sdhci_msm_ice_resume(struct sdhci_host *host)
 	if (msm_host->ice.vops->resume) {
 		err = msm_host->ice.vops->resume(msm_host->ice.pdev);
 		if (err) {
-			pr_debug("%s: ice resume failed %d\n",
+			pr_err("%s: ice resume failed %d\n",
 					mmc_hostname(host->mmc), err);
 			return err;
 		}
@@ -536,7 +536,7 @@ int sdhci_msm_ice_suspend(struct sdhci_host *host)
 
 	if (msm_host->ice.state !=
 			SDHCI_MSM_ICE_STATE_ACTIVE) {
-		pr_debug("%s: ice is in invalid state before resume %d\n",
+		pr_err("%s: ice is in invalid state before resume %d\n",
 			mmc_hostname(host->mmc), msm_host->ice.state);
 		return -EINVAL;
 	}
@@ -544,7 +544,7 @@ int sdhci_msm_ice_suspend(struct sdhci_host *host)
 	if (msm_host->ice.vops->suspend) {
 		err = msm_host->ice.vops->suspend(msm_host->ice.pdev);
 		if (err) {
-			pr_debug("%s: ice suspend failed %d\n",
+			pr_err("%s: ice suspend failed %d\n",
 					mmc_hostname(host->mmc), err);
 			return -EINVAL;
 		}
@@ -560,7 +560,7 @@ int sdhci_msm_ice_get_status(struct sdhci_host *host, int *ice_status)
 	int stat = -EINVAL;
 
 	if (msm_host->ice.state != SDHCI_MSM_ICE_STATE_ACTIVE) {
-		pr_debug("%s: ice is in invalid state %d\n",
+		pr_err("%s: ice is in invalid state %d\n",
 			mmc_hostname(host->mmc), msm_host->ice.state);
 		return -EINVAL;
 	}
@@ -569,7 +569,7 @@ int sdhci_msm_ice_get_status(struct sdhci_host *host, int *ice_status)
 		*ice_status = 0;
 		stat = msm_host->ice.vops->status(msm_host->ice.pdev);
 		if (stat < 0) {
-			pr_debug("%s: ice get sts failed %d\n",
+			pr_err("%s: ice get sts failed %d\n",
 					mmc_hostname(host->mmc), stat);
 			return -EINVAL;
 		}
