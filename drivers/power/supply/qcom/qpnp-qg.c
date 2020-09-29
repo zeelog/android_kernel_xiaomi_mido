@@ -1049,8 +1049,7 @@ static void process_udata_work(struct work_struct *work)
 			chip->catch_up_soc = chip->udata.param[QG_SOC].data;
 		}
 
-		qg_scale_soc(chip, chip->force_soc);
-		chip->force_soc = false;
+		qg_scale_soc(chip, false);
 
 		/* update parameters to SDAM */
 		chip->sdam_data[SDAM_SOC] = chip->msoc;
@@ -1577,54 +1576,6 @@ static int qg_get_charge_counter(struct qpnp_qg *chip, int *charge_counter)
 	return 0;
 }
 
-static int qg_get_power(struct qpnp_qg *chip, int *val, bool average)
-{
-	int rc, v_min, v_ocv, rbatt = 0, esr = 0;
-	s64 power;
-
-	if (is_debug_batt_id(chip)) {
-		*val = -EINVAL;
-		return 0;
-	}
-
-	v_min = chip->dt.sys_min_volt_mv * 1000;
-
-	rc = qg_sdam_read(SDAM_OCV_UV, &v_ocv);
-	if (rc < 0) {
-		pr_err("Failed to read OCV rc=%d\n", rc);
-		return rc;
-	}
-
-	rc = qg_sdam_read(SDAM_RBAT_MOHM, &rbatt);
-	if (rc < 0) {
-		pr_err("Failed to read T_RBAT rc=%d\n", rc);
-		return rc;
-	}
-
-	rbatt *= 1000;	/* uohms */
-	esr = chip->esr_last * 1000;
-
-	if (rbatt <= 0 || esr <= 0) {
-		pr_debug("Invalid rbatt/esr rbatt=%d esr=%d\n", rbatt, esr);
-		*val = -EINVAL;
-		return 0;
-	}
-
-	power = (s64)v_min * (v_ocv - v_min);
-
-	if (average)
-		power = div_s64(power, rbatt);
-	else
-		power = div_s64(power, esr);
-
-	*val = power;
-
-	qg_dbg(chip, QG_DEBUG_STATUS, "v_min=%d v_ocv=%d rbatt=%d esr=%d power=%lld\n",
-			v_min, v_ocv, rbatt, esr, power);
-
-	return 0;
-}
-
 static int qg_get_ttf_param(void *data, enum ttf_param param, int *val)
 {
 	union power_supply_propval prop = {0, };
@@ -1707,94 +1658,6 @@ static int qg_ttf_awake_voter(void *data, bool val)
 	return 0;
 }
 
-#define MAX_QG_OK_RETRIES	20
-static int qg_reset(struct qpnp_qg *chip)
-{
-	int rc = 0, count = 0, soc = 0;
-	u32 ocv_uv = 0, ocv_raw = 0;
-	u8 reg = 0;
-
-	qg_dbg(chip, QG_DEBUG_STATUS, "QG RESET triggered\n");
-
-	mutex_lock(&chip->data_lock);
-
-	/* hold and release master to clear FIFO's */
-	rc = qg_master_hold(chip, true);
-	if (rc < 0) {
-		pr_err("Failed to hold master, rc=%d\n", rc);
-		goto done;
-	}
-
-	/* delay for the master-hold */
-	msleep(20);
-
-	rc = qg_master_hold(chip, false);
-	if (rc < 0) {
-		pr_err("Failed to release master, rc=%d\n", rc);
-		goto done;
-	}
-
-	/* delay for master to settle */
-	msleep(20);
-
-	qg_get_battery_voltage(chip, &rc);
-	qg_get_battery_capacity(chip, &soc);
-	qg_dbg(chip, QG_DEBUG_STATUS, "VBAT=%duV SOC=%d\n", rc, soc);
-
-	/* Trigger S7 */
-	rc = qg_masked_write(chip, chip->qg_base + QG_STATE_TRIG_CMD_REG,
-				S7_PON_OCV_START, S7_PON_OCV_START);
-	if (rc < 0) {
-		pr_err("Failed to trigger S7, rc=%d\n", rc);
-		goto done;
-	}
-
-	/* poll for QG OK */
-	do {
-		rc = qg_read(chip, chip->qg_base + QG_STATUS1_REG, &reg, 1);
-		if (rc < 0) {
-			pr_err("Failed to read STATUS1_REG rc=%d\n", rc);
-			goto done;
-		}
-
-		if (reg & QG_OK_BIT)
-			break;
-
-		msleep(200);
-		count++;
-	} while (count < MAX_QG_OK_RETRIES);
-
-	if (count == MAX_QG_OK_RETRIES) {
-		qg_dbg(chip, QG_DEBUG_STATUS, "QG_OK not set\n");
-		goto done;
-	}
-
-	/* read S7 PON OCV */
-	rc = qg_read_ocv(chip, &ocv_uv, &ocv_raw, S7_PON_OCV);
-	if (rc < 0) {
-		pr_err("Failed to read PON OCV rc=%d\n", rc);
-		goto done;
-	}
-
-	qg_dbg(chip, QG_DEBUG_STATUS, "S7_OCV = %duV\n", ocv_uv);
-
-	chip->kdata.param[QG_GOOD_OCV_UV].data = ocv_uv;
-	chip->kdata.param[QG_GOOD_OCV_UV].valid = true;
-	/* clear all the userspace data */
-	chip->kdata.param[QG_CLEAR_LEARNT_DATA].data = 1;
-	chip->kdata.param[QG_CLEAR_LEARNT_DATA].valid = true;
-
-	vote(chip->awake_votable, GOOD_OCV_VOTER, true, 0);
-	/* signal the read thread */
-	chip->data_ready = true;
-	chip->force_soc = true;
-	wake_up_interruptible(&chip->qg_wait_q);
-
-done:
-	mutex_unlock(&chip->data_lock);
-	return rc;
-}
-
 static int qg_psy_set_property(struct power_supply *psy,
 			       enum power_supply_property psp,
 			       const union power_supply_propval *pval)
@@ -1832,9 +1695,6 @@ static int qg_psy_set_property(struct power_supply *psy,
 		break;
 	case POWER_SUPPLY_PROP_ESR_NOMINAL:
 		chip->esr_nominal = pval->intval;
-		break;
-	case POWER_SUPPLY_PROP_FG_RESET:
-		qg_reset(chip);
 		break;
 	default:
 		break;
@@ -1956,12 +1816,6 @@ static int qg_psy_get_property(struct power_supply *psy,
 	case POWER_SUPPLY_PROP_QG_VBMS_MODE:
 		pval->intval = !!chip->dt.qg_vbms_mode;
 		break;
-	case POWER_SUPPLY_PROP_POWER_NOW:
-		rc = qg_get_power(chip, &pval->intval, false);
-		break;
-	case POWER_SUPPLY_PROP_POWER_AVG:
-		rc = qg_get_power(chip, &pval->intval, true);
-		break;
 	default:
 		pr_debug("Unsupported property %d\n", psp);
 		break;
@@ -1978,7 +1832,6 @@ static int qg_property_is_writeable(struct power_supply *psy,
 	case POWER_SUPPLY_PROP_ESR_ACTUAL:
 	case POWER_SUPPLY_PROP_ESR_NOMINAL:
 	case POWER_SUPPLY_PROP_SOH:
-	case POWER_SUPPLY_PROP_FG_RESET:
 		return 1;
 	default:
 		break;
@@ -2016,10 +1869,7 @@ static enum power_supply_property qg_psy_props[] = {
 	POWER_SUPPLY_PROP_ESR_NOMINAL,
 	POWER_SUPPLY_PROP_SOH,
 	POWER_SUPPLY_PROP_CC_SOC,
-	POWER_SUPPLY_PROP_FG_RESET,
 	POWER_SUPPLY_PROP_QG_VBMS_MODE,
-	POWER_SUPPLY_PROP_POWER_AVG,
-	POWER_SUPPLY_PROP_POWER_NOW,
 };
 
 static const struct power_supply_desc qg_psy_desc = {
@@ -2187,6 +2037,7 @@ static int qg_handle_battery_removal(struct qpnp_qg *chip)
 	return rc;
 }
 
+#define MAX_QG_OK_RETRIES	20
 static int qg_handle_battery_insertion(struct qpnp_qg *chip)
 {
 	int rc, count = 0;
@@ -2728,7 +2579,7 @@ static struct ocv_all ocv[] = {
 #define S7_ERROR_MARGIN_UV		20000
 static int qg_determine_pon_soc(struct qpnp_qg *chip)
 {
-	int rc = 0, batt_temp = 0, i, shutdown_temp = 0;
+	int rc = 0, batt_temp = 0, i;
 	bool use_pon_ocv = true;
 	unsigned long rtc_sec = 0;
 	u32 ocv_uv = 0, soc = 0, pon_soc = 0, full_soc = 0, cutoff_soc = 0;
@@ -2753,7 +2604,7 @@ static int qg_determine_pon_soc(struct qpnp_qg *chip)
 	}
 
 	rc = qg_get_battery_temp(chip, &batt_temp);
-	if (rc < 0) {
+	if (rc) {
 		pr_err("Failed to read BATT_TEMP at PON rc=%d\n", rc);
 		goto done;
 	}
@@ -2769,7 +2620,6 @@ static int qg_determine_pon_soc(struct qpnp_qg *chip)
 		pr_err("Failed to read shutdown params rc=%d\n", rc);
 		goto use_pon_ocv;
 	}
-	shutdown_temp = sign_extend32(shutdown[SDAM_TEMP], 15);
 
 	rc = lookup_soc_ocv(&pon_soc, ocv[S7_PON_OCV].ocv_uv, batt_temp, false);
 	if (rc < 0) {
@@ -2782,7 +2632,7 @@ static int qg_determine_pon_soc(struct qpnp_qg *chip)
 			shutdown[SDAM_SOC],
 			shutdown[SDAM_OCV_UV],
 			shutdown[SDAM_TIME_SEC],
-			shutdown_temp,
+			shutdown[SDAM_TEMP],
 			rtc_sec, batt_temp,
 			pon_soc);
 	/*
@@ -2799,8 +2649,7 @@ static int qg_determine_pon_soc(struct qpnp_qg *chip)
 		goto use_pon_ocv;
 
 	if (!is_between(0, chip->dt.shutdown_temp_diff,
-			abs(shutdown_temp -  batt_temp)) &&
-			(shutdown_temp < 0 || batt_temp < 0))
+			abs(shutdown[SDAM_TEMP] -  batt_temp)))
 		goto use_pon_ocv;
 
 	if ((chip->dt.shutdown_soc_threshold != -EINVAL) &&
@@ -3373,8 +3222,6 @@ static int qg_alg_init(struct qpnp_qg *chip)
 #define DEFAULT_ESR_QUAL_VBAT_UV	7000
 #define DEFAULT_ESR_DISABLE_SOC		1000
 #define ESR_CHG_MIN_IBAT_UA		(-450000)
-#define DEFAULT_SLEEP_TIME_SECS		1800 /* 30 mins */
-#define DEFAULT_SYS_MIN_VOLT_MV		2800
 static int qg_parse_dt(struct qpnp_qg *chip)
 {
 	int rc = 0;
@@ -3611,21 +3458,7 @@ static int qg_parse_dt(struct qpnp_qg *chip)
 	else
 		chip->dt.shutdown_soc_threshold = temp;
 
-	rc = of_property_read_u32(node, "qcom,qg-sys-min-voltage", &temp);
-	if (rc < 0)
-		chip->dt.sys_min_volt_mv = DEFAULT_SYS_MIN_VOLT_MV;
-	else
-		chip->dt.sys_min_volt_mv = temp;
-
 	chip->dt.qg_ext_sense = of_property_read_bool(node, "qcom,qg-ext-sns");
-
-	rc = of_property_read_u32(node, "qcom,min-sleep-time-secs", &temp);
-	if (rc < 0)
-		chip->dt.min_sleep_time_secs = DEFAULT_SLEEP_TIME_SECS;
-	else
-		chip->dt.min_sleep_time_secs = temp;
-
-	chip->dt.bass_enable = of_property_read_bool(node, "qcom,bass-enable");
 
 	/* Capacity learning params*/
 	if (!chip->dt.cl_disable) {
@@ -3777,12 +3610,9 @@ static int process_suspend(struct qpnp_qg *chip)
 		chip->suspend_data = true;
 	}
 
-	get_rtc_time(&chip->suspend_time);
-
-	qg_dbg(chip, QG_DEBUG_PM, "FIFO rt_length=%d sleep_fifo_length=%d default_s2_count=%d suspend_data=%d time=%d\n",
+	qg_dbg(chip, QG_DEBUG_PM, "FIFO rt_length=%d sleep_fifo_length=%d default_s2_count=%d suspend_data=%d\n",
 			fifo_rt_length, sleep_fifo_length,
-			chip->dt.s2_fifo_length, chip->suspend_data,
-			chip->suspend_time);
+			chip->dt.s2_fifo_length, chip->suspend_data);
 
 	return rc;
 }
@@ -3792,14 +3622,11 @@ static int process_resume(struct qpnp_qg *chip)
 	u8 status2 = 0, rt_status = 0, val = 0;
 	u32 ocv_uv = 0, ocv_raw = 0;
 	int rc;
-	unsigned long rtc_sec = 0, sleep_time_secs = 0;
+	unsigned long rtc_sec = 0;
 
 	/* skip if profile is not loaded */
 	if (!chip->profile_loaded)
 		return 0;
-
-	get_rtc_time(&rtc_sec);
-	sleep_time_secs = rtc_sec - chip->suspend_time;
 
 	rc = qg_read(chip, chip->qg_base + QG_STATUS2_REG, &status2, 1);
 	if (rc < 0) {
@@ -3816,14 +3643,11 @@ static int process_resume(struct qpnp_qg *chip)
 
 		 /* Clear suspend data as there has been a GOOD OCV */
 		memset(&chip->kdata, 0, sizeof(chip->kdata));
+		get_rtc_time(&rtc_sec);
 		chip->kdata.fifo_time = (u32)rtc_sec;
 		chip->kdata.param[QG_GOOD_OCV_UV].data = ocv_uv;
 		chip->kdata.param[QG_GOOD_OCV_UV].valid = true;
 		chip->suspend_data = false;
-
-		/* allow SOC jump if we have slept longer */
-		if (sleep_time_secs >= chip->dt.min_sleep_time_secs)
-			chip->force_soc = true;
 
 		qg_dbg(chip, QG_DEBUG_PM, "GOOD OCV @ resume good_ocv=%d uV\n",
 				ocv_uv);
@@ -3837,10 +3661,9 @@ static int process_resume(struct qpnp_qg *chip)
 	}
 	rt_status &= FIFO_UPDATE_DONE_INT_LAT_STS_BIT;
 
-	qg_dbg(chip, QG_DEBUG_PM, "FIFO_DONE_STS=%d suspend_data=%d good_ocv=%d sleep_time=%d secs\n",
+	qg_dbg(chip, QG_DEBUG_PM, "FIFO_DONE_STS=%d suspend_data=%d good_ocv=%d\n",
 				!!rt_status, chip->suspend_data,
-				chip->kdata.param[QG_GOOD_OCV_UV].valid,
-				sleep_time_secs);
+				chip->kdata.param[QG_GOOD_OCV_UV].valid);
 	/*
 	 * If this is not a wakeup from FIFO-done,
 	 * process the data immediately if - we have data from
