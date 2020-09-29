@@ -227,6 +227,11 @@ static vos_wake_lock_t wlan_wake_lock;
 /* set when SSR is needed after unload */
 static e_hdd_ssr_required isSsrRequired = HDD_SSR_NOT_REQUIRED;
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 0))
+#define WLAN_NV_FILE_SIZE 64
+static char wlan_nv_bin[WLAN_NV_FILE_SIZE];
+#endif
+
 //internal function declaration
 static VOS_STATUS wlan_hdd_framework_restart(hdd_context_t *pHddCtx);
 static void wlan_hdd_restart_init(hdd_context_t *pHddCtx);
@@ -8694,6 +8699,19 @@ VOS_STATUS hdd_release_firmware(char *pFileName,v_VOID_t *pCtx)
    EXIT();
    return status;
 }
+
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 0))
+char* hdd_get_nv_bin()
+{
+	if (wcnss_get_nv_name(wlan_nv_bin)) {
+		hddLog(VOS_TRACE_LEVEL_ERROR,
+		       "%s: NV binary is invalid", __func__);
+		return NULL;
+	}
+
+	return wlan_nv_bin;
+}
+#endif
 
 /**---------------------------------------------------------------------------
 
