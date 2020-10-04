@@ -1883,12 +1883,14 @@ static inline unsigned int counter_delta(struct kgsl_device *device,
 			 * Since KGSL got abnormal value from the counter,
 			 * We will drop the value from being accumulated.
 			 */
+#if 0
 			KGSL_DRV_ERR_RATELIMIT(device,
 				"Abnormal value:0x%llx (0x%llx) from perf counter : 0x%x\n",
 				val | ((uint64_t)perfctr_pwr_hi << 32),
 				*counter |
 					((uint64_t)prev_perfctr_pwr_hi << 32),
 				reg);
+#endif
 		}
 	}
 
