@@ -2107,7 +2107,7 @@ static int pl011_probe(struct amba_device *dev, const struct amba_id *id)
 	struct uart_amba_port *uap;
 	struct vendor_data *vendor = id->data;
 	void __iomem *base;
-	int i, ret;
+	int i, j, ret;
 
 	for (i = 0; i < ARRAY_SIZE(amba_ports); i++)
 		if (amba_ports[i] == NULL)
@@ -2163,6 +2163,9 @@ static int pl011_probe(struct amba_device *dev, const struct amba_id *id)
 		if (ret < 0) {
 			dev_err(&dev->dev,
 				"Failed to register AMBA-PL011 driver\n");
+			for (j = 0; j < ARRAY_SIZE(amba_ports); j++)
+				if (amba_ports[j] == uap)
+					amba_ports[j] = NULL;
 			return ret;
 		}
 	}
