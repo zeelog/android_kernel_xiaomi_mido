@@ -5075,7 +5075,7 @@ int ipa2_ap_suspend(struct device *dev)
 
 	IPADBG("Enter...\n");
 
-#if 0
+#ifndef CONFIG_IPA_WAKELOCK
 	/* In case there is a tx/rx handler in polling mode fail to suspend */
 	for (i = 0; i < ipa_ctx->ipa_num_pipes; i++) {
 		if (ipa_ctx->ep[i].sys &&
@@ -5086,7 +5086,7 @@ int ipa2_ap_suspend(struct device *dev)
 		}
 	}
 #endif
-	
+
 	/* release SPS IPA resource without waiting for inactivity timer */
 	atomic_set(&ipa_ctx->sps_pm.eot_activity, 0);
 	ipa_sps_release_resource(NULL);
