@@ -243,7 +243,9 @@ static struct bus_type mmc_bus_type = {
 	.probe		= mmc_bus_probe,
 	.remove		= mmc_bus_remove,
 	.shutdown	= mmc_bus_shutdown,
+	#ifndef CONFIG_SUSPEND_SKIP_SYNC
 	.pm		= &mmc_bus_pm_ops,
+	#endif
 };
 
 int mmc_register_bus(void)

@@ -201,7 +201,9 @@ MODULE_DEVICE_TABLE(of, sdhci_spear_id_table);
 static struct platform_driver sdhci_driver = {
 	.driver = {
 		.name	= "sdhci",
+	#ifndef CONFIG_SUSPEND_SKIP_SYNC
 		.pm	= &sdhci_pm_ops,
+	#endif
 		.of_match_table = of_match_ptr(sdhci_spear_id_table),
 	},
 	.probe		= sdhci_probe,

@@ -734,7 +734,9 @@ static struct platform_driver mxs_mmc_driver = {
 	.id_table	= mxs_ssp_ids,
 	.driver		= {
 		.name	= DRIVER_NAME,
+	#ifndef CONFIG_SUSPEND_SKIP_SYNC
 		.pm	= &mxs_mmc_pm_ops,
+	#endif
 		.of_match_table = mxs_mmc_dt_ids,
 	},
 };

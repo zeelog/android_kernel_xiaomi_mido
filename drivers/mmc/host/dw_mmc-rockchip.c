@@ -341,7 +341,9 @@ static struct platform_driver dw_mci_rockchip_pltfm_driver = {
 	.driver		= {
 		.name		= "dwmmc_rockchip",
 		.of_match_table	= dw_mci_rockchip_match,
+	#ifndef CONFIG_SUSPEND_SKIP_SYNC
 		.pm		= &dw_mci_pltfm_pmops,
+	#endif
 	},
 };
 

@@ -699,7 +699,9 @@ static struct pci_driver toshsd_driver = {
 	.id_table = pci_ids,
 	.probe = toshsd_probe,
 	.remove = toshsd_remove,
+	#ifndef CONFIG_SUSPEND_SKIP_SYNC
 	.driver.pm = &toshsd_pm_ops,
+	#endif
 };
 
 module_pci_driver(toshsd_driver);

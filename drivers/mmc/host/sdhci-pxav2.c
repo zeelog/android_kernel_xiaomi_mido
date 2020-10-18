@@ -252,7 +252,9 @@ static struct platform_driver sdhci_pxav2_driver = {
 	.driver		= {
 		.name	= "sdhci-pxav2",
 		.of_match_table = of_match_ptr(sdhci_pxav2_of_match),
+	#ifndef CONFIG_SUSPEND_SKIP_SYNC
 		.pm	= &sdhci_pltfm_pmops,
+	#endif
 	},
 	.probe		= sdhci_pxav2_probe,
 	.remove		= sdhci_pxav2_remove,

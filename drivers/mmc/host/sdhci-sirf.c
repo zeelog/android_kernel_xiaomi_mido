@@ -274,7 +274,9 @@ static struct platform_driver sdhci_sirf_driver = {
 	.driver		= {
 		.name	= "sdhci-sirf",
 		.of_match_table = sdhci_sirf_of_match,
+	#ifndef CONFIG_SUSPEND_SKIP_SYNC
 		.pm	= &sdhci_sirf_pm_ops,
+	#endif
 	},
 	.probe		= sdhci_sirf_probe,
 	.remove		= sdhci_pltfm_unregister,

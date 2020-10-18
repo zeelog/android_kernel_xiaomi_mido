@@ -991,7 +991,9 @@ static struct platform_driver wmt_mci_driver = {
 	.remove = wmt_mci_remove,
 	.driver = {
 		.name = DRIVER_NAME,
+	#ifndef CONFIG_SUSPEND_SKIP_SYNC
 		.pm = wmt_mci_pm_ops,
+	#endif
 		.of_match_table = wmt_mci_dt_ids,
 	},
 };

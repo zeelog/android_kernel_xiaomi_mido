@@ -1382,7 +1382,9 @@ static struct platform_driver sdhci_esdhc_imx_driver = {
 	.driver		= {
 		.name	= "sdhci-esdhc-imx",
 		.of_match_table = imx_esdhc_dt_ids,
+	#ifndef CONFIG_SUSPEND_SKIP_SYNC
 		.pm	= &sdhci_esdhc_pmops,
+	#endif
 	},
 	.id_table	= imx_esdhc_devtype,
 	.probe		= sdhci_esdhc_imx_probe,

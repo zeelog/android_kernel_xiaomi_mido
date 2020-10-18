@@ -152,7 +152,9 @@ static const struct dev_pm_ops tmio_mmc_dev_pm_ops = {
 static struct platform_driver tmio_mmc_driver = {
 	.driver = {
 		.name = "tmio-mmc",
+	#ifndef CONFIG_SUSPEND_SKIP_SYNC
 		.pm = &tmio_mmc_dev_pm_ops,
+	#endif
 	},
 	.probe = tmio_mmc_probe,
 	.remove = tmio_mmc_remove,

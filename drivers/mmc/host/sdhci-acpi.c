@@ -568,7 +568,9 @@ static struct platform_driver sdhci_acpi_driver = {
 	.driver = {
 		.name			= "sdhci-acpi",
 		.acpi_match_table	= sdhci_acpi_ids,
+	#ifndef CONFIG_SUSPEND_SKIP_SYNC
 		.pm			= &sdhci_acpi_pm_ops,
+	#endif
 	},
 	.probe	= sdhci_acpi_probe,
 	.remove	= sdhci_acpi_remove,

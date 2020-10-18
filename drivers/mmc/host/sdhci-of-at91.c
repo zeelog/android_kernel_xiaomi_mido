@@ -405,7 +405,9 @@ static struct platform_driver sdhci_at91_driver = {
 	.driver		= {
 		.name	= "sdhci-at91",
 		.of_match_table = sdhci_at91_dt_match,
+	#ifndef CONFIG_SUSPEND_SKIP_SYNC
 		.pm	= &sdhci_at91_dev_pm_ops,
+	#endif
 	},
 	.probe		= sdhci_at91_probe,
 	.remove		= sdhci_at91_remove,

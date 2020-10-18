@@ -688,7 +688,9 @@ static struct platform_driver sdhci_esdhc_driver = {
 	.driver = {
 		.name = "sdhci-esdhc",
 		.of_match_table = sdhci_esdhc_of_match,
+	#ifndef CONFIG_SUSPEND_SKIP_SYNC
 		.pm = &esdhc_of_dev_pm_ops,
+	#endif
 	},
 	.probe = sdhci_esdhc_probe,
 	.remove = sdhci_pltfm_unregister,

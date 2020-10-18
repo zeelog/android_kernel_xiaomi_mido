@@ -198,7 +198,9 @@ static struct platform_driver dw_mci_k3_pltfm_driver = {
 	.driver		= {
 		.name		= "dwmmc_k3",
 		.of_match_table	= dw_mci_k3_match,
+	#ifndef CONFIG_SUSPEND_SKIP_SYNC
 		.pm		= &dw_mci_k3_pmops,
+	#endif
 	},
 };
 

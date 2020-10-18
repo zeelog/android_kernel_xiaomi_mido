@@ -1595,7 +1595,9 @@ static struct platform_driver sh_mmcif_driver = {
 	.remove		= sh_mmcif_remove,
 	.driver		= {
 		.name	= DRIVER_NAME,
+	#ifndef CONFIG_SUSPEND_SKIP_SYNC
 		.pm	= &sh_mmcif_dev_pm_ops,
+	#endif
 		.of_match_table = sh_mmcif_of_match,
 	},
 };

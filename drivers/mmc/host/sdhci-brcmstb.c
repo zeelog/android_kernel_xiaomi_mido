@@ -133,7 +133,9 @@ MODULE_DEVICE_TABLE(of, sdhci_brcm_of_match);
 static struct platform_driver sdhci_brcmstb_driver = {
 	.driver		= {
 		.name	= "sdhci-brcmstb",
+	#ifndef CONFIG_SUSPEND_SKIP_SYNC
 		.pm	= &sdhci_brcmstb_pmops,
+	#endif
 		.of_match_table = of_match_ptr(sdhci_brcm_of_match),
 	},
 	.probe		= sdhci_brcmstb_probe,

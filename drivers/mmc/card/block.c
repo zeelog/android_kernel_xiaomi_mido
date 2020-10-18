@@ -4913,7 +4913,9 @@ static SIMPLE_DEV_PM_OPS(mmc_blk_pm_ops, mmc_blk_suspend, mmc_blk_resume);
 static struct mmc_driver mmc_driver = {
 	.drv		= {
 		.name	= "mmcblk",
+	#ifndef CONFIG_SUSPEND_SKIP_SYNC
 		.pm	= &mmc_blk_pm_ops,
+	#endif
 	},
 	.probe		= mmc_blk_probe,
 	.remove		= mmc_blk_remove,

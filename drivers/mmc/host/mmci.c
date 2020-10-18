@@ -1892,7 +1892,9 @@ MODULE_DEVICE_TABLE(amba, mmci_ids);
 static struct amba_driver mmci_driver = {
 	.drv		= {
 		.name	= DRIVER_NAME,
+	#ifndef CONFIG_SUSPEND_SKIP_SYNC
 		.pm	= &mmci_dev_pm_ops,
+	#endif
 	},
 	.probe		= mmci_probe,
 	.remove		= mmci_remove,

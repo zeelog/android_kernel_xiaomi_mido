@@ -1720,7 +1720,9 @@ static struct platform_driver mt_msdc_driver = {
 	.driver = {
 		.name = "mtk-msdc",
 		.of_match_table = msdc_of_ids,
+	#ifndef CONFIG_SUSPEND_SKIP_SYNC
 		.pm = &msdc_dev_pm_ops,
+	#endif
 	},
 };
 

@@ -101,7 +101,9 @@ static int sdhci_cns3xxx_probe(struct platform_device *pdev)
 static struct platform_driver sdhci_cns3xxx_driver = {
 	.driver		= {
 		.name	= "sdhci-cns3xxx",
+	#ifndef CONFIG_SUSPEND_SKIP_SYNC
 		.pm	= &sdhci_pltfm_pmops,
+	#endif
 	},
 	.probe		= sdhci_cns3xxx_probe,
 	.remove		= sdhci_pltfm_unregister,

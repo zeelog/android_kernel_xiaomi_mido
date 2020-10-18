@@ -2736,7 +2736,9 @@ static struct platform_driver atmci_driver = {
 	.driver		= {
 		.name		= "atmel_mci",
 		.of_match_table	= of_match_ptr(atmci_dt_ids),
+	#ifndef CONFIG_SUSPEND_SKIP_SYNC
 		.pm		= &atmci_dev_pm_ops,
+	#endif
 	},
 };
 module_platform_driver(atmci_driver);

@@ -71,7 +71,9 @@ static const struct dev_pm_ops mmc_pm_ops = {
 static struct class mmc_host_class = {
 	.name		= "mmc_host",
 	.dev_release	= mmc_host_classdev_release,
+	#ifndef CONFIG_SUSPEND_SKIP_SYNC
 	.pm		= &mmc_pm_ops,
+	#endif
 };
 
 int mmc_register_host_class(void)

@@ -227,7 +227,9 @@ static struct bus_type sdio_bus_type = {
 	.uevent		= sdio_bus_uevent,
 	.probe		= sdio_bus_probe,
 	.remove		= sdio_bus_remove,
+	#ifndef CONFIG_SUSPEND_SKIP_SYNC
 	.pm		= &sdio_bus_pm_ops,
+	#endif
 };
 
 int sdio_register_bus(void)

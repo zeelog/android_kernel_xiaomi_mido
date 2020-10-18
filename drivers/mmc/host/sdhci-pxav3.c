@@ -593,7 +593,9 @@ static struct platform_driver sdhci_pxav3_driver = {
 	.driver		= {
 		.name	= "sdhci-pxav3",
 		.of_match_table = of_match_ptr(sdhci_pxav3_of_match),
+	#ifndef CONFIG_SUSPEND_SKIP_SYNC
 		.pm	= &sdhci_pxav3_pmops,
+	#endif
 	},
 	.probe		= sdhci_pxav3_probe,
 	.remove		= sdhci_pxav3_remove,

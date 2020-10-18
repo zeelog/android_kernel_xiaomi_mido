@@ -477,7 +477,9 @@ static const struct dev_pm_ops tmio_mmc_dev_pm_ops = {
 static struct platform_driver sh_mobile_sdhi_driver = {
 	.driver		= {
 		.name	= "sh_mobile_sdhi",
+	#ifndef CONFIG_SUSPEND_SKIP_SYNC
 		.pm	= &tmio_mmc_dev_pm_ops,
+	#endif
 		.of_match_table = sh_mobile_sdhi_of_match,
 	},
 	.probe		= sh_mobile_sdhi_probe,

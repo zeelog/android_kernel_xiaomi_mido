@@ -111,7 +111,9 @@ static struct pci_driver dw_mci_pci_driver = {
 	.probe		= dw_mci_pci_probe,
 	.remove		= dw_mci_pci_remove,
 	.driver		=	{
+	#ifndef CONFIG_SUSPEND_SKIP_SYNC
 		.pm =   &dw_mci_pci_pmops
+	#endif
 	},
 };
 

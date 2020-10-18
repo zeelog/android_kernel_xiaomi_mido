@@ -758,7 +758,9 @@ static struct platform_driver sdhci_s3c_driver = {
 	.driver		= {
 		.name	= "s3c-sdhci",
 		.of_match_table = of_match_ptr(sdhci_s3c_dt_match),
+	#ifndef CONFIG_SUSPEND_SKIP_SYNC
 		.pm	= &sdhci_s3c_pmops,
+	#endif
 	},
 };
 

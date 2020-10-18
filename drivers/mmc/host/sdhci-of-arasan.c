@@ -730,7 +730,9 @@ static struct platform_driver sdhci_arasan_driver = {
 	.driver = {
 		.name = "sdhci-arasan",
 		.of_match_table = sdhci_arasan_of_match,
+	#ifndef CONFIG_SUSPEND_SKIP_SYNC
 		.pm = &sdhci_arasan_dev_pm_ops,
+	#endif
 	},
 	.probe = sdhci_arasan_probe,
 	.remove = sdhci_arasan_remove,

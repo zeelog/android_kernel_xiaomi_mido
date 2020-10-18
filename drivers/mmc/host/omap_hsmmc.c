@@ -2395,7 +2395,9 @@ static struct platform_driver omap_hsmmc_driver = {
 	.remove		= omap_hsmmc_remove,
 	.driver		= {
 		.name = DRIVER_NAME,
+	#ifndef CONFIG_SUSPEND_SKIP_SYNC
 		.pm = &omap_hsmmc_dev_pm_ops,
+	#endif
 		.of_match_table = of_match_ptr(omap_mmc_of_match),
 	},
 };

@@ -543,7 +543,9 @@ static struct platform_driver dw_mci_exynos_pltfm_driver = {
 	.driver		= {
 		.name		= "dwmmc_exynos",
 		.of_match_table	= dw_mci_exynos_match,
+	#ifndef CONFIG_SUSPEND_SKIP_SYNC
 		.pm		= &dw_mci_exynos_pmops,
+	#endif
 	},
 };
 

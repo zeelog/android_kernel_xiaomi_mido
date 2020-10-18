@@ -1917,7 +1917,9 @@ static struct pci_driver sdhci_driver = {
 	.probe =	sdhci_pci_probe,
 	.remove =	sdhci_pci_remove,
 	.driver =	{
+	#ifndef CONFIG_SUSPEND_SKIP_SYNC
 		.pm =   &sdhci_pci_pm_ops
+	#endif
 	},
 };
 
