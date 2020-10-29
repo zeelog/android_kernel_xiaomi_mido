@@ -163,6 +163,9 @@ struct smbchg_chip {
 	bool				wipower_dyn_icl_avail;
 	struct ilim_entry		current_ilim;
 	struct mutex			wipower_config;
+#ifdef CONFIG_MACH_XIAOMI_C6
+	struct mutex 			cool_current;
+#endif
 	bool				wipower_configured;
 	struct qpnp_adc_tm_btm_param	param;
 
@@ -259,6 +262,9 @@ struct smbchg_chip {
 	struct work_struct		usb_set_online_work;
 	struct delayed_work		vfloat_adjust_work;
 	struct delayed_work		hvdcp_det_work;
+#ifdef CONFIG_MACH_XIAOMI_C6
+	struct delayed_work 		cool_limit_work;
+#endif
 	spinlock_t			sec_access_lock;
 	struct mutex			therm_lvl_lock;
 	struct mutex			usb_set_online_lock;
@@ -1059,6 +1065,37 @@ static int get_prop_batt_capacity(struct smbchg_chip *chip)
 	return capacity;
 }
 
+#ifdef CONFIG_MACH_XIAOMI_C6
+static int get_prop_battery_charge_full_design(struct smbchg_chip *chip)
+{
+	union power_supply_propval ret = {0,};
+
+	if (chip->bms_psy) {
+		power_supply_get_property(chip->bms_psy,
+				POWER_SUPPLY_PROP_CHARGE_FULL_DESIGN, &ret);
+		return ret.intval;
+	} else {
+		pr_debug("No BMS supply registered return 0\n");
+	}
+	return 0;
+}
+
+static int get_prop_battery_charge_full(struct smbchg_chip *chip)
+{
+	union power_supply_propval ret = {0,};
+
+	if (chip->bms_psy) {
+		power_supply_get_property(chip->bms_psy,
+				POWER_SUPPLY_PROP_CHARGE_FULL, &ret);
+		return ret.intval;
+	} else {
+		pr_debug("No BMS supply registered return 0\n");
+	}
+
+	return 0;
+}
+#endif
+
 #define DEFAULT_BATT_TEMP		200
 static int get_prop_batt_temp(struct smbchg_chip *chip)
 {
@@ -1099,6 +1136,7 @@ static int get_prop_batt_resistance_id(struct smbchg_chip *chip)
 	return rbatt;
 }
 
+#ifndef CONFIG_MACH_XIAOMI_C6
 #define DEFAULT_BATT_FULL_CHG_CAPACITY	0
 static int get_prop_batt_full_charge(struct smbchg_chip *chip)
 {
@@ -1111,6 +1149,7 @@ static int get_prop_batt_full_charge(struct smbchg_chip *chip)
 	}
 	return bfc;
 }
+#endif
 
 #define DEFAULT_BATT_VOLTAGE_NOW	0
 static int get_prop_batt_voltage_now(struct smbchg_chip *chip)
@@ -3663,6 +3702,11 @@ static int smbchg_config_chg_battery_type(struct smbchg_chip *chip)
 	/* change vfloat */
 	rc = of_property_read_u32(profile_node, "qcom,max-voltage-uv",
 						&max_voltage_uv);
+
+#ifdef CONFIG_MACH_XIAOMI_C6
+	max_voltage_uv = 4380000;
+#endif
+
 	if (rc) {
 		pr_warn("couldn't find battery max voltage rc=%d\n", rc);
 		ret = rc;
@@ -4320,6 +4364,31 @@ static int smbchg_adjust_vfloat_mv_trim(struct smbchg_chip *chip,
 
 	return rc;
 }
+
+#ifdef CONFIG_MACH_XIAOMI_C6
+#define SMBCHG_UPDATE_MS 1000
+static void smbchg_cool_limit_work(struct work_struct *work)
+{
+	struct smbchg_chip *chip = container_of(work,
+			struct smbchg_chip,
+			cool_limit_work.work);
+	int temp, rc;
+
+	temp = get_prop_batt_temp(chip);
+
+	if (temp <= 50 && temp > 0) {
+		mutex_lock(&chip->cool_current);
+		rc = smbchg_fastchg_current_comp_set(chip, 250);
+		mutex_unlock(&chip->cool_current);
+	} else if (temp > 50 && temp < 150) {
+		mutex_lock(&chip->cool_current);
+		rc = smbchg_fastchg_current_comp_set(chip, 1200);
+		mutex_unlock(&chip->cool_current);
+	}
+
+	schedule_delayed_work(&chip->cool_limit_work, msecs_to_jiffies(SMBCHG_UPDATE_MS));
+}
+#endif
 
 #define VFLOAT_RESAMPLE_DELAY_MS	10000
 static void smbchg_vfloat_adjust_work(struct work_struct *work)
@@ -5951,6 +6020,10 @@ static enum power_supply_property smbchg_battery_properties[] = {
 	POWER_SUPPLY_PROP_CHARGING_ENABLED,
 	POWER_SUPPLY_PROP_CHARGE_TYPE,
 	POWER_SUPPLY_PROP_CAPACITY,
+#ifdef CONFIG_MACH_XIAOMI_C6
+	POWER_SUPPLY_PROP_CHARGE_FULL_DESIGN,
+	POWER_SUPPLY_PROP_CHARGE_FULL,
+#endif
 	POWER_SUPPLY_PROP_HEALTH,
 	POWER_SUPPLY_PROP_TECHNOLOGY,
 	POWER_SUPPLY_PROP_SYSTEM_TEMP_LEVEL,
@@ -6160,6 +6233,14 @@ static int smbchg_battery_get_property(struct power_supply *psy,
 	case POWER_SUPPLY_PROP_CAPACITY:
 		val->intval = get_prop_batt_capacity(chip);
 		break;
+#ifdef CONFIG_MACH_XIAOMI_C6
+	case POWER_SUPPLY_PROP_CHARGE_FULL_DESIGN:
+		val->intval = get_prop_battery_charge_full_design(chip);
+		break;
+	case POWER_SUPPLY_PROP_CHARGE_FULL:
+		val->intval = get_prop_battery_charge_full(chip);
+		break;
+#endif
 	case POWER_SUPPLY_PROP_CURRENT_NOW:
 		val->intval = get_prop_batt_current_now(chip);
 		val->intval *= (-1);
@@ -6170,9 +6251,11 @@ static int smbchg_battery_get_property(struct power_supply *psy,
 	case POWER_SUPPLY_PROP_RESISTANCE_ID:
 		val->intval = get_prop_batt_resistance_id(chip);
 		break;
+#ifndef CONFIG_MACH_XIAOMI_C6
 	case POWER_SUPPLY_PROP_CHARGE_FULL:
 		val->intval = get_prop_batt_full_charge(chip);
 		break;
+#endif
 	case POWER_SUPPLY_PROP_TEMP:
 		val->intval = get_prop_batt_temp(chip);
 		break;
@@ -7638,6 +7721,9 @@ static int smb_parse_dt(struct smbchg_chip *chip)
 			"fastchg-current-ma", rc, 1);
 	if (chip->cfg_fastchg_current_ma == -EINVAL)
 		chip->cfg_fastchg_current_ma = DEFAULT_FCC_MA;
+#ifdef CONFIG_MACH_XIAOMI_C6
+	chip->vfloat_mv = 4380;
+#endif
 	OF_PROP_READ(chip, chip->vfloat_mv, "float-voltage-mv", rc, 1);
 	OF_PROP_READ(chip, chip->safety_time, "charging-timeout-mins", rc, 1);
 	OF_PROP_READ(chip, chip->vled_max_uv, "vled-max-uv", rc, 1);
@@ -8476,6 +8562,10 @@ static int smbchg_probe(struct platform_device *pdev)
 			smbchg_parallel_usb_en_work);
 	INIT_DELAYED_WORK(&chip->vfloat_adjust_work, smbchg_vfloat_adjust_work);
 	INIT_DELAYED_WORK(&chip->hvdcp_det_work, smbchg_hvdcp_det_work);
+#ifdef CONFIG_MACH_XIAOMI_C6
+	INIT_DELAYED_WORK(&chip->cool_limit_work, smbchg_cool_limit_work);
+	schedule_delayed_work(&chip->cool_limit_work, msecs_to_jiffies(SMBCHG_UPDATE_MS));
+#endif
 	init_completion(&chip->src_det_lowered);
 	init_completion(&chip->src_det_raised);
 	init_completion(&chip->usbin_uv_lowered);
@@ -8498,6 +8588,10 @@ static int smbchg_probe(struct platform_device *pdev)
 	mutex_init(&chip->pm_lock);
 	mutex_init(&chip->wipower_config);
 	mutex_init(&chip->usb_status_lock);
+#ifdef CONFIG_MACH_XIAOMI_C6
+	mutex_init(&chip->cool_current);
+#endif
+
 	device_init_wakeup(chip->dev, true);
 
 	rc = smbchg_parse_peripherals(chip);
