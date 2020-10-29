@@ -120,12 +120,13 @@
 		};
 
 		qpnp_smbcharger: qcom,qpnp-smbcharger {
+			qcom,iterm-ma = <200>;
 			qcom,float-voltage-mv = <4400>;
 			qcom,resume-delta-mv = <50>;
 			qcom,thermal-mitigation = <1500 1200 900 600 300 0>;
 			qcom,charge-unknown-battery;
 			qcom,fastchg-current-comp = <1200>;
-			qcom,float-voltage-comp = <16>;
+			qcom,float-voltage-comp = <15>;
 			/delete-property/ qcom,parallel-usb-min-current-ma;
 			/delete-property/ qcom,parallel-usb-9v-min-current-ma;
 			/delete-property/ qcom,parallel-allowed-lowering-ma;
@@ -135,9 +136,13 @@
 		};
 
 		qcom_fg: qcom,fg {
-			qcom,resume-soc = <99>;
+			qcom,resume-soc-raw = <254>;
+			qcom,fg-iterm-ma = <300>;
+			qcom,fg-chg-iterm-ma = <200>;
 			qcom,fg-cutoff-voltage-mv = <3400>;
-			qcom,fg-cc-cv-threshold-mv = <4380>;
+			qcom,hold-soc-while-full;
+			qcom,fg-cc-cv-threshold-mv = <4390>;
+			qcpm,fg-cc-cv-threshold-mv-global = <4370>;
 			qcom,fg-vbat-estimate-diff-mv = <200>;
 			qcom,fg-restore-batt-info;
 			qcom,thermal-coefficients = [c8 86 c1 50 d3 37];
