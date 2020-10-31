@@ -57,8 +57,6 @@ struct qg_dt {
 	int			esr_disable_soc;
 	int			esr_min_ibat_ua;
 	int			shutdown_soc_threshold;
-	int			min_sleep_time_secs;
-	int			sys_min_volt_mv;
 	bool			hold_soc_while_full;
 	bool			linearize_soc;
 	bool			cl_disable;
@@ -67,7 +65,6 @@ struct qg_dt {
 	bool			esr_discharge_enable;
 	bool			qg_ext_sense;
 	bool			qg_vbms_mode;
-	bool			bass_enable;
 };
 
 struct qg_esr_data {
@@ -124,8 +121,6 @@ struct qpnp_qg {
 	bool			parallel_enabled;
 	bool			usb_present;
 	bool			charge_full;
-	bool			force_soc;
-	bool			bass_active;
 	int			charge_status;
 	int			charge_type;
 	int			chg_iterm_ma;
@@ -135,7 +130,6 @@ struct qpnp_qg {
 	int			soh;
 	int			soc_reporting_ready;
 	int			vbms_ibat_ua;
-	int			bsoc_bass_entry;
 	u32			fifo_done_count;
 	u32			wa_flags;
 	u32			seq_no;
@@ -145,7 +139,6 @@ struct qpnp_qg {
 	ktime_t			last_user_update_time;
 	ktime_t			last_fifo_update_time;
 	unsigned long		last_maint_soc_update_time;
-	unsigned long		suspend_time;
 
 	/* soc params */
 	int			catch_up_soc;
