@@ -600,7 +600,7 @@ static const struct dev_pm_ops pm_ops = {
 ----------------------------------------------------------------------------*/
 VOS_STATUS hddRegisterPmOps(hdd_context_t *pHddCtx)
 {
-    wcnss_wlan_register_pm_ops(pHddCtx->parent_dev, &pm_ops);
+//     wcnss_wlan_register_pm_ops(pHddCtx->parent_dev, &pm_ops);
     return VOS_STATUS_SUCCESS;
 }
 
@@ -619,7 +619,7 @@ VOS_STATUS hddRegisterPmOps(hdd_context_t *pHddCtx)
 ----------------------------------------------------------------------------*/
 VOS_STATUS hddDeregisterPmOps(hdd_context_t *pHddCtx)
 {
-    wcnss_wlan_unregister_pm_ops(pHddCtx->parent_dev, &pm_ops);
+//     wcnss_wlan_unregister_pm_ops(pHddCtx->parent_dev, &pm_ops);
     return VOS_STATUS_SUCCESS;
 }
 
