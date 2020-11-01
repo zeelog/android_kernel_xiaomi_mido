@@ -3651,7 +3651,7 @@ static struct platform_driver wcnss_wlan_driver = {
 	.driver = {
 		.name	= DEVICE,
 		.owner	= THIS_MODULE,
-		.pm	= &wcnss_wlan_pm_ops,
+// 		.pm	= &wcnss_wlan_pm_ops,
 #ifdef CONFIG_WCNSS_CORE_PRONTO
 		.of_match_table = msm_wcnss_pronto_match,
 #endif
