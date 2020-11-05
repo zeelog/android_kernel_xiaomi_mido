@@ -608,19 +608,22 @@ void wlan_unregister_driver(void);
 #ifdef FEATURE_WLAN_SW_PTA
 /**
  * vos_process_bt_profile - process BT profile
- * @bt_enabled: status of BT
- * @ble: status of BLE
- * @a2dp: stautus of A2DP
- * @bt_sco: status of SCO
+ * @bt_enabled: BT status
+ * @bt_adv: BT advertisement status
+ * @ble_enabled: BLE status
+ * @bt_a2dp: BT A2DP status
+ * @bt_sco: BT SCO status
  *
  * Return: 0 on success and error on failure
  */
-int vos_process_bt_profile(bool bt_enabled, bool ble,
-			   bool a2dp, bool bt_sco);
+int vos_process_bt_profile(bool bt_enabled, bool bt_adv,
+			   bool ble_enabled, bool bt_a2dp,
+			   bool bt_sco);
 #else
 static inline int
-vos_process_bt_profile(bool bt_enabled, bool ble,
-		       bool a2dp, bool bt_sco)
+vos_process_bt_profile(bool bt_enabled, bool bt_adv,
+		       bool ble_enabled, bool bt_a2dp,
+		       bool bt_sco);
 {
 	return -ENOTSUPP;
 }
