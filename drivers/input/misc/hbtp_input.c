@@ -1453,7 +1453,7 @@ static ssize_t hbtp_display_pwr_store(struct kobject *kobj,
 	}
 	hbtp->display_status = status;
 	if (!hbtp->input_dev) {
-		pr_err("hbtp: hbtp->input_dev not ready!\n");
+		pr_debug("hbtp: hbtp->input_dev not ready!\n");
 		mutex_unlock(&hbtp->mutex);
 		return ret;
 	}
