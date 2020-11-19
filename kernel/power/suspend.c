@@ -482,6 +482,8 @@ static void suspend_finish(void)
 	pm_notifier_call_chain(PM_POST_SUSPEND);
 	pm_restore_console();
 }
+
+#ifndef CONFIG_SUSPEND_SKIP_SYNC
 /**
  * Sync the filesystem in seperate workqueue.
  * Then check it finishing or not periodically and
@@ -535,6 +537,7 @@ static int sys_sync_queue(void)
 abort:
 	return -EAGAIN;
 }
+#endif
 
 /**
  * enter_state - Do common work needed to enter system sleep state.
