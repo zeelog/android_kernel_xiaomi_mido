@@ -4028,6 +4028,7 @@ int hdd_process_bt_sco_profile(hdd_context_t *hdd_ctx,
 static void hdd_init_sw_pta(hdd_context_t *hdd_ctx)
 {
 	init_completion(&hdd_ctx->sw_pta_comp);
+	wcnss_update_bt_profile();
 }
 
 static void hdd_deinit_sw_pta(hdd_context_t *hdd_ctx)

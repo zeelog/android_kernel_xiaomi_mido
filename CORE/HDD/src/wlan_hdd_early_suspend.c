@@ -2875,5 +2875,7 @@ success:
    if (pHddCtx->cfg_ini->sap_internal_restart)
        hdd_ssr_restart_sap(pHddCtx);
 
+   wcnss_update_bt_profile();
+
    return VOS_STATUS_SUCCESS;
 }

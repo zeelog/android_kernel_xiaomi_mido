@@ -2433,6 +2433,10 @@ static inline void hdd_fill_last_rx(hdd_adapter_t *adapter)
 }
 #else
 void hdd_fill_last_rx(hdd_adapter_t *adapter);
+static inline int wcnss_update_bt_profile(void)
+{
+	return 0;
+}
 #endif
 
 #ifdef FEATURE_WLAN_SW_PTA
