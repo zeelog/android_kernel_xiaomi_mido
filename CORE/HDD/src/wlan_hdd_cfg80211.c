@@ -12790,14 +12790,6 @@ int __wlan_hdd_cfg80211_change_iface( struct wiphy *wiphy,
 		}
                 hdd_set_conparam(1);
 
-                status = hdd_sta_id_hash_attach(pAdapter);
-                if (VOS_STATUS_SUCCESS != status)
-                {
-                    hddLog(VOS_TRACE_LEVEL_ERROR,
-                           FL("Failed to initialize hash for AP"));
-                    return -EINVAL;
-                }
-
                 /*interface type changed update in wiphy structure*/
                 if(wdev)
                 {

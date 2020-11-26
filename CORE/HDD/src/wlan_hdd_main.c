@@ -10118,14 +10118,6 @@ hdd_adapter_t* hdd_open_adapter( hdd_context_t *pHddCtx, tANI_U8 session_type,
 
          hdd_initialize_adapter_common(pAdapter);
 
-         status = hdd_sta_id_hash_attach(pAdapter);
-         if (VOS_STATUS_SUCCESS != status)
-         {
-             hddLog(VOS_TRACE_LEVEL_FATAL,
-                    FL("failed to attach hash for session %d"), session_type);
-             goto err_free_netdev;
-         }
-
          status = hdd_register_hostapd( pAdapter, rtnl_held );
          if( VOS_STATUS_SUCCESS != status )
          {
@@ -11695,12 +11687,6 @@ VOS_STATUS hdd_start_all_adapters( hdd_context_t *pHddCtx )
          case WLAN_HDD_SOFTAP:
             if (pHddCtx->cfg_ini->sap_internal_restart) {
                 hdd_init_ap_mode(pAdapter, true);
-                status = hdd_sta_id_hash_attach(pAdapter);
-                if (VOS_STATUS_SUCCESS != status)
-                {
-                    hddLog(VOS_TRACE_LEVEL_FATAL,
-                         FL("failed to attach hash for"));
-                }
             }
             break;
 
