@@ -62,33 +62,15 @@ static DEFINE_SPINLOCK(bc_timer_lock);
 
 struct lpm_cluster *lpm_root_node;
 
-#define MAXSAMPLES 5
-
-static bool lpm_prediction = true;
-module_param_named(lpm_prediction, lpm_prediction, bool, 0664);
-
 static bool cluster_use_deepest_state = true;
 module_param(cluster_use_deepest_state, bool, 0664);
 
 static uint32_t bias_hyst;
 module_param_named(bias_hyst, bias_hyst, uint, 0664);
 
-struct lpm_history {
-	uint32_t resi[MAXSAMPLES];
-	int mode[MAXSAMPLES];
-	int nsamp;
-	uint32_t hptr;
-	uint32_t hinvalid;
-	uint32_t htmr_wkup;
-	int64_t stime;
-};
-
-static DEFINE_PER_CPU(struct lpm_history, hist);
-
 static DEFINE_PER_CPU(struct lpm_cpu*, cpu_lpm);
 static bool suspend_in_progress;
 static struct hrtimer lpm_hrtimer;
-static DEFINE_PER_CPU(struct hrtimer, histtimer);
 
 static void cluster_unprepare(struct lpm_cluster *cluster,
 		const struct cpumask *cpu, int child_idx, bool from_idle,
@@ -287,96 +269,6 @@ static enum hrtimer_restart lpm_hrtimer_cb(struct hrtimer *h)
 	return HRTIMER_NORESTART;
 }
 
-static void histtimer_cancel(void)
-{
-	unsigned int cpu = raw_smp_processor_id();
-	struct hrtimer *cpu_histtimer = &per_cpu(histtimer, cpu);
-	ktime_t time_rem;
-
-	time_rem = hrtimer_get_remaining(cpu_histtimer);
-	if (ktime_to_us(time_rem) <= 0)
-		return;
-
-	hrtimer_try_to_cancel(cpu_histtimer);
-}
-
-static enum hrtimer_restart histtimer_fn(struct hrtimer *h)
-{
-	int cpu = raw_smp_processor_id();
-	struct lpm_history *history = &per_cpu(hist, cpu);
-
-	history->hinvalid = 1;
-	return HRTIMER_NORESTART;
-}
-
-static void histtimer_start(uint32_t time_us)
-{
-	uint64_t time_ns = time_us * NSEC_PER_USEC;
-	ktime_t hist_ktime = ns_to_ktime(time_ns);
-	unsigned int cpu = raw_smp_processor_id();
-	struct hrtimer *cpu_histtimer = &per_cpu(histtimer, cpu);
-
-	cpu_histtimer->function = histtimer_fn;
-	hrtimer_start(cpu_histtimer, hist_ktime, HRTIMER_MODE_REL_PINNED);
-}
-
-static void cluster_timer_init(struct lpm_cluster *cluster)
-{
-	struct list_head *list;
-
-	if (!cluster)
-		return;
-
-	hrtimer_init(&cluster->histtimer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
-
-	list_for_each(list, &cluster->child) {
-		struct lpm_cluster *n;
-
-		n = list_entry(list, typeof(*n), list);
-		cluster_timer_init(n);
-	}
-}
-
-static void clusttimer_cancel(void)
-{
-	int cpu = raw_smp_processor_id();
-	struct lpm_cluster *cluster = per_cpu(cpu_lpm, cpu)->parent;
-	ktime_t time_rem;
-
-	time_rem = hrtimer_get_remaining(&cluster->histtimer);
-	if (ktime_to_us(time_rem) > 0)
-		hrtimer_try_to_cancel(&cluster->histtimer);
-
-	if (cluster->parent) {
-		time_rem = hrtimer_get_remaining(
-			&cluster->parent->histtimer);
-
-		if (ktime_to_us(time_rem) <= 0)
-			return;
-
-		hrtimer_try_to_cancel(&cluster->parent->histtimer);
-	}
-}
-
-static enum hrtimer_restart clusttimer_fn(struct hrtimer *h)
-{
-	struct lpm_cluster *cluster = container_of(h,
-				struct lpm_cluster, histtimer);
-
-	cluster->history.hinvalid = 1;
-	return HRTIMER_NORESTART;
-}
-
-static void clusttimer_start(struct lpm_cluster *cluster, uint32_t time_us)
-{
-	uint64_t time_ns = time_us * NSEC_PER_USEC;
-	ktime_t clust_ktime = ns_to_ktime(time_ns);
-
-	cluster->histtimer.function = clusttimer_fn;
-	hrtimer_start(&cluster->histtimer, clust_ktime,
-				HRTIMER_MODE_REL_PINNED);
-}
-
 static void msm_pm_set_timer(uint32_t modified_time_us)
 {
 	u64 modified_time_ns = modified_time_us * NSEC_PER_USEC;
@@ -385,162 +277,6 @@ static void msm_pm_set_timer(uint32_t modified_time_us)
 	lpm_hrtimer.function = lpm_hrtimer_cb;
 	hrtimer_start(&lpm_hrtimer, modified_ktime, HRTIMER_MODE_REL_PINNED);
 }
-
-static uint64_t lpm_cpuidle_predict(struct cpuidle_device *dev,
-		struct lpm_cpu *cpu, int *idx_restrict,
-		uint32_t *idx_restrict_time)
-{
-	int i, j, divisor;
-	uint64_t max, avg, stddev;
-	int64_t thresh = LLONG_MAX;
-	struct lpm_history *history = &per_cpu(hist, dev->cpu);
-	uint32_t *min_residency = get_per_cpu_min_residency(dev->cpu);
-	uint32_t *max_residency = get_per_cpu_max_residency(dev->cpu);
-
-	if (!lpm_prediction || !cpu->lpm_prediction)
-		return 0;
-
-	/*
-	 * Samples are marked invalid when woken-up due to timer,
-	 * so donot predict.
-	 */
-	if (history->hinvalid) {
-		history->hinvalid = 0;
-		history->htmr_wkup = 1;
-		history->stime = 0;
-		return 0;
-	}
-
-	/*
-	 * Predict only when all the samples are collected.
-	 */
-	if (history->nsamp < MAXSAMPLES) {
-		history->stime = 0;
-		return 0;
-	}
-
-	/*
-	 * Check if the samples are not much deviated, if so use the
-	 * average of those as predicted sleep time. Else if any
-	 * specific mode has more premature exits return the index of
-	 * that mode.
-	 */
-
-again:
-	max = avg = divisor = stddev = 0;
-	for (i = 0; i < MAXSAMPLES; i++) {
-		int64_t value = history->resi[i];
-
-		if (value <= thresh) {
-			avg += value;
-			divisor++;
-			if (value > max)
-				max = value;
-		}
-	}
-	do_div(avg, divisor);
-
-	for (i = 0; i < MAXSAMPLES; i++) {
-		int64_t value = history->resi[i];
-
-		if (value <= thresh) {
-			int64_t diff = value - avg;
-
-			stddev += diff * diff;
-		}
-	}
-	do_div(stddev, divisor);
-	stddev = int_sqrt(stddev);
-
-	/*
-	 * If the deviation is less, return the average, else
-	 * ignore one maximum sample and retry
-	 */
-	if (((avg > stddev * 6) && (divisor >= (MAXSAMPLES - 1)))
-					|| stddev <= cpu->ref_stddev) {
-		history->stime = ktime_to_us(ktime_get()) + avg;
-		return avg;
-	} else if (divisor  > (MAXSAMPLES - 1)) {
-		thresh = max - 1;
-		goto again;
-	}
-
-	/*
-	 * Find the number of premature exits for each of the mode,
-	 * excluding clockgating mode, and they are more than fifty
-	 * percent restrict that and deeper modes.
-	 */
-	if (history->htmr_wkup != 1) {
-		for (j = 1; j < cpu->nlevels; j++) {
-			uint32_t failed = 0;
-			uint64_t total = 0;
-
-			for (i = 0; i < MAXSAMPLES; i++) {
-				if ((history->mode[i] == j) &&
-					(history->resi[i] < min_residency[j])) {
-					failed++;
-					total += history->resi[i];
-				}
-			}
-			if (failed >= cpu->ref_premature_cnt) {
-				*idx_restrict = j;
-				do_div(total, failed);
-				for (i = 0; i < j; i++) {
-					if (total < max_residency[i]) {
-						*idx_restrict = i+1;
-						total = max_residency[i];
-						break;
-					}
-				}
-
-				*idx_restrict_time = total;
-				history->stime = ktime_to_us(ktime_get())
-						+ *idx_restrict_time;
-				break;
-			}
-		}
-	}
-	return 0;
-}
-
-static inline void invalidate_predict_history(struct cpuidle_device *dev)
-{
-	struct lpm_history *history = &per_cpu(hist, dev->cpu);
-	struct lpm_cpu *lpm_cpu = per_cpu(cpu_lpm, dev->cpu);
-
-	if (!lpm_prediction || !lpm_cpu->lpm_prediction)
-		return;
-
-	if (history->hinvalid) {
-		history->hinvalid = 0;
-		history->htmr_wkup = 1;
-		history->stime = 0;
-	}
-}
-
-static void clear_predict_history(void)
-{
-	struct lpm_history *history;
-	int i;
-	unsigned int cpu;
-	struct lpm_cpu *lpm_cpu = per_cpu(cpu_lpm, raw_smp_processor_id());
-
-	if (!lpm_prediction || !lpm_cpu->lpm_prediction)
-		return;
-
-	for_each_possible_cpu(cpu) {
-		history = &per_cpu(hist, cpu);
-		for (i = 0; i < MAXSAMPLES; i++) {
-			history->resi[i]  = 0;
-			history->mode[i] = -1;
-			history->hptr = 0;
-			history->nsamp = 0;
-			history->stime = 0;
-		}
-	}
-}
-
-static void update_history(struct cpuidle_device *dev, int idx);
 
 static inline bool is_cpu_biased(int cpu)
 {
@@ -564,10 +300,7 @@ static int cpu_power_select(struct cpuidle_device *dev,
 	uint32_t next_event_us = 0;
 	int i, idx_restrict;
 	uint32_t lvl_latency_us = 0;
-	uint64_t predicted = 0;
-	uint32_t htime = 0, idx_restrict_time = 0;
 	uint32_t next_wakeup_us = (uint32_t)sleep_us;
-	uint32_t *min_residency = get_per_cpu_min_residency(dev->cpu);
 	uint32_t *max_residency = get_per_cpu_max_residency(dev->cpu);
 
 	if ((sleep_disabled && !cpu_isolated(dev->cpu)) || sleep_us < 0)
@@ -604,21 +337,6 @@ static int cpu_power_select(struct cpuidle_device *dev,
 				next_wakeup_us = next_event_us - lvl_latency_us;
 		}
 
-		if (!i && !cpu_isolated(dev->cpu)) {
-			/*
-			 * If the next_wake_us itself is not sufficient for
-			 * deeper low power modes than clock gating do not
-			 * call prediction.
-			 */
-			if (next_wakeup_us > max_residency[i]) {
-				predicted = lpm_cpuidle_predict(dev, cpu,
-					&idx_restrict, &idx_restrict_time);
-				if (predicted && (predicted < min_residency[i]))
-					predicted = min_residency[i];
-			} else
-				invalidate_predict_history(dev);
-		}
-
 		if (i >= idx_restrict)
 			break;
 
@@ -629,37 +347,15 @@ static int cpu_power_select(struct cpuidle_device *dev,
 		else
 			modified_time_us = 0;
 
-		if (predicted ? (predicted <= max_residency[i])
-			: (next_wakeup_us <= max_residency[i]))
+		if (next_wakeup_us <= max_residency[i])
 			break;
 	}
 
 	if (modified_time_us)
 		msm_pm_set_timer(modified_time_us);
 
-	/*
-	 * Start timer to avoid staying in shallower mode forever
-	 * incase of misprediciton
-	 */
-	if ((predicted || (idx_restrict != (cpu->nlevels + 1)))
-			&& ((best_level >= 0)
-			&& (best_level < (cpu->nlevels-1)))) {
-		htime = predicted + cpu->tmr_add;
-		if (htime == cpu->tmr_add)
-			htime = idx_restrict_time;
-		else if (htime > max_residency[best_level])
-			htime = max_residency[best_level];
-
-		if ((next_wakeup_us > htime) &&
-			((next_wakeup_us - htime) > max_residency[best_level]))
-			histtimer_start(htime);
-	}
-
 done_select:
 	trace_cpu_power_select(best_level, sleep_us, latency_us, next_event_us);
-
-	trace_cpu_pred_select(idx_restrict_time ? 2 : (predicted ? 1 : 0),
-			predicted, htime);
 
 	return best_level;
 }
@@ -686,13 +382,11 @@ static unsigned int get_next_online_cpu(bool from_idle)
 }
 
 static uint64_t get_cluster_sleep_time(struct lpm_cluster *cluster,
-		bool from_idle, uint32_t *pred_time)
+		bool from_idle)
 {
 	int cpu;
 	ktime_t next_event;
 	struct cpumask online_cpus_in_cluster;
-	struct lpm_history *history;
-	int64_t prediction = LONG_MAX;
 
 	if (!from_idle)
 		return ~0ULL;
@@ -709,179 +403,12 @@ static uint64_t get_cluster_sleep_time(struct lpm_cluster *cluster,
 			next_event.tv64 = next_event_c->tv64;
 		}
 
-		if (from_idle && lpm_prediction && cluster->lpm_prediction) {
-			history = &per_cpu(hist, cpu);
-			if (history->stime && (history->stime < prediction))
-				prediction = history->stime;
-		}
-	}
-
-	if (from_idle && lpm_prediction && cluster->lpm_prediction) {
-		if (prediction > ktime_to_us(ktime_get()))
-			*pred_time = prediction - ktime_to_us(ktime_get());
 	}
 
 	if (ktime_to_us(next_event) > ktime_to_us(ktime_get()))
 		return ktime_to_us(ktime_sub(next_event, ktime_get()));
 	else
 		return 0;
-}
-
-static int cluster_predict(struct lpm_cluster *cluster,
-				uint32_t *pred_us)
-{
-	int i, j;
-	int ret = 0;
-	struct cluster_history *history = &cluster->history;
-	int64_t cur_time = ktime_to_us(ktime_get());
-
-	if (!lpm_prediction || !cluster->lpm_prediction)
-		return 0;
-
-	if (history->hinvalid) {
-		history->hinvalid = 0;
-		history->htmr_wkup = 1;
-		history->flag = 0;
-		return ret;
-	}
-
-	if (history->nsamp == MAXSAMPLES) {
-		for (i = 0; i < MAXSAMPLES; i++) {
-			if ((cur_time - history->stime[i])
-					> CLUST_SMPL_INVLD_TIME)
-				history->nsamp--;
-		}
-	}
-
-	if (history->nsamp < MAXSAMPLES) {
-		history->flag = 0;
-		return ret;
-	}
-
-	if (history->flag == 2)
-		history->flag = 0;
-
-	if (history->htmr_wkup != 1) {
-		uint64_t total = 0;
-
-		if (history->flag == 1) {
-			for (i = 0; i < MAXSAMPLES; i++)
-				total += history->resi[i];
-			do_div(total, MAXSAMPLES);
-			*pred_us = total;
-			return 2;
-		}
-
-		for (j = 1; j < cluster->nlevels; j++) {
-			uint32_t failed = 0;
-
-			total = 0;
-			for (i = 0; i < MAXSAMPLES; i++) {
-				if ((history->mode[i] == j) && (history->resi[i]
-				< cluster->levels[j].pwr.min_residency)) {
-					failed++;
-					total += history->resi[i];
-				}
-			}
-
-			if (failed > (MAXSAMPLES-2)) {
-				do_div(total, failed);
-				*pred_us = total;
-				history->flag = 1;
-				return 1;
-			}
-		}
-	}
-
-	return ret;
-}
-
-static void update_cluster_history_time(struct cluster_history *history,
-						int idx, uint64_t start)
-{
-	history->entry_idx = idx;
-	history->entry_time = start;
-}
-
-static void update_cluster_history(struct cluster_history *history, int idx)
-{
-	uint32_t tmr = 0;
-	uint32_t residency = 0;
-	struct lpm_cluster *cluster =
-			container_of(history, struct lpm_cluster, history);
-
-	if (!lpm_prediction || !cluster->lpm_prediction)
-		return;
-
-	if ((history->entry_idx == -1) || (history->entry_idx == idx)) {
-		residency = ktime_to_us(ktime_get()) - history->entry_time;
-		history->stime[history->hptr] = history->entry_time;
-	} else
-		return;
-
-	if (history->htmr_wkup) {
-		if (!history->hptr)
-			history->hptr = MAXSAMPLES-1;
-		else
-			history->hptr--;
-
-		history->resi[history->hptr] += residency;
-
-		history->htmr_wkup = 0;
-		tmr = 1;
-	} else
-		history->resi[history->hptr] = residency;
-
-	history->mode[history->hptr] = idx;
-
-	history->entry_idx = INT_MIN;
-	history->entry_time = 0;
-
-	if (history->nsamp < MAXSAMPLES)
-		history->nsamp++;
-
-	trace_cluster_pred_hist(cluster->cluster_name,
-		history->mode[history->hptr], history->resi[history->hptr],
-		history->hptr, tmr);
-
-	(history->hptr)++;
-
-	if (history->hptr >= MAXSAMPLES)
-		history->hptr = 0;
-}
-
-static void clear_cl_history_each(struct cluster_history *history)
-{
-	int i;
-
-	for (i = 0; i < MAXSAMPLES; i++) {
-		history->resi[i]  = 0;
-		history->mode[i] = -1;
-		history->stime[i] = 0;
-	}
-
-	history->hptr = 0;
-	history->nsamp = 0;
-	history->flag = 0;
-	history->hinvalid = 0;
-	history->htmr_wkup = 0;
-}
-static void clear_cl_predict_history(void)
-{
-	struct lpm_cluster *cluster = lpm_root_node;
-	struct list_head *list;
-
-	if (!lpm_prediction || !cluster->lpm_prediction)
-		return;
-
-	clear_cl_history_each(&cluster->history);
-
-	list_for_each(list, &cluster->child) {
-		struct lpm_cluster *n;
-
-		n = list_entry(list, typeof(*n), list);
-		clear_cl_history_each(&n->history);
-	}
 }
 
 static int cluster_select_deepest(struct lpm_cluster *cluster)
@@ -904,16 +431,13 @@ static int cluster_select_deepest(struct lpm_cluster *cluster)
 	return i;
 }
 
-static int cluster_select(struct lpm_cluster *cluster, bool from_idle,
-							int *ispred)
+static int cluster_select(struct lpm_cluster *cluster, bool from_idle)
 {
 	int best_level = -1;
 	int i;
 	struct cpumask mask;
 	uint32_t latency_us = ~0U;
 	uint32_t sleep_us;
-	uint32_t cpupred_us = 0, pred_us = 0;
-	int pred_mode = 0, predicted = 0;
 
 	if (!cluster)
 		return -EINVAL;
@@ -921,21 +445,7 @@ static int cluster_select(struct lpm_cluster *cluster, bool from_idle,
 	if (cluster_use_deepest_state)
 		return cluster_select_deepest(cluster);
 
-	sleep_us = (uint32_t)get_cluster_sleep_time(cluster,
-						from_idle, &cpupred_us);
-
-	if (from_idle) {
-		pred_mode = cluster_predict(cluster, &pred_us);
-
-		if (cpupred_us && pred_mode && (cpupred_us < pred_us))
-			pred_us = cpupred_us;
-
-		if (pred_us && pred_mode && (pred_us < sleep_us))
-			predicted = 1;
-
-		if (predicted && (pred_us == cpupred_us))
-			predicted = 2;
-	}
+	sleep_us = (uint32_t)get_cluster_sleep_time(cluster, from_idle);
 
 	if (cpumask_and(&mask, cpu_online_mask, &cluster->child_cpus))
 		latency_us = pm_qos_request_for_cpumask(PM_QOS_CPU_DMA_LATENCY,
@@ -970,19 +480,9 @@ static int cluster_select(struct lpm_cluster *cluster, bool from_idle,
 
 		best_level = i;
 
-		if (from_idle &&
-			(predicted ? (pred_us <= pwr_params->max_residency)
-			: (sleep_us <= pwr_params->max_residency)))
+		if (from_idle && sleep_us <= pwr_params->max_residency)
 			break;
 	}
-
-	if ((best_level == (cluster->nlevels - 1)) && (pred_mode == 2))
-		cluster->history.flag = 2;
-
-	*ispred = predicted;
-
-	trace_cluster_pred_select(cluster->cluster_name, best_level, sleep_us,
-						latency_us, predicted, pred_us);
 
 	return best_level;
 }
@@ -997,7 +497,7 @@ static void cluster_notify(struct lpm_cluster *cluster,
 }
 
 static int cluster_configure(struct lpm_cluster *cluster, int idx,
-		bool from_idle, int predicted)
+		bool from_idle)
 {
 	struct lpm_cluster_level *level = &cluster->levels[idx];
 	struct cpumask online_cpus, cpumask;
@@ -1018,9 +518,6 @@ static int cluster_configure(struct lpm_cluster *cluster, int idx,
 			cluster->child_cpus.bits[0], from_idle);
 		lpm_stats_cluster_enter(cluster->stats, idx);
 
-		if (from_idle && lpm_prediction && cluster->lpm_prediction)
-			update_cluster_history_time(&cluster->history, idx,
-						ktime_to_us(ktime_get()));
 	}
 
 	if (level->notify_rpm) {
@@ -1036,8 +533,6 @@ static int cluster_configure(struct lpm_cluster *cluster, int idx,
 		cpu = get_next_online_cpu(from_idle);
 		cpumask_copy(&cpumask, cpumask_of(cpu));
 
-		clear_predict_history();
-		clear_cl_predict_history();
 		if (sys_pm_ops && sys_pm_ops->enter) {
 			spin_lock(&bc_timer_lock);
 			ret = sys_pm_ops->enter(&cpumask);
@@ -1051,13 +546,6 @@ static int cluster_configure(struct lpm_cluster *cluster, int idx,
 
 	cluster->last_level = idx;
 
-	if (predicted && (idx < (cluster->nlevels - 1))) {
-		struct power_params *pwr_params = &cluster->levels[idx].pwr;
-
-		clusttimer_start(cluster, pwr_params->max_residency +
-							cluster->tmr_add);
-	}
-
 	return 0;
 }
 
@@ -1066,7 +554,6 @@ static void cluster_prepare(struct lpm_cluster *cluster,
 		int64_t start_time)
 {
 	int i;
-	int predicted = 0;
 
 	if (!cluster)
 		return;
@@ -1097,29 +584,12 @@ static void cluster_prepare(struct lpm_cluster *cluster,
 				&cluster->child_cpus))
 		goto failed;
 
-	i = cluster_select(cluster, from_idle, &predicted);
-
-	if (((i < 0) || (i == cluster->default_level))
-				&& predicted && from_idle) {
-		update_cluster_history_time(&cluster->history,
-					-1, ktime_to_us(ktime_get()));
-
-		if (i < 0) {
-			struct power_params *pwr_params =
-						&cluster->levels[0].pwr;
-
-			clusttimer_start(cluster,
-					pwr_params->max_residency +
-					cluster->tmr_add);
-
-			goto failed;
-		}
-	}
+	i = cluster_select(cluster, from_idle);
 
 	if (i < 0)
 		goto failed;
 
-	if (cluster_configure(cluster, i, from_idle, predicted))
+	if (cluster_configure(cluster, i, from_idle))
 		goto failed;
 
 	cluster->stats->sleep_time = start_time;
@@ -1162,10 +632,6 @@ static void cluster_unprepare(struct lpm_cluster *cluster,
 					&lvl->num_cpu_votes, cpu);
 	}
 
-	if (from_idle && first_cpu &&
-		(cluster->last_level == cluster->default_level))
-		update_cluster_history(&cluster->history, cluster->last_level);
-
 	if (!first_cpu || cluster->last_level == cluster->default_level)
 		goto unlock_return;
 
@@ -1191,9 +657,6 @@ static void cluster_unprepare(struct lpm_cluster *cluster,
 	cluster->last_level = cluster->default_level;
 
 	cluster_notify(cluster, &cluster->levels[last_level], false);
-
-	if (from_idle)
-		update_cluster_history(&cluster->history, last_level);
 
 	cluster_unprepare(cluster->parent, &cluster->child_cpus,
 			last_level, from_idle, end_time, success);
@@ -1328,40 +791,6 @@ static int lpm_cpuidle_select(struct cpuidle_driver *drv,
 	return cpu_power_select(dev, cpu);
 }
 
-static void update_history(struct cpuidle_device *dev, int idx)
-{
-	struct lpm_history *history = &per_cpu(hist, dev->cpu);
-	uint32_t tmr = 0;
-	struct lpm_cpu *lpm_cpu = per_cpu(cpu_lpm, dev->cpu);
-
-	if (!lpm_prediction || !lpm_cpu->lpm_prediction)
-		return;
-
-	if (history->htmr_wkup) {
-		if (!history->hptr)
-			history->hptr = MAXSAMPLES-1;
-		else
-			history->hptr--;
-
-		history->resi[history->hptr] += dev->last_residency;
-		history->htmr_wkup = 0;
-		tmr = 1;
-	} else
-		history->resi[history->hptr] = dev->last_residency;
-
-	history->mode[history->hptr] = idx;
-
-	trace_cpu_pred_hist(history->mode[history->hptr],
-		history->resi[history->hptr], history->hptr, tmr);
-
-	if (history->nsamp < MAXSAMPLES)
-		history->nsamp++;
-
-	(history->hptr)++;
-	if (history->hptr >= MAXSAMPLES)
-		history->hptr = 0;
-}
-
 static int lpm_cpuidle_enter(struct cpuidle_device *dev,
 		struct cpuidle_driver *drv, int idx)
 {
@@ -1391,12 +820,7 @@ exit:
 	cluster_unprepare(cpu->parent, cpumask, idx, true, end_time, success);
 	cpu_unprepare(cpu, idx, true);
 	dev->last_residency = ktime_us_delta(ktime_get(), start);
-	update_history(dev, idx);
 	trace_cpu_idle_exit(idx, success);
-	if (lpm_prediction && cpu->lpm_prediction) {
-		histtimer_cancel();
-		clusttimer_cancel();
-	}
 	local_irq_enable();
 	return idx;
 }
@@ -1671,8 +1095,6 @@ static const struct platform_freeze_ops lpm_freeze_ops = {
 static int lpm_probe(struct platform_device *pdev)
 {
 	int ret;
-	unsigned int cpu;
-	struct hrtimer *cpu_histtimer;
 	struct kobject *module_kobj = NULL;
 
 	get_online_cpus();
@@ -1696,12 +1118,6 @@ static int lpm_probe(struct platform_device *pdev)
 	suspend_set_ops(&lpm_suspend_ops);
 	freeze_set_ops(&lpm_freeze_ops);
 	hrtimer_init(&lpm_hrtimer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
-	for_each_possible_cpu(cpu) {
-		cpu_histtimer = &per_cpu(histtimer, cpu);
-		hrtimer_init(cpu_histtimer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
-	}
-
-	cluster_timer_init(lpm_root_node);
 
 	register_cluster_lpm_stats(lpm_root_node, NULL);
 
