@@ -620,6 +620,13 @@ static const struct nla_policy wlan_hdd_tm_policy[WLAN_HDD_TM_ATTR_MAX + 1] =
 };
 #endif /* WLAN_NL80211_TESTMODE */
 
+#ifdef FEATURE_WLAN_SW_PTA
+bool hdd_is_sw_pta_enabled(hdd_context_t *hdd_ctx)
+{
+	return hdd_ctx->cfg_ini->is_sw_pta_enabled;
+}
+#endif
+
 #ifdef FEATURE_WLAN_CH_AVOID
 /*
  * FUNCTION: wlan_hdd_send_avoid_freq_event
@@ -12313,6 +12320,7 @@ static int __wlan_hdd_cfg80211_start_ap(struct wiphy *wiphy,
                                              params->auth_type);
     }
 
+    wlan_hdd_cfg80211_register_frames(pAdapter);
     EXIT();
     return status;
 }
@@ -12490,6 +12498,7 @@ int __wlan_hdd_cfg80211_change_iface( struct wiphy *wiphy,
     eMib_dot11DesiredBssType connectedBssType;
     VOS_STATUS status;
     long ret;
+    bool iff_up = ndev->flags & IFF_UP;
 
     ENTER();
 
@@ -12762,13 +12771,21 @@ int __wlan_hdd_cfg80211_change_iface( struct wiphy *wiphy,
                          return -EINVAL;
                     }
                 }
-                status = hdd_init_ap_mode(pAdapter, false);
-                if(status != VOS_STATUS_SUCCESS)
-                {
-                    hddLog(VOS_TRACE_LEVEL_FATAL,
-                           "%s: Error initializing the ap mode", __func__);
-                    return -EINVAL;
-                }
+		if (iff_up) {
+			hddLog(VOS_TRACE_LEVEL_DEBUG,
+			       "%s: SAP interface is already up", __func__);
+			status = hdd_init_ap_mode(pAdapter, false);
+			if(status != VOS_STATUS_SUCCESS)
+			{
+				hddLog(VOS_TRACE_LEVEL_FATAL,
+				       "%s: Error initializing the ap mode",
+				       __func__);
+				return -EINVAL;
+			}
+		} else {
+			hddLog(VOS_TRACE_LEVEL_DEBUG,
+			       "%s: SAP interface is down", __func__);
+		}
                 hdd_set_conparam(1);
 
                 status = hdd_sta_id_hash_attach(pAdapter);
@@ -12854,9 +12871,16 @@ int __wlan_hdd_cfg80211_change_iface( struct wiphy *wiphy,
 #ifdef FEATURE_WLAN_TDLS
                 mutex_unlock(&pHddCtx->tdls_lock);
 #endif
-                status = hdd_init_station_mode( pAdapter );
-                if( VOS_STATUS_SUCCESS != status )
-                    return -EOPNOTSUPP;
+		if (iff_up) {
+			hddLog(VOS_TRACE_LEVEL_DEBUG,
+			       "%s: STA interface is already up", __func__);
+			status = hdd_init_station_mode( pAdapter );
+			if( VOS_STATUS_SUCCESS != status )
+				return -EOPNOTSUPP;
+		} else {
+			hddLog(VOS_TRACE_LEVEL_DEBUG,
+			       "%s: STA interface is down", __func__);
+		}
                 /* In case of JB, for P2P-GO, only change interface will be called,
                  * This is the right place to enable back bmps_imps()
                  */
@@ -15787,6 +15811,19 @@ int __wlan_hdd_cfg80211_scan( struct wiphy *wiphy,
     }
     mutex_unlock(&pHddCtx->tmInfo.tmOperationLock);
 
+    /**
+     * If sw pta is enabled, scan should not allowed.
+     * Returning error makes framework to trigger scan continuously
+     * for every second, so indicating framework that scan is aborted
+     * and return success.
+     */
+    if (hdd_is_sw_pta_enabled(pHddCtx) && pHddCtx->is_sco_enabled) {
+        VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_INFO,
+                  FL("BT SCO operation in progress"));
+        hdd_cfg80211_scan_done(pAdapter, request, true);
+        return 0;
+    }
+
     /* Check if scan is allowed at this point of time.
      */
     if (TRUE == pHddCtx->btCoexModeSet)
@@ -16305,6 +16342,14 @@ int wlan_hdd_cfg80211_connect_start( hdd_adapter_t  *pAdapter,
         return -EINVAL;
     }
 
+    /**
+     * If sw pta is enabled, new connections should not allowed.
+     */
+    if (hdd_is_sw_pta_enabled(pHddCtx) && pHddCtx->is_sco_enabled) {
+        hddLog(VOS_TRACE_LEVEL_ERROR, "%s: BT SCO operation in progress",
+               __func__);
+        return -EINVAL;
+    }
 
     pRoamProfile = &pWextState->roamProfile;
 
@@ -20059,6 +20104,15 @@ void hdd_cfg80211_sched_scan_done_callback(void *callbackContext,
         return ;
     }
     spin_unlock(&pHddCtx->schedScan_lock);
+
+    /**
+     * If sw pta is enabled, scan results should not send to framework.
+     */
+    if (hdd_is_sw_pta_enabled(pHddCtx) && pHddCtx->is_sco_enabled) {
+        VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_INFO,
+                  FL("BT SCO operation in progress"));
+        return;
+    }
 
     ret = wlan_hdd_cfg80211_update_bss(pHddCtx->wiphy, pAdapter);
 
