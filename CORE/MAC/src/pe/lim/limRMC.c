@@ -338,7 +338,7 @@ __limRulerMessageToString(eRmcMessageType msgType)
     }
 }
 
-static char *
+static char __maybe_unused *
 __limRulerStateToString(eRmcRulerState state)
 {
     switch (state)

@@ -47,7 +47,9 @@
 #include "sme_Api.h"
 #include "vos_sched.h"
 
+#ifdef TDLS_USE_SEPARATE_DISCOVERY_TIMER
 static tANI_S32 wlan_hdd_get_tdls_discovery_peer_cnt(tdlsCtx_t *pHddTdlsCtx);
+#endif
 static tANI_S32 wlan_hdd_tdls_peer_reset_discovery_processed(tdlsCtx_t *pHddTdlsCtx);
 static void wlan_hdd_tdls_timers_destroy(tdlsCtx_t *pHddTdlsCtx);
 static void wlan_hdd_tdls_peer_timers_destroy(tdlsCtx_t *pHddTdlsCtx);
@@ -2335,6 +2337,7 @@ static tANI_S32 wlan_hdd_tdls_peer_reset_discovery_processed(tdlsCtx_t *pHddTdls
     return 0;
 }
 
+#ifdef TDLS_USE_SEPARATE_DISCOVERY_TIMER
 static tANI_S32 wlan_hdd_get_tdls_discovery_peer_cnt(tdlsCtx_t *pHddTdlsCtx)
 {
     int i;
@@ -2359,6 +2362,7 @@ static tANI_S32 wlan_hdd_get_tdls_discovery_peer_cnt(tdlsCtx_t *pHddTdlsCtx)
     }
     return discovery_peer_cnt;
 }
+#endif
 
 tANI_U16 wlan_hdd_tdlsConnectedPeers(hdd_adapter_t *pAdapter)
 {

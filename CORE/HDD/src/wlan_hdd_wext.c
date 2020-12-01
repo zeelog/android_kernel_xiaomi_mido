@@ -11153,9 +11153,9 @@ const struct iw_handler_def we_mon_handler_def = {
 
 int hdd_validate_mcc_config(hdd_adapter_t *pAdapter, v_UINT_t staId, v_UINT_t arg1, v_UINT_t arg2, v_UINT_t arg3)
 {
-    v_U32_t  cmd = 288; //Command to RIVA
+    v_U32_t __maybe_unused cmd = 288; //Command to RIVA
     hdd_context_t *pHddCtx = NULL;
-    tHalHandle hHal = WLAN_HDD_GET_HAL_CTX(pAdapter);
+    tHalHandle __maybe_unused hHal = WLAN_HDD_GET_HAL_CTX(pAdapter);
     pHddCtx = WLAN_HDD_GET_CTX(pAdapter);
     /*
      *configMccParam : specify the bit which needs to be modified

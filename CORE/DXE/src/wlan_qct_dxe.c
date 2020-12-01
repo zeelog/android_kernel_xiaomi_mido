@@ -4626,7 +4626,7 @@ void dxeTraceInit(void)
   @  Return
       NONE
 ===========================================================================*/
-void dxeTrace(v_U8_t chan, v_U8_t code, v_U32_t data)
+void __maybe_unused dxeTrace(v_U8_t chan, v_U8_t code, v_U32_t data)
 {
     pdxeTraceRecord rec = NULL;
     unsigned long flags;

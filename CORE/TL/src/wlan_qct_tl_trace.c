@@ -37,7 +37,7 @@
 #include "wlan_qct_tl_trace.h"
 #include "tlDebug.h"
 
-static v_U8_t* tlTraceGetEventString(v_U32_t code)
+static v_U8_t __maybe_unused * tlTraceGetEventString(v_U32_t code)
 {
     switch(code)
     {

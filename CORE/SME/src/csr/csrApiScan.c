@@ -7898,7 +7898,7 @@ tANI_BOOLEAN csrScanRemoveFreshScanCommand(tpAniSirGlobal pMac, tANI_U8 sessionI
 
 void csrReleaseScanCommand(tpAniSirGlobal pMac, tSmeCmd *pCommand, eCsrScanStatus scanStatus)
 {
-    eCsrScanReason reason = pCommand->u.scanCmd.reason;
+    eCsrScanReason __maybe_unused reason = pCommand->u.scanCmd.reason;
     tANI_BOOLEAN status;
 
     if (!pMac->fScanOffload)

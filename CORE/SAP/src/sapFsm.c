@@ -672,13 +672,6 @@ sapGotoDisconnecting
     return VOS_STATUS_SUCCESS;
 }
 
-static eHalStatus sapRoamSessionCloseCallback(void *pContext)
-{
-    ptSapContext sapContext = (ptSapContext)pContext;
-    return sapSignalHDDevent(sapContext, NULL,
-                    eSAP_STOP_BSS_EVENT, (v_PVOID_t) eSAP_STATUS_SUCCESS);
-}
-
 /*==========================================================================
   FUNCTION    sapGotoDisconnected
 

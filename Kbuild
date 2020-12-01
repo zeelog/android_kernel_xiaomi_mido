@@ -595,7 +595,6 @@ CDEFINES :=	-DANI_BUS_TYPE_PLATFORM=1 \
 		-DGEN6_ONWARDS \
 		-DANI_COMPILER_TYPE_GCC \
 		-DANI_OS_TYPE_ANDROID=6 \
-		-DANI_LOGDUMP \
 		-DWLAN_PERF \
 		-DPTT_SOCK_SVC_ENABLE \
 		-Wall\
@@ -653,7 +652,8 @@ CDEFINES +=	-DWLAN_DEBUG \
 		-DSME_TRACE_RECORD \
 		-DPE_DEBUG_LOGW \
 		-DPE_DEBUG_LOGE \
-                -DDXE_TRACE \
+		-DDXE_TRACE \
+		-DANI_LOGDUMP \
 		-DDEBUG
 endif
 
@@ -773,7 +773,7 @@ CDEFINES += -DEXISTS_MSM_SMSM
 endif
 
 # Fix build for GCC 4.7
-EXTRA_CFLAGS += -Wno-maybe-uninitialized -Wno-unused-function -Wno-unused-variable
+EXTRA_CFLAGS += $(call cc-disable-warning, maybe-uninitialized)
 
 ifeq ($(CONFIG_WLAN_OFFLOAD_PACKETS),y)
 CDEFINES += -DWLAN_FEATURE_OFFLOAD_PACKETS
