@@ -241,6 +241,49 @@ enum vos_hang_reason {
 	VOS_WDI_FAILURE = 6,
 };
 
+/* Format of the packet stats event*/
+typedef struct {
+	v_U16_t flags;
+	v_U16_t missed_cnt;
+	v_U16_t log_type;
+	v_U16_t size;
+	v_U32_t timestamp;
+}__attribute__((packed)) pkt_stats_hdr;
+
+typedef struct {
+	v_U16_t rate: 4;
+	v_U16_t nss: 2;
+	v_U16_t preamble: 2;
+	v_U16_t bw: 2;
+	v_U16_t short_gi: 1;
+	v_U16_t reserved: 5;
+} mcs_stats;
+
+typedef struct {
+	v_U8_t    flags;
+	v_U8_t    tid;                          /* transmit or received tid */
+	mcs_stats MCS;                          /* modulation and bandwidth */
+	v_S7_t    rssi;                         /* TX: RSSI of ACK for that packet; RX: RSSI of packet */
+	v_U8_t    num_retries;                  /* number of attempted retries */
+	v_U16_t   last_transmit_rate;           /* last transmit rate in .5 mbps */
+	v_U16_t   link_layer_transmit_sequence; /* receive sequence for that MPDU packet */
+	v_U64_t   dxe_timestamp;                /* DXE timestamp */
+	v_U64_t   start_contention_timestamp;   /* 0: Not supported */
+	v_U64_t   transmit_success_timestamp;   /* 0: Not Supported */
+
+	/*
+	 * Whole frame for management/EAPOl/DHCP frames and 802.11 + LLC
+	 * header + 40 bytes or full frame whichever is smaller for
+	 * remaining Data packets
+	 */
+	v_U8_t    data[MAX_PKT_STAT_DATA_LEN];
+} __attribute__((packed)) per_packet_stats;
+
+typedef struct {
+	pkt_stats_hdr    ps_hdr;
+	per_packet_stats stats;
+} tx_rx_pkt_stats;
+
 /*------------------------------------------------------------------------- 
   Function declarations and documenation
   ------------------------------------------------------------------------*/

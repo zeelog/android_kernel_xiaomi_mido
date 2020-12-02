@@ -121,9 +121,11 @@ static void vos_linux_timer_callback (unsigned long data)
    v_PVOID_t userData=NULL;
    int threadId;
    VOS_TIMER_TYPE type=VOS_TIMER_TYPE_SW;
+#ifdef WLAN_LOGGING_SOCK_SVC_ENABLE
    v_CONTEXT_t vos_context = NULL;
    pVosContextType vos_global_context;
    vos_wdthread_timer_work_t *wdthread_timer_work;
+#endif
 
    VOS_ASSERT(timer);
 

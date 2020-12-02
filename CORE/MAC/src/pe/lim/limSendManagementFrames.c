@@ -7377,8 +7377,10 @@ static void lim_tx_mgmt_frame(tpAniSirGlobal mac_ctx,
                FL("*** Could not send Auth frame, retCode=%X ***"),
                hal_status);
         mac_ctx->authAckStatus = LIM_AUTH_ACK_RCD_FAILURE;
+#ifdef FEATURE_WLAN_DIAG_SUPPORT
         limDiagEventReport(mac_ctx, WLAN_PE_DIAG_AUTH_REQ_EVENT,
                            session, eSIR_FAILURE, eSIR_FAILURE);
+#endif
         /* Pkt will be freed up by the callback */
     }
 }

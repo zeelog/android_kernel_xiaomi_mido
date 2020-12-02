@@ -12829,9 +12829,9 @@ void hdd_wlan_exit(hdd_context_t *pHddCtx)
    send_btc_nlink_msg(WLAN_MODULE_DOWN_IND, 0);
 
    hdd_close_tx_queues(pHddCtx);
+#ifdef WLAN_LOGGING_SOCK_SVC_ENABLE
    wlan_free_fwr_mem_dump_buffer();
 
-#ifdef WLAN_LOGGING_SOCK_SVC_ENABLE
    if (pHddCtx->cfg_ini->wlanLoggingEnable)
    {
        wlan_logging_sock_deactivate_svc();
@@ -13603,6 +13603,7 @@ void hdd_init_frame_logging_done(void *fwlogInitCbContext, tAniLoggingInitRsp *p
       return;
    }
 
+#ifdef WLAN_LOGGING_SOCK_SVC_ENABLE
    /*Check feature supported by FW*/
    if(TRUE == sme_IsFeatureSupportedByFW(MEMORY_DUMP_SUPPORTED))
    {
@@ -13613,6 +13614,7 @@ void hdd_init_frame_logging_done(void *fwlogInitCbContext, tAniLoggingInitRsp *p
    {
       wlan_store_fwr_mem_dump_size(0);
    }
+#endif
 
 
 }
@@ -14631,10 +14633,9 @@ int hdd_wlan_startup(struct device *dev )
        hddLog(VOS_TRACE_LEVEL_INFO, FL("Logging disabled in ini"));
    }
 
-#endif
-
    if (vos_is_multicast_logging())
        wlan_logging_set_log_level();
+#endif
 
    hdd_register_mcast_bcast_filter(pHddCtx);
 
@@ -14761,8 +14762,8 @@ int hdd_wlan_startup(struct device *dev )
    mutex_init(&pHddCtx->cache_channel_lock);
    goto success;
 
-err_open_cesium_nl_sock:
 #ifdef WLAN_LOGGING_SOCK_SVC_ENABLE
+err_open_cesium_nl_sock:
    hdd_close_cesium_nl_sock();
 #endif
 
@@ -16138,6 +16139,7 @@ VOS_STATUS hdd_issta_p2p_clientconnected(hdd_context_t *pHddCtx)
 }
 
 
+#ifdef WLAN_LOGGING_SOCK_SVC_ENABLE
 /*
  * API to find if the firmware will send logs using DXE channel
  */
@@ -16165,6 +16167,7 @@ v_U8_t hdd_is_fw_ev_logging_enabled(void)
     return (pHddCtx && pHddCtx->cfg_ini->wlanLoggingEnable &&
             pHddCtx->cfg_ini->enableFWLogging);
 }
+#endif
 
 /*
  * API to find if there is any session connected

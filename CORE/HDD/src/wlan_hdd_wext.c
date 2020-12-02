@@ -6153,13 +6153,16 @@ static int __iw_setint_getnone(struct net_device *dev,
         }
         case WE_SET_PKT_STATS_ENABLE_DISABLE:
         {
+#ifdef WLAN_LOGGING_SOCK_SVC_ENABLE
             hdd_context_t *pHddCtx = WLAN_HDD_GET_CTX(pAdapter);
             tAniWifiStartLog start_log;
             if (!pHddCtx->cfg_ini->wlanPerPktStatsLogEnable ||
                  !vos_isPktStatsEnabled())
             {
+#endif
                 hddLog(LOGE, FL("per pkt stats not enabled"));
                 return -EINVAL;
+#ifdef WLAN_LOGGING_SOCK_SVC_ENABLE
             }
             hddLog(LOG1, FL("Set Pkt Stats %d"), set_value);
 
@@ -6182,6 +6185,7 @@ static int __iw_setint_getnone(struct net_device *dev,
                 ret = -EINVAL;
             }
             break;
+#endif
         }
         case WE_SET_PROXIMITY_ENABLE:
         {

@@ -2133,8 +2133,19 @@ hdd_remain_on_chan_ctx_t *hdd_get_remain_on_channel_ctx(hdd_context_t *pHddCtx);
 VOS_STATUS wlan_hdd_handle_dfs_chan_scan(hdd_context_t *pHddCtx,
                                    tANI_U8 dfsScanMode);
 
+#ifdef WLAN_LOGGING_SOCK_SVC_ENABLE
 v_U8_t hdd_is_fw_logging_enabled(void);
 v_U8_t hdd_is_fw_ev_logging_enabled(void);
+#else
+static inline v_U8_t hdd_is_fw_logging_enabled(void)
+{
+	return (FALSE);
+}
+static inline v_U8_t hdd_is_fw_ev_logging_enabled(void)
+{
+	return (FALSE);
+}
+#endif
 
 #define HDD_STA_ID_HASH_MULTIPLIER 2
 
