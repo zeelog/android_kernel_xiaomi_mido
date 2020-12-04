@@ -2897,7 +2897,6 @@ eHalStatus csrRoamCallCallback(tpAniSirGlobal pMac, tANI_U32 sessionId, tCsrRoam
     else
     {
        smsLog(pMac, LOGE, "Session ID:%d is not valid", sessionId);
-       VOS_ASSERT(0);
        return eHAL_STATUS_FAILURE;
     }
 
