@@ -560,9 +560,9 @@ static bool icm20602_check_acc_selftest(struct inv_icm20602_state *st,
 	acc_ST_code.Y = st->config->acc_self_test.Y;
 	acc_ST_code.Z = st->config->acc_self_test.Z;
 
-	st_otp.X = (st_otp.X != 0) ? mpu_st_tb[acc_ST_code.X - 1] : 0;
-	st_otp.Y = (st_otp.Y != 0) ? mpu_st_tb[acc_ST_code.Y - 1] : 0;
-	st_otp.Z = (st_otp.Z != 0) ? mpu_st_tb[acc_ST_code.Z - 1] : 0;
+	st_otp.X = (acc_ST_code.X != 0) ? mpu_st_tb[acc_ST_code.X - 1] : 0;
+	st_otp.Y = (acc_ST_code.Y != 0) ? mpu_st_tb[acc_ST_code.Y - 1] : 0;
+	st_otp.Z = (acc_ST_code.Z != 0) ? mpu_st_tb[acc_ST_code.Z - 1] : 0;
 
 	if ((st_otp.X & st_otp.Y & st_otp.Z) == 0)
 		otp_value_zero = true;
