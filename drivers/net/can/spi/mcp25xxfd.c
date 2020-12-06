@@ -3002,7 +3002,7 @@ static int mcp25xxfd_can_ist_handle_status(struct spi_device *spi)
 	priv->bdiag1_clear_value = 0;
 	priv->bdiag1_clear_mask = 0;
 	priv->can_err_id = 0;
-	memset(priv->can_err_data, 0, 8);
+	memset(priv->can_err_data, 0, sizeof(priv->can_err_data));
 
 	/* state changes */
 	priv->new_state = priv->can.state;
