@@ -119,15 +119,8 @@ int hdd_del_all_sta(hdd_adapter_t *pAdapter);
 void hdd_sap_indicate_disconnect_for_sta(hdd_adapter_t *adapter);
 void hdd_sap_destroy_timers(hdd_adapter_t *adapter);
 
-#ifdef SAP_AUTH_OFFLOAD
 bool  hdd_set_sap_auth_offload(hdd_adapter_t *pHostapdAdapter,
         bool enabled);
-#else
-static inline bool
-hdd_set_sap_auth_offload(hdd_adapter_t *pHostapdAdapter, bool enabled)
-{
-}
-#endif
 
 /**
  * hdd_check_for_unsafe_ch() - Check the current operating channel with

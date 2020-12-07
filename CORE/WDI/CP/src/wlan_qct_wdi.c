@@ -39888,6 +39888,7 @@ WDI_Status WDI_process_sap_auth_offload(
 
     return WDI_PostMainEvent(&gWDICb, WDI_REQUEST_EVENT, &wdiEventData);
 }
+#endif
 
 /**
  *  wdi_process_cap_tsf_req() - Send Capture tsf request to FW.
@@ -40236,4 +40237,3 @@ WDI_process_sw_pta_resp(WDI_ControlBlockType *wdi_ctx,
 	return WDI_STATUS_SUCCESS;
 }
 #endif /* FEATURE_WLAN_SW_PTA */
-#endif
