@@ -1035,8 +1035,6 @@ WDI_RspProcFuncType  pfnRspProcTbl[WDI_MAX_RESP] =
   WDI_ProcessGetCurrentAntennaIndexRsp,     /* WDI_ANTENNA_DIVERSITY_SELECTION_RSP */
 #ifdef WLAN_FEATURE_APFIND
   WDI_ProcessQRFPrefNetworkFoundInd,   /* WDI_HAL_QRF_PREF_NETWORK_FOUND_IND */
-#else
-  NULL,
 #endif
 };
 /*---------------------------------------------------------------------------
