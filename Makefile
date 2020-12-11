@@ -744,6 +744,12 @@ endif
 KBUILD_CFLAGS	+= $(call cc-option,--param=allow-store-data-races=0)
 KBUILD_CFLAGS	+= $(call cc-option,-fno-allow-store-data-races)
 
+# Restore pre-gcc-10's params
+KBUILD_CFLAGS	+= $(call gcc-ifversion, -ge, 1000, --param=inline-min-speedup=15)
+KBUILD_CFLAGS	+= $(call gcc-ifversion, -ge, 1000, --param=max-inline-insns-single=200)
+KBUILD_CFLAGS	+= $(call gcc-ifversion, -ge, 1000, --param=max-inline-insns-auto=30)
+KBUILD_CFLAGS	+= $(call gcc-ifversion, -ge, 1000, --param=early-inlining-insns=14)
+
 # check for 'asm goto'
 ifeq ($(shell $(CONFIG_SHELL) $(srctree)/scripts/gcc-goto.sh $(CC) $(KBUILD_CFLAGS)), y)
 	KBUILD_CFLAGS += -DCC_HAVE_ASM_GOTO
