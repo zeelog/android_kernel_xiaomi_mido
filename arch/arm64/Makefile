@@ -75,7 +75,13 @@ ifeq ($(CONFIG_COMPAT_VDSO), y)
     export CONFIG_VDSO32 := y
     vdso32 := -DCONFIG_VDSO32=1
   else ifeq ($(shell which $(CROSS_COMPILE_ARM32)$(cc-name) 2> /dev/null),)
-    $(error $(CROSS_COMPILE_ARM32)$(cc-name) not found, check CROSS_COMPILE_ARM32)
+    ifeq ($(shell which $(CC_ARM32) 2> /dev/null),)
+      $(error $(CROSS_COMPILE_ARM32)$(cc-name) not found, check CROSS_COMPILE_ARM32)
+    else
+      export CROSS_COMPILE_ARM32
+      export CONFIG_VDSO32 := y
+      vdso32 := -DCONFIG_VDSO32=1
+    endif
   else
     export CROSS_COMPILE_ARM32
     export CONFIG_VDSO32 := y

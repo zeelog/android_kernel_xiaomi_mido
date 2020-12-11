@@ -7,7 +7,7 @@
 ifeq ($(cc-name),clang)
   CC_ARM32 := $(CC) $(CLANG_TARGET_ARM32) -no-integrated-as $(CLANG_GCC32_TC) $(CLANG_PREFIX32)
 else
-  CC_ARM32 := $(CROSS_COMPILE_ARM32)$(cc-name)
+  CC_ARM32 ?= $(CROSS_COMPILE_ARM32)$(cc-name)
 endif
 
 # Same as cc-*option, but using CC_ARM32 instead of CC
