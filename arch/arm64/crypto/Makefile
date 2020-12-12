@@ -20,6 +20,11 @@ ghash-ce-y := ghash-ce-glue.o ghash-ce-core.o
 obj-$(CONFIG_CRYPTO_AES_ARM64_CE) += aes-ce-cipher.o
 aes-ce-cipher-y := aes-ce-cipher-glue.o aes-ce-cipher-core.o
 
+ifeq ($(filter -mcpu=%, $(MACH_CFLAGS)),)
+CFLAGS_aes-ce-cipher-core.o += -march=armv8-a+crypto -Wa,-march=armv8-a+crypto
+endif
+CFLAGS_aes-ce-cipher-core.o += $(DISABLE_LTO)
+
 obj-$(CONFIG_CRYPTO_AES_ARM64_CE_CCM) += aes-ce-ccm.o
 aes-ce-ccm-y := aes-ce-ccm-glue.o aes-ce-ccm-core.o
 
@@ -34,9 +39,23 @@ AFLAGS_aes-neon.o	:= -DINTERLEAVE=4
 
 CFLAGS_aes-glue-ce.o	:= -DUSE_V8_CRYPTO_EXTENSIONS
 
+ifeq ($(cc-name),gcc)
+ifneq ($(filter -mcpu=%, $(MACH_CFLAGS)),)
+# Includes crypto extension by default for Clang
+ccflags-y += $(filter -mcpu=%, $(MACH_CFLAGS))+crypto
+endif
+endif
+
+ifneq ($(filter -Wa$(comma)-mcpu=%, $(MACH_AFLAGS)),)
+ccflags-y += $(filter -Wa$(comma)-mcpu=%, $(MACH_AFLAGS))+crypto
+asflags-y += $(filter -Wa$(comma)-mcpu=%, $(MACH_AFLAGS))+crypto
+endif
+
 obj-$(CONFIG_CRYPTO_CRC32_ARM64) += crc32-arm64.o
 
+ifeq ($(filter -mcpu=%, $(MACH_CFLAGS)),)
 CFLAGS_crc32-arm64.o	:= -mcpu=generic+crc
+endif
 
 $(obj)/aes-glue-%.o: $(src)/aes-glue.c FORCE
 	$(call if_changed_rule,cc_o_c)
