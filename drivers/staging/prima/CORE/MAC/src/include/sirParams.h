@@ -283,6 +283,18 @@ struct sir_mgmt_msg {
     uint8_t *data;
 };
 
+#ifdef FEATURE_WLAN_SW_PTA
+/**
+ * struct sir_teardown_link - Struct used to tear down link with AP
+ * @type: Message type
+ * @session_id: session id
+ */
+struct sir_teardown_link {
+    uint16_t type;
+    uint8_t session_id;
+};
+#endif
+
 /// Message queue definitions
 //  msgtype(2bytes) reserved(2bytes) bodyptr(4bytes) bodyval(4bytes)
 //  NOTE tSirMsgQ should be always multiples of WORD(4Bytes)
@@ -831,6 +843,10 @@ struct sir_mgmt_msg {
 #define SIR_HAL_QPOWER                     (SIR_HAL_ITC_MSG_TYPES_BEGIN + 307)
 
 #define SIR_HAL_BLACKLIST_REQ              (SIR_HAL_ITC_MSG_TYPES_BEGIN + 308)
+
+#ifdef FEATURE_WLAN_SW_PTA
+#define SIR_HAL_SW_PTA_REQ                (SIR_HAL_ITC_MSG_TYPES_BEGIN + 309)
+#endif
 
 #define SIR_HAL_MSG_TYPES_END              (SIR_HAL_MSG_TYPES_BEGIN + 0x1FF)
 
