@@ -30,6 +30,7 @@
 #define ATEN_VENDOR_ID		0x0557
 #define ATEN_VENDOR_ID2		0x0547
 #define ATEN_PRODUCT_ID		0x2008
+#define ATEN_PRODUCT_UC485	0x2021
 #define ATEN_PRODUCT_ID2	0x2118
 
 #define IODATA_VENDOR_ID	0x04bb
@@ -124,6 +125,7 @@
 
 /* Hewlett-Packard POS Pole Displays */
 #define HP_VENDOR_ID		0x03f0
+#define HP_LD381GC_PRODUCT_ID	0x0183
 #define HP_LM920_PRODUCT_ID	0x026b
 #define HP_TD620_PRODUCT_ID	0x0956
 #define HP_LD960_PRODUCT_ID	0x0b39

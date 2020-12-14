@@ -38,6 +38,13 @@
 
 #define FTDI_LUMEL_PD12_PID	0x6002
 
+/*
+ * Custom USB adapters made by Falconia Partners LLC
+ * for FreeCalypso project, ID codes allocated to Falconia by FTDI.
+ */
+#define FTDI_FALCONIA_JTAG_BUF_PID	0x7150
+#define FTDI_FALCONIA_JTAG_UNBUF_PID	0x7151
+
 /* Sienna Serial Interface by Secyourit GmbH */
 #define FTDI_SIENNA_PID		0x8348
 
@@ -614,6 +621,13 @@
 #define ADI_VID			0x0456
 #define ADI_GNICE_PID		0xF000
 #define ADI_GNICEPLUS_PID	0xF001
+
+/*
+ * Cypress WICED USB UART
+ */
+#define CYPRESS_VID			0x04B4
+#define CYPRESS_WICED_BT_USB_PID	0x009B
+#define CYPRESS_WICED_WL_USB_PID	0xF900
 
 /*
  * Microchip Technology, Inc.

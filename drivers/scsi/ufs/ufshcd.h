@@ -854,26 +854,13 @@ struct ufs_hba {
 	/* Allow auto bkops to enabled during runtime suspend */
 #define UFSHCD_CAP_AUTO_BKOPS_SUSPEND (1 << 3)
 	/*
-	 * This capability allows host controller driver to use the UFS HCI's
-	 * interrupt aggregation capability.
-	 * CAUTION: Enabling this might reduce overall UFS throughput.
-	 */
-#define UFSHCD_CAP_INTR_AGGR (1 << 4)
-	/* Allow standalone Hibern8 enter on idle */
-#define UFSHCD_CAP_HIBERN8_ENTER_ON_IDLE (1 << 5)
-	/*
 	 * This capability allows the device auto-bkops to be always enabled
 	 * except during suspend (both runtime and suspend).
 	 * Enabling this capability means that device will always be allowed
 	 * to do background operation when it's active but it might degrade
 	 * the performance of ongoing read/write operations.
 	 */
-#define UFSHCD_CAP_KEEP_AUTO_BKOPS_ENABLED_EXCEPT_SUSPEND (1 << 6)
-	/*
-	 * If host controller hardware can be power collapsed when UFS link is
-	 * in hibern8 then enable this cap.
-	 */
-#define UFSHCD_CAP_POWER_COLLAPSE_DURING_HIBERN8 (1 << 7)
+#define UFSHCD_CAP_KEEP_AUTO_BKOPS_ENABLED_EXCEPT_SUSPEND (1 << 5)
 
 	struct devfreq *devfreq;
 	struct ufs_clk_scaling clk_scaling;
@@ -991,6 +978,11 @@ static inline void *ufshcd_get_variant(struct ufs_hba *hba)
 {
 	BUG_ON(!hba);
 	return hba->priv;
+}
+static inline bool ufshcd_keep_autobkops_enabled_except_suspend(
+							struct ufs_hba *hba)
+{
+	return hba->caps & UFSHCD_CAP_KEEP_AUTO_BKOPS_ENABLED_EXCEPT_SUSPEND;
 }
 
 extern int ufshcd_runtime_suspend(struct ufs_hba *hba);
