@@ -9978,6 +9978,11 @@ int ufshcd_shutdown(struct ufs_hba *hba)
 
 	if (ufshcd_is_ufs_dev_poweroff(hba) && ufshcd_is_link_off(hba))
 		goto out;
+<<<<<<< HEAD
+=======
+
+	pm_runtime_get_sync(hba->dev);
+>>>>>>> 423410d337ce5bef89a27ebc04f4cad93d4088e3
 
 	pm_runtime_get_sync(hba->dev);
 	ufshcd_hold_all(hba);
