@@ -4009,7 +4009,7 @@ int vos_process_bt_profile(bool bt_enabled, bool bt_adv,
 		return -EINVAL;
 	}
 
-	if (!hdd_ctx->cfg_ini->is_sw_pta_enabled) {
+	if (!hdd_is_sw_pta_enabled(hdd_ctx)) {
 		VOS_TRACE(VOS_MODULE_ID_VOSS, VOS_TRACE_LEVEL_ERROR,
 			  "%s: sw pta is not enabled", __func__);
 		return -EINVAL;

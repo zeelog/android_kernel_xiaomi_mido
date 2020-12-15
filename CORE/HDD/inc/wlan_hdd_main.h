@@ -2437,6 +2437,11 @@ static inline int wcnss_update_bt_profile(void)
 {
 	return 0;
 }
+
+static inline int wcnss_is_sw_pta_enabled(void)
+{
+	return 0;
+}
 #endif
 
 #ifdef FEATURE_WLAN_SW_PTA
