@@ -33,3 +33,15 @@ obj-$(CONFIG_CRYPTO_DEV_VMX) += vmx/
 obj-$(CONFIG_CRYPTO_DEV_SUN4I_SS) += sunxi-ss/
 obj-$(CONFIG_CRYPTO_DEV_ROCKCHIP) += rockchip/
 obj-$(CONFIG_CRYPTO_DEV_CHELSIO) += chelsio/
+
+ifeq ($(cc-name),gcc)
+ifneq ($(filter -mcpu=%, $(MACH_CFLAGS)),)
+# Includes crypto extension by default for Clang
+ccflags-y += $(filter -mcpu=%, $(MACH_CFLAGS))+crypto
+endif
+endif
+
+ifneq ($(filter -Wa$(comma)-mcpu=%, $(MACH_AFLAGS)),)
+ccflags-y += $(filter -Wa$(comma)-mcpu=%, $(MACH_AFLAGS))+crypto
+asflags-y += $(filter -Wa$(comma)-mcpu=%, $(MACH_AFLAGS))+crypto
+endif
