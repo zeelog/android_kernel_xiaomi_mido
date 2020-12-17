@@ -154,8 +154,3 @@ ifneq ($(filter -mcpu=%, $(MACH_CFLAGS)),)
 ccflags-y += $(filter -mcpu=%, $(MACH_CFLAGS))+crypto
 endif
 endif
-
-ifneq ($(filter -Wa$(comma)-mcpu=%, $(MACH_AFLAGS)),)
-ccflags-y += $(filter -Wa$(comma)-mcpu=%, $(MACH_AFLAGS))+crypto
-asflags-y += $(filter -Wa$(comma)-mcpu=%, $(MACH_AFLAGS))+crypto
-endif
