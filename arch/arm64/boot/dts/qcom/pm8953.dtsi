@@ -220,6 +220,7 @@
 				qcom,fast-avg-setup = <0>;
 			};
 
+
 			chan@32 {
 				label = "xo_therm";
 				reg = <0x32>;
@@ -242,7 +243,6 @@
 				qcom,fast-avg-setup = <0>;
 				qcom,vadc-thermal-node;
 			};
-
 			chan@13 {
 				label = "case_therm";
 				reg = <0x13>;

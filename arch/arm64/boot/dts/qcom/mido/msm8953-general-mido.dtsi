@@ -72,8 +72,6 @@
 				qcom,decimation = <1>;
 				qcom,fast-avg-setup = <5>;
 			};
-
-			/delete-node/ chan@11;
 		};
 
 		pm8953_adc_tm: vadc@3400 {
@@ -81,8 +79,6 @@
 				qcom,decimation = <1>;
 				qcom,fast-avg-setup = <5>;
 			};
-
-			/delete-node/ chan@11;
 		};
 
 		/delete-node/ qcom,pm8953_typec@bf00;
@@ -462,10 +458,6 @@
 
 &thermal_zones {
 	chg-temp-adc {
-		status = "disabled";
-	};
-
-	pa-therm1-adc {
 		status = "disabled";
 	};
 
