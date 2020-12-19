@@ -49,3 +49,11 @@
 &wsa881x_analog_reset_gpio {
         status = "disabled";
 };
+
+&msm_digital_codec {
+	status = "okay";
+};
+
+&pmic_analog_codec {
+	status = "okay";
+};
