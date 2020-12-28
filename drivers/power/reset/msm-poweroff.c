@@ -593,7 +593,7 @@ static int msm_restart_probe(struct platform_device *pdev)
 
 	np = of_find_compatible_node(NULL, NULL, DL_MODE_PROP);
 	if (!np) {
-		pr_err("unable to find DT imem DLOAD mode node\n");
+		pr_debug("unable to find DT imem DLOAD mode node\n");
 	} else {
 		dload_mode_addr = of_iomap(np, 0);
 		if (!dload_mode_addr)
@@ -602,7 +602,7 @@ static int msm_restart_probe(struct platform_device *pdev)
 
 	np = of_find_compatible_node(NULL, NULL, EDL_MODE_PROP);
 	if (!np) {
-		pr_err("unable to find DT imem EDLOAD mode node\n");
+		pr_debug("unable to find DT imem EDLOAD mode node\n");
 	} else {
 		emergency_dload_mode_addr = of_iomap(np, 0);
 		if (!emergency_dload_mode_addr)
