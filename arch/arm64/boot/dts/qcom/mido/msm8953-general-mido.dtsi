@@ -146,7 +146,7 @@
 			qcom,fg-cutoff-voltage-mv = <3400>;
 			qcom,hold-soc-while-full;
 			qcom,fg-cc-cv-threshold-mv = <4390>;
-			qcpm,fg-cc-cv-threshold-mv-global = <4370>;
+			qcom,fg-cc-cv-threshold-mv-global = <4370>;
 			qcom,fg-vbat-estimate-diff-mv = <200>;
 			qcom,fg-restore-batt-info;
 			qcom,thermal-coefficients = [c8 86 c1 50 d3 37];
