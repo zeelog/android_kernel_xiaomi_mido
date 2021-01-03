@@ -3702,11 +3702,9 @@ static int smbchg_config_chg_battery_type(struct smbchg_chip *chip)
 	/* change vfloat */
 	rc = of_property_read_u32(profile_node, "qcom,max-voltage-uv",
 						&max_voltage_uv);
-
 #ifdef CONFIG_MACH_XIAOMI_C6
 	max_voltage_uv = 4380000;
 #endif
-
 	if (rc) {
 		pr_warn("couldn't find battery max voltage rc=%d\n", rc);
 		ret = rc;
@@ -3829,8 +3827,10 @@ static void smbchg_external_power_changed(struct power_supply *psy)
 									rc);
 	}
 
+#ifndef CONFIG_MACH_XIAOMI_C6
 	/* adjust vfloat */
 	smbchg_vfloat_adjust_check(chip);
+#endif
 }
 
 static int smbchg_otg_regulator_enable(struct regulator_dev *rdev)
@@ -6036,7 +6036,9 @@ static enum power_supply_property smbchg_battery_properties[] = {
 	POWER_SUPPLY_PROP_TEMP,
 	POWER_SUPPLY_PROP_VOLTAGE_NOW,
 	POWER_SUPPLY_PROP_RESISTANCE_ID,
+#ifndef CONFIG_MACH_XIAOMI_C6
 	POWER_SUPPLY_PROP_CHARGE_FULL,
+#endif
 	POWER_SUPPLY_PROP_SAFETY_TIMER_ENABLE,
 	POWER_SUPPLY_PROP_INPUT_CURRENT_MAX,
 	POWER_SUPPLY_PROP_INPUT_CURRENT_SETTLED,
@@ -7721,10 +7723,10 @@ static int smb_parse_dt(struct smbchg_chip *chip)
 			"fastchg-current-ma", rc, 1);
 	if (chip->cfg_fastchg_current_ma == -EINVAL)
 		chip->cfg_fastchg_current_ma = DEFAULT_FCC_MA;
+	OF_PROP_READ(chip, chip->vfloat_mv, "float-voltage-mv", rc, 1);
 #ifdef CONFIG_MACH_XIAOMI_C6
 	chip->vfloat_mv = 4380;
 #endif
-	OF_PROP_READ(chip, chip->vfloat_mv, "float-voltage-mv", rc, 1);
 	OF_PROP_READ(chip, chip->safety_time, "charging-timeout-mins", rc, 1);
 	OF_PROP_READ(chip, chip->vled_max_uv, "vled-max-uv", rc, 1);
 	if (chip->vled_max_uv < 0)
@@ -8591,7 +8593,6 @@ static int smbchg_probe(struct platform_device *pdev)
 #ifdef CONFIG_MACH_XIAOMI_C6
 	mutex_init(&chip->cool_current);
 #endif
-
 	device_init_wakeup(chip->dev, true);
 
 	rc = smbchg_parse_peripherals(chip);
