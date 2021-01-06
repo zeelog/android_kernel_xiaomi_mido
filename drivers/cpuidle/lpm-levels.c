@@ -62,7 +62,7 @@ static DEFINE_SPINLOCK(bc_timer_lock);
 
 struct lpm_cluster *lpm_root_node;
 
-static bool cluster_use_deepest_state = true;
+static bool cluster_use_deepest_state;
 module_param(cluster_use_deepest_state, bool, 0664);
 
 static uint32_t bias_hyst;
