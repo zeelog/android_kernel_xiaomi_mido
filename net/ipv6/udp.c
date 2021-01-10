@@ -901,8 +901,7 @@ static struct sock *__udp6_lib_demux_lookup(struct net *net,
 	struct sock *sk;
 
 	udp_portaddr_for_each_entry_rcu(sk, &hslot2->head) {
-		if (sk->sk_state == TCP_ESTABLISHED &&
-		    INET6_MATCH(sk, net, rmt_addr, loc_addr, ports, dif))
+		if (INET6_MATCH(sk, net, rmt_addr, loc_addr, ports, dif))
 			return sk;
 		/* Only check first socket in chain */
 		break;
