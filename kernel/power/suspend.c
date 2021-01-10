@@ -515,7 +515,9 @@ static DECLARE_WORK(sys_sync_work, sys_sync_work_func);
 static DECLARE_WAIT_QUEUE_HEAD(sys_sync_wait);
 static void sys_sync_work_func(struct work_struct *work)
 {
+#ifdef CONFIG_SUSPEND_LOG_DEBUG
 	pr_info("PM: Syncing filesystems ... \n");
+#endif
 	sys_sync();
 	sys_sync_completed = true;
 	wake_up(&sys_sync_wait);
@@ -549,7 +551,9 @@ static int sys_sync_queue(void)
 		}
 	}
 
+#ifdef CONFIG_SUSPEND_LOG_DEBUG
 	pr_info("PM: Syncing done\n");
+#endif
 	return 0;
 abort:
 	return -EAGAIN;
