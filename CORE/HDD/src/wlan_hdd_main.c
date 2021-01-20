@@ -227,6 +227,11 @@ static vos_wake_lock_t wlan_wake_lock;
 /* set when SSR is needed after unload */
 static e_hdd_ssr_required isSsrRequired = HDD_SSR_NOT_REQUIRED;
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 0))
+#define WLAN_NV_FILE_SIZE 64
+static char wlan_nv_bin[WLAN_NV_FILE_SIZE];
+#endif
+
 //internal function declaration
 static VOS_STATUS wlan_hdd_framework_restart(hdd_context_t *pHddCtx);
 static void wlan_hdd_restart_init(hdd_context_t *pHddCtx);
@@ -3893,7 +3898,7 @@ int hdd_get_disable_ch_list(hdd_context_t *hdd_ctx, tANI_U8 *buf,
 }
 
 #ifdef FEATURE_WLAN_SW_PTA
-static void hdd_sco_resp_callback(uint8_t sco_status)
+static void hdd_sw_pta_resp_callback(uint8_t sw_pta_status)
 {
 	hdd_context_t *hdd_ctx = NULL;
 	v_CONTEXT_t vos_ctx = NULL;
@@ -3913,12 +3918,12 @@ static void hdd_sco_resp_callback(uint8_t sco_status)
 		return;
 	}
 
-	hddLog(VOS_TRACE_LEVEL_DEBUG, "%s: Response status %d",
-	       __func__, sco_status);
+	hddLog(VOS_TRACE_LEVEL_DEBUG, "%s: sw pta response status %d",
+	       __func__, sw_pta_status);
 
-	if (sco_status) {
-		hddLog(VOS_TRACE_LEVEL_FATAL, "%s: Invalid sco status %d",
-		       __func__, sco_status);
+	if (sw_pta_status) {
+		hddLog(VOS_TRACE_LEVEL_FATAL, "%s: Invalid sw pta status %d",
+		       __func__, sw_pta_status);
 		return;
 	}
 
@@ -3926,15 +3931,15 @@ static void hdd_sco_resp_callback(uint8_t sco_status)
 }
 
 int hdd_process_bt_sco_profile(hdd_context_t *hdd_ctx,
-			       bool bt_enabled, bool bt_sco)
+			       bool bt_enabled, bool bt_adv,
+			       bool ble_enabled, bool bt_a2dp,
+			       bool bt_sco)
 {
 	tpAniSirGlobal mac_ctx = PMAC_STRUCT(hdd_ctx->hHal);
-	uint8_t no_of_states_changed = 0;
 	hdd_station_ctx_t *hdd_sta_ctx;
 	eConnectionState conn_state;
 	hdd_adapter_t *adapter;
 	eHalStatus hal_status;
-	bool sco_status;
 	int rc;
 
 	if (!mac_ctx) {
@@ -3942,68 +3947,11 @@ int hdd_process_bt_sco_profile(hdd_context_t *hdd_ctx,
 		return -EINVAL;
 	}
 
-	/**
-	 * At a time only one status can be changed compared to
-	 * previous command (BT_ENABLED/SCO)
-	 * If no.of states changed is greater than one it is
-	 * an invalid command.
-	 */
-	if (bt_enabled != hdd_ctx->is_bt_enabled)
-		no_of_states_changed++;
-
-	if (bt_sco != hdd_ctx->is_sco_enabled)
-		no_of_states_changed++;
-
-	if (no_of_states_changed > 1) {
-		hddLog(VOS_TRACE_LEVEL_ERROR, "%s: Multiple states changed",
-		       __func__);
-		return -EINVAL;
-	}
-
 	INIT_COMPLETION(hdd_ctx->sw_pta_comp);
 
-	if (bt_enabled != hdd_ctx->is_bt_enabled) {
-		hal_status = sme_bt_req(hdd_ctx->hHal,
-					hdd_sco_resp_callback,
-					adapter->sessionId, bt_enabled);
-		if (!HAL_STATUS_SUCCESS(hal_status)) {
-			hddLog(VOS_TRACE_LEVEL_ERROR,
-			       "%s: Error sending sme sco indication request",
-			       __func__);
-			return -EINVAL;
-		}
-
-		rc = wait_for_completion_timeout(&hdd_ctx->sw_pta_comp,
-				msecs_to_jiffies(WLAN_WAIT_TIME_SW_PTA));
-		if (!rc) {
-			hddLog(VOS_TRACE_LEVEL_ERROR,
-			       FL("Target response timed out for sw_pta_comp"));
-			return -EINVAL;
-		}
-
-		hdd_ctx->is_bt_enabled = bt_enabled;
-		return 0;
-	}
-
-	if (bt_sco) {
-		if (hdd_ctx->is_sco_enabled) {
-			hddLog(VOS_TRACE_LEVEL_ERROR,
-			       "%s: BT SCO is already enabled", __func__);
-			return 0;
-		}
-		sco_status = true;
-	} else {
-		if (!hdd_ctx->is_sco_enabled) {
-			hddLog(VOS_TRACE_LEVEL_ERROR,
-			       "%s: BT SCO is already disabled", __func__);
-			return 0;
-		}
-		sco_status = false;
-	}
-
-	hal_status = sme_sco_req(hdd_ctx->hHal,
-				 hdd_sco_resp_callback,
-				 adapter->sessionId, sco_status);
+	hal_status = sme_sw_pta_req(hdd_ctx->hHal, hdd_sw_pta_resp_callback,
+				    adapter->sessionId, bt_enabled,
+				    bt_adv, ble_enabled, bt_a2dp, bt_sco);
 	if (!HAL_STATUS_SUCCESS(hal_status)) {
 		hddLog(VOS_TRACE_LEVEL_ERROR,
 		       "%s: Error sending sme sco indication request",
@@ -4019,7 +3967,18 @@ int hdd_process_bt_sco_profile(hdd_context_t *hdd_ctx,
 		return -EINVAL;
 	}
 
-	if (!bt_sco) {
+	if (bt_sco) {
+		if (hdd_ctx->is_sco_enabled) {
+			hddLog(VOS_TRACE_LEVEL_ERROR,
+			       "%s: BT SCO is already enabled", __func__);
+			return 0;
+		}
+	} else {
+		if (!hdd_ctx->is_sco_enabled) {
+			hddLog(VOS_TRACE_LEVEL_ERROR,
+			       "%s: BT SCO is already disabled", __func__);
+			return 0;
+		}
 		hdd_ctx->is_sco_enabled = false;
 		mac_ctx->isCoexScoIndSet = 0;
 		return 0;
@@ -4074,6 +4033,7 @@ int hdd_process_bt_sco_profile(hdd_context_t *hdd_ctx,
 static void hdd_init_sw_pta(hdd_context_t *hdd_ctx)
 {
 	init_completion(&hdd_ctx->sw_pta_comp);
+	wcnss_update_bt_profile();
 }
 
 static void hdd_deinit_sw_pta(hdd_context_t *hdd_ctx)
@@ -8739,6 +8699,19 @@ VOS_STATUS hdd_release_firmware(char *pFileName,v_VOID_t *pCtx)
    EXIT();
    return status;
 }
+
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 0))
+char* hdd_get_nv_bin()
+{
+	if (wcnss_get_nv_name(wlan_nv_bin)) {
+		hddLog(VOS_TRACE_LEVEL_ERROR,
+		       "%s: NV binary is invalid", __func__);
+		return NULL;
+	}
+
+	return wlan_nv_bin;
+}
+#endif
 
 /**---------------------------------------------------------------------------
 

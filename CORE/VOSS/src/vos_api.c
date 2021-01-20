@@ -3988,8 +3988,9 @@ void wlan_unregister_driver(void )
 }
 
 #ifdef FEATURE_WLAN_SW_PTA
-int vos_process_bt_profile(bool bt_enabled, bool ble,
-			   bool a2dp, bool bt_sco)
+int vos_process_bt_profile(bool bt_enabled, bool bt_adv,
+			   bool ble_enabled, bool bt_a2dp,
+			   bool bt_sco)
 {
 	v_CONTEXT_t vos_ctx = vos_get_global_context(VOS_MODULE_ID_SYS, NULL);
 	hdd_context_t *hdd_ctx;
@@ -4008,13 +4009,14 @@ int vos_process_bt_profile(bool bt_enabled, bool ble,
 		return -EINVAL;
 	}
 
-	if (!hdd_ctx->cfg_ini->is_sw_pta_enabled) {
+	if (!hdd_is_sw_pta_enabled(hdd_ctx)) {
 		VOS_TRACE(VOS_MODULE_ID_VOSS, VOS_TRACE_LEVEL_ERROR,
 			  "%s: sw pta is not enabled", __func__);
 		return -EINVAL;
 	}
 
-	ret = hdd_process_bt_sco_profile(hdd_ctx, bt_enabled, bt_sco);
+	ret = hdd_process_bt_sco_profile(hdd_ctx, bt_enabled, bt_adv,
+					 ble_enabled, bt_a2dp, bt_sco);
 	if (ret)
 		VOS_TRACE(VOS_MODULE_ID_VOSS, VOS_TRACE_LEVEL_ERROR,
 			  "%s: Unable to process bt sco profile", __func__);

@@ -2433,19 +2433,33 @@ static inline void hdd_fill_last_rx(hdd_adapter_t *adapter)
 }
 #else
 void hdd_fill_last_rx(hdd_adapter_t *adapter);
+static inline int wcnss_update_bt_profile(void)
+{
+	return 0;
+}
+
+static inline int wcnss_is_sw_pta_enabled(void)
+{
+	return 0;
+}
 #endif
 
 #ifdef FEATURE_WLAN_SW_PTA
 /**
  * hdd_process_bt_sco_profile - process BT SCO profile
  * @hdd_ctx: pointer to HDD context
- * @bt_enabled: status of BT
- * @bt_sco: status of SCO
+ * @bt_enabled: BT status
+ * @bt_adv: BT advertisement status
+ * @ble_enabled: BLE status
+ * @bt_a2dp: BT A2DP status
+ * @bt_sco: BT SCO status
  *
  * Return: 0 on success, error on failure
  */
 int hdd_process_bt_sco_profile(hdd_context_t *hdd_ctx,
-			       bool bt_enabled, bool bt_sco);
+			       bool bt_enabled, bool bt_adv,
+			       bool ble_enabled, bool bt_a2dp,
+			       bool bt_sco);
 
 /**
  * hdd_is_sw_pta_enabled - is sw pta enabled
