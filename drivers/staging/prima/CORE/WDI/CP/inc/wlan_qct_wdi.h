@@ -6682,29 +6682,19 @@ struct WDI_sap_ofl_enable_params{
 
 #ifdef FEATURE_WLAN_SW_PTA
 /**
- * enum wdi_sw_pta_param_type - Type of sw pta coex param
- * @WDI_SCO_STATUS: Enable/Disable SCO
- * @WDI_NUD_STATUS: Enable/Disable NUD
- * @WDI_BT_STATUS: Enable/Disable BT
- */
-/* Copied from sirApi.h to avoid compile error */
-enum wdi_sw_pta_param_type {
-	WDI_SCO_STATUS,
-	WDI_NUD_STATUS,
-	WDI_BT_STATUS,
-};
-
-#define WDI_SW_PTA_COEX_PARAMS_MAX_LEN 32
-/**
  * wdi_sw_pta_req - SW PTA coex params request
- * @param_type: sw pta coex param type
- * @length: sw pta coex params value length
- * @value: sw pta coex params value
+ * @bt_enabled: BT status
+ * @bt_adv: BT advertisement status
+ * @ble_enabled: BLE status
+ * @bt_a2dp: BT A2DP status
+ * @bt_sco: BT SCO status
  */
 struct wdi_sw_pta_req {
-	enum wdi_sw_pta_param_type param_type;
-	uint8_t length;
-	uint8_t value[WDI_SW_PTA_COEX_PARAMS_MAX_LEN];
+	bool bt_enabled;
+	bool bt_adv;
+	bool ble_enabled;
+	bool bt_a2dp;
+	bool bt_sco;
 };
 #endif
 

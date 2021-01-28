@@ -40175,10 +40175,11 @@ WDI_process_sw_pta_req(WDI_ControlBlockType *pWDICtx,
 	wdi_sw_pta_req = (struct wdi_sw_pta_req *)pEventData->pEventData;
 
 	hal_sw_pta_req = (tpHalSwPTAReq) (pSendBuffer + usDataOffset);;
-	hal_sw_pta_req->param_type = wdi_sw_pta_req->param_type;
-	hal_sw_pta_req->length = wdi_sw_pta_req->length;
-	memcpy(hal_sw_pta_req->value, wdi_sw_pta_req->value,
-	       wdi_sw_pta_req->length);
+	hal_sw_pta_req->bt_enabled = wdi_sw_pta_req->bt_enabled;
+	hal_sw_pta_req->bt_adv = wdi_sw_pta_req->bt_adv;
+	hal_sw_pta_req->ble_enabled = wdi_sw_pta_req->ble_enabled;
+	hal_sw_pta_req->bt_a2dp = wdi_sw_pta_req->bt_a2dp;
+	hal_sw_pta_req->bt_sco = wdi_sw_pta_req->bt_sco;
 
 	return WDI_SendMsg(pWDICtx, pSendBuffer, usSendSize,
 			   pEventData->pCBfnc, pEventData->pUserData,

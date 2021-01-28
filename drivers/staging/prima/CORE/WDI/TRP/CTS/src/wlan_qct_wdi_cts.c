@@ -594,8 +594,9 @@ int WCTS_bt_profile_state_process(void *priv, struct bt_profile_state *state)
 		   "%s: Received bt_profile state update %s", __func__,
 		   state->bt_enabled ? "ENABLED" : "DISABLED");
 
-	ret = vos_process_bt_profile(state->bt_enabled, state->bt_ble,
-				     state->bt_a2dp, state->bt_sco);
+	ret = vos_process_bt_profile(state->bt_enabled, state->bt_adv,
+				     state->bt_ble, state->bt_a2dp,
+				     state->bt_sco);
 
 	return ret;
 }
