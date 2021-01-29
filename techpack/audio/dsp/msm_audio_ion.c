@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2018, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2013-2018, 2020, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -561,7 +561,7 @@ static int msm_audio_dma_buf_map(struct ion_client *client,
 		ion_phys_addr_t *addr, size_t *len)
 {
 
-	struct msm_audio_alloc_data *alloc_data;
+	struct msm_audio_alloc_data *alloc_data = NULL;
 	struct device *cb_dev;
 	int rc = 0;
 
@@ -647,7 +647,7 @@ err_attach:
 
 err_dma_buf:
 	kfree(alloc_data);
-
+	alloc_data = NULL;
 	return rc;
 }
 
@@ -691,6 +691,7 @@ static int msm_audio_dma_buf_unmap(struct ion_client *client,
 
 			list_del(&(alloc_data->list));
 			kfree(alloc_data);
+			alloc_data = NULL;
 			break;
 		}
 	}
