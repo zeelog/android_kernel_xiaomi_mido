@@ -9668,19 +9668,7 @@ int ufshcd_system_suspend(struct ufs_hba *hba)
 	     hba->uic_link_state))
 		goto out;
 
-	if (pm_runtime_suspended(hba->dev)) {
-		/*
-		 * UFS device and/or UFS link low power states during runtime
-		 * suspend seems to be different than what is expected during
-		 * system suspend. Hence runtime resume the devic & link and
-		 * let the system suspend low power states to take effect.
-		 * TODO: If resume takes longer time, we might have optimize
-		 * it in future by not resuming everything if possible.
-		 */
-		ret = ufshcd_runtime_resume(hba);
-		if (ret)
-			goto out;
-	}
+	pm_runtime_get_sync(hba->dev);
 
 	ret = ufshcd_suspend(hba, UFS_SYSTEM_PM);
 out:
