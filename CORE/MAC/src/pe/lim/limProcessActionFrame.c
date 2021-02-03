@@ -2613,7 +2613,6 @@ limProcessActionFrame(tpAniSirGlobal pMac, tANI_U8 *pRxPacketInfo,tpPESession ps
         case SIR_MAC_ACTION_VENDOR_SPECIFIC_CATEGORY:
             {
               tpSirMacVendorSpecificFrameHdr pVendorSpecific = (tpSirMacVendorSpecificFrameHdr) pActionHdr;
-              tANI_U8 Oui[] = { 0x00, 0x00, 0xf0 };
 
 		if(frameLen < sizeof(*pVendorSpecific)) {
 			limLog(pMac, LOGE,
@@ -2621,15 +2620,11 @@ limProcessActionFrame(tpAniSirGlobal pMac, tANI_U8 *pRxPacketInfo,tpPESession ps
 			break;
 		  }
 
-              //Check if it is a vendor specific action frame.
-              if ((eLIM_STA_ROLE == psessionEntry->limSystemRole) &&
-                  (VOS_TRUE == vos_mem_compare(psessionEntry->selfMacAddr,
-                    &pHdr->da[0], sizeof(tSirMacAddr))) &&
-                    IS_WES_MODE_ENABLED(pMac) &&
-                    vos_mem_compare(pVendorSpecific->Oui, Oui, 3))
-              {
-                  PELOGE( limLog( pMac, LOGW, FL("Received Vendor specific action frame, OUI %x %x %x"),
-                         pVendorSpecific->Oui[0], pVendorSpecific->Oui[1], pVendorSpecific->Oui[2]);)
+		if ((eLIM_STA_IN_IBSS_ROLE != psessionEntry->limSystemRole) &&
+		    (VOS_TRUE == vos_mem_compare(psessionEntry->selfMacAddr,
+		    &pHdr->da[0], sizeof(tSirMacAddr)))) {
+			limLog(pMac, LOGW, FL("Received Vendor specific action frame, OUI %x %x %x"),
+			       pVendorSpecific->Oui[0], pVendorSpecific->Oui[1], pVendorSpecific->Oui[2]);
                  /* Forward to the SME to HDD to wpa_supplicant */
                  // type is ACTION
                   limSendSmeMgmtFrameInd(pMac, psessionEntry->smeSessionId,
@@ -2637,8 +2632,7 @@ limProcessActionFrame(tpAniSirGlobal pMac, tANI_U8 *pRxPacketInfo,tpPESession ps
                                          psessionEntry, 0, RXMGMT_FLAG_NONE);
               }
 #if defined (WLAN_FEATURE_RMC)
-              else if ((eLIM_STA_IN_IBSS_ROLE == psessionEntry->limSystemRole) &&
-                  ((VOS_TRUE == vos_mem_compare(SIR_MAC_RMC_MCAST_ADDRESS,
+		else if (((VOS_TRUE == vos_mem_compare(SIR_MAC_RMC_MCAST_ADDRESS,
                     &pHdr->da[0], sizeof(tSirMacAddr))) ||
                    (VOS_TRUE == vos_mem_compare(psessionEntry->selfMacAddr,
                      &pHdr->da[0], sizeof(tSirMacAddr)))) &&
@@ -2687,17 +2681,6 @@ limProcessActionFrame(tpAniSirGlobal pMac, tANI_U8 *pRxPacketInfo,tpPESession ps
                   }
               }
 #endif /* WLAN_FEATURE_RMC */
-              else
-              {
-                 limLog( pMac, LOG1,
-                      FL("Dropping the vendor specific action frame because of( "
-                      "WES Mode not enabled (WESMODE = %d) or OUI mismatch (%02x %02x %02x) or "
-                      "not received with SelfSta Mac address) system role = %d"),
-                      IS_WES_MODE_ENABLED(pMac),
-                      pVendorSpecific->Oui[0], pVendorSpecific->Oui[1],
-                      pVendorSpecific->Oui[2],
-                      psessionEntry->limSystemRole );
-              }
            }
            break;
 #endif /* WLAN_FEATURE_VOWIFI_11R || FEATURE_WLAN_ESE ||
