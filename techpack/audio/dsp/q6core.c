@@ -652,8 +652,11 @@ int q6core_get_avcs_api_version_per_service(uint32_t service_id)
                 return -EINVAL;
 
         ret = q6core_get_avcs_fwk_version();
-        if (ret < 0) {
-                pr_err("%s: failure in getting AVCS version\n", __func__);
+        if ( q6core_lcl.q6core_avcs_ver_info.status == VER_QUERY_UNSUPPORTED ) {
+            pr_debug("%s: Fallback to AVCS version 0 for service_id %d.\n", __func__, service_id);
+            return 0;
+        } else if (ret < 0) {
+                pr_err("%s: failure in getting AVCS version for service_id %d ret %d\n", __func__, service_id, ret);
                 return ret;
         }
 
@@ -661,8 +664,10 @@ int q6core_get_avcs_api_version_per_service(uint32_t service_id)
         num_services = cached_ver_info->avcs_fwk_version.num_services;
 
         for (i = 0; i < num_services; i++) {
-                if (cached_ver_info->services[i].service_id == service_id)
+                if (cached_ver_info->services[i].service_id == service_id){
+                        pr_debug("%s: returning AVCS version %d for service_id %d\n", __func__, cached_ver_info->services[i].api_version, service_id);
                         return cached_ver_info->services[i].api_version;
+                }
         }
         pr_err("%s: No service matching service ID %d\n", __func__, service_id);
         return -EINVAL;

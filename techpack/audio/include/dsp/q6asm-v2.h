@@ -112,6 +112,7 @@
 #define ASM_BIG_ENDIAN 1
 
 #define ADSP_ASM_API_VERSION_V2   2
+#define ADSP_ASM_API_VERSION_V1   1
 
 /* PCM_MEDIA_FORMAT_Version */
 enum {
