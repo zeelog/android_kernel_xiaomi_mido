@@ -730,7 +730,7 @@ ifdef CONFIG_CC_OPTIMIZE_FOR_SIZE
 KBUILD_CFLAGS   += -Os
 else
 ifeq ($(cc-name),clang)
-KBUILD_CFLAGS   += -O3
+KBUILD_CFLAGS   += -O3 -finline-hint-functions
 else
 KBUILD_CFLAGS   += -O2
 endif
