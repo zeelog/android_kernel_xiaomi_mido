@@ -4,8 +4,9 @@
 
 kbuild-dir := $(if $(filter /%,$(src)),$(src),$(srctree)/$(src))
 
-ccflags-y += -include $(kbuild-dir)/compat/compat.h
-asflags-y += -include $(kbuild-dir)/compat/compat-asm.h
+VERSION_FLAGS:= -DCOMPAT_VERSION=$(VERSION) -DCOMPAT_PATCHLEVEL=$(PATCHLEVEL) -DCOMPAT_SUBLEVEL=$(SUBLEVEL) -include $(kbuild-dir)/compat/version.h
+ccflags-y += $(VERSION_FLAGS) -include $(kbuild-dir)/compat/compat.h
+asflags-y += $(VERSION_FLAGS) -include $(kbuild-dir)/compat/compat-asm.h
 
 ifeq ($(wildcard $(srctree)/include/linux/ptr_ring.h),)
 ccflags-y += -I$(kbuild-dir)/compat/ptr_ring/include
