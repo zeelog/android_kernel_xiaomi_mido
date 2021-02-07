@@ -6739,6 +6739,7 @@ static int afe_get_service_ver(void)
 		pr_err("%s: q6core_get_service_version failed %d\n",
 		       __func__, ret);
 
+	kfree(ver_info);
 	return ret;
 }
 
