@@ -6,8 +6,6 @@
 #ifndef _EXFAT_COMPAT_H
 #define _EXFAT_COMPAT_H
 
-#include <linux/version.h>
-
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 8, 0)
 #error "This driver doesn't support v5.8+, " \
        "please use the included driver from your kernel"
