@@ -10,6 +10,11 @@ obj-$(CONFIG_EXFAT_FS) += exfat.o
 
 exfat-objs	:= inode.o namei.o dir.o super.o fatent.o cache.o nls.o misc.o \
 	   file.o balloc.o xattr.o
+
+VERSION_FLAGS:= -DCOMPAT_VERSION=$(VERSION) -DCOMPAT_PATCHLEVEL=$(PATCHLEVEL) -DCOMPAT_SUBLEVEL=$(SUBLEVEL) -include version-static.h
+ccflags-y += $(VERSION_FLAGS)
+asflags-y += $(VERSION_FLAGS)
+
 else
 # Called from external kernel module build
 
