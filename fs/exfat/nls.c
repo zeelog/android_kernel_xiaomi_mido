@@ -3,6 +3,7 @@
  * Copyright (C) 2012-2013 Samsung Electronics Co., Ltd.
  */
 
+#include <linux/version.h>
 #include <linux/string.h>
 #include <linux/slab.h>
 #include <linux/buffer_head.h>
