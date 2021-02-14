@@ -7,6 +7,7 @@
 #define _WG_COMPAT_H
 
 #include <linux/kconfig.h>
+#include <linux/version.h>
 #include <linux/types.h>
 #include <generated/utsrelease.h>
 
@@ -1065,6 +1066,22 @@ static const struct header_ops ip_tunnel_header_ops = { .parse_protocol = ip_tun
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(5, 9, 0)
 #define kfree_sensitive(a) kzfree(a)
+#endif
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 3, 0) && !defined(ISRHEL7)
+#define xchg_release xchg
+#endif
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 14, 0) && !defined(ISRHEL7)
+#include <asm/barrier.h>
+#ifndef smp_load_acquire
+#define smp_load_acquire(p)                                            \
+({                                                                     \
+       typeof(*p) ___p1 = ACCESS_ONCE(*p);                             \
+       smp_mb();                                                       \
+       ___p1;                                                          \
+})
+#endif
 #endif
 
 #if defined(ISUBUNTU1604) || defined(ISRHEL7)

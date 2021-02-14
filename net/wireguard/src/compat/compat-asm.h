@@ -8,6 +8,7 @@
 
 #include <linux/linkage.h>
 #include <linux/kconfig.h>
+#include <linux/version.h>
 
 #ifdef RHEL_MAJOR
 #if RHEL_MAJOR == 7
