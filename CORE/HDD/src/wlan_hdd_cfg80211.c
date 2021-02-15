@@ -15962,14 +15962,23 @@ int __wlan_hdd_cfg80211_scan( struct wiphy *wiphy,
 
     if( request->n_channels )
     {
-        char chList [(request->n_channels*5)+1];
         int len;
+	char *chList;
+
+	chList = vos_mem_malloc((request->n_channels * 5) + 1);
+	if (!chList) {
+		hddLog(VOS_TRACE_LEVEL_ERROR,
+		       "%s: memory alloc failed channelList", __func__);
+		status = -ENOMEM;
+	}
+
         channelList = vos_mem_malloc( request->n_channels );
         if( NULL == channelList )
         {
             hddLog(VOS_TRACE_LEVEL_ERROR,
                            "%s: memory alloc failed channelList", __func__);
             status = -ENOMEM;
+	    vos_mem_free(chList);
             goto free_mem;
         }
 
@@ -15981,6 +15990,7 @@ int __wlan_hdd_cfg80211_scan( struct wiphy *wiphy,
 
         hddLog(VOS_TRACE_LEVEL_INFO,
                            "Channel-List:  %s ", chList);
+	vos_mem_free(chList);
     }
 
     scanRequest.ChannelInfo.numOfChannels = request->n_channels;
@@ -20397,9 +20407,17 @@ static int __wlan_hdd_cfg80211_sched_scan_start(struct wiphy *wiphy,
     num_ch = 0;
     if (request->n_channels)
     {
-        char chList [(request->n_channels*5)+1];
         int len;
-        for (i = 0, len = 0; i < request->n_channels; i++)
+	char *chList;
+
+	chList = vos_mem_malloc((request->n_channels * 5) + 1);
+	if (!chList) {
+		hddLog(VOS_TRACE_LEVEL_ERROR,
+		       "%s: memory alloc failed channelList", __func__);
+		status = -ENOMEM;
+	}
+
+	for (i = 0, len = 0; i < request->n_channels; i++)
         {
             for (indx = 0; indx < num_channels_allowed; indx++)
             {
@@ -20430,8 +20448,10 @@ static int __wlan_hdd_cfg80211_sched_scan_start(struct wiphy *wiphy,
             VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_INFO,
              "%s : All requested channels are DFS channels", __func__);
             ret = -EINVAL;
+	    vos_mem_free(chList);
             goto error;
         }
+	vos_mem_free(chList);
      }
 
     pnoRequest.aNetworks =
