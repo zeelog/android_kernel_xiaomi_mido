@@ -257,15 +257,21 @@ void hdd_set_wlan_suspend_mode(bool suspend);
 void hdd_set_vowifi_mode(hdd_context_t *hdd_ctx, bool enable);
 void hdd_set_olpc_mode(tHalHandle hHal, bool low_power);
 
-v_U16_t hdd_select_queue(struct net_device *dev,
-    struct sk_buff *skb
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,13,0))
-    , void *accel_priv
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 19, 0))
+uint16_t hdd_select_queue(struct net_device *dev, struct sk_buff *skb,
+			  struct net_device *sb_dev,
+			  select_queue_fallback_t fallback);
+
+#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0))
+uint16_t hdd_select_queue(struct net_device *dev, struct sk_buff *skb,
+			  void *accel_priv, select_queue_fallback_t fallback);
+
+#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 13, 0))
+uint16_t hdd_select_queue(struct net_device *dev, struct sk_buff *skb,
+			  void *accel_priv);
+#else
+uint16_t hdd_select_queue(struct net_device *dev, struct sk_buff *skb);
 #endif
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,14,0))
-    , select_queue_fallback_t fallback
-#endif
-);
 
 #ifdef WLAN_FEATURE_PACKET_FILTERING
 static void hdd_set_multicast_list(struct net_device *dev);
@@ -12235,19 +12241,31 @@ static void hdd_set_multicast_list(struct net_device *dev)
   \return - ac, Queue Index/access category corresponding to UP in IP header 
   
   --------------------------------------------------------------------------*/
-v_U16_t hdd_select_queue(struct net_device *dev,
-    struct sk_buff *skb
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,13,0))
-    , void *accel_priv
-#endif
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,14,0))
-    , select_queue_fallback_t fallback
-#endif
-)
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 19, 0))
+v_U16_t hdd_select_queue(struct net_device *dev, struct sk_buff *skb,
+			 struct net_device *sb_dev,
+			 select_queue_fallback_t fallback)
 {
-   return hdd_wmm_select_queue(dev, skb);
+	return hdd_wmm_select_queue(dev, skb);
 }
-
+#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0))
+v_U16_t hdd_select_queue(struct net_device *dev, struct sk_buff *skb,
+			 void *accel_priv, select_queue_fallback_t fallback)
+{
+	return hdd_wmm_select_queue(dev, skb);
+}
+#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 13, 0))
+v_U16_t hdd_select_queue(struct net_device *dev, struct sk_buff *skb,
+			 void *accel_priv)
+{
+	return hdd_wmm_select_queue(dev, skb);
+}
+#else
+v_U16_t hdd_select_queue(struct net_device *dev, struct sk_buff *skb)
+{
+	return hdd_wmm_select_queue(dev, skb);
+}
+#endif
 
 /**---------------------------------------------------------------------------
 
