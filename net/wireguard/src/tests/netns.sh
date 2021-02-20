@@ -143,6 +143,9 @@ tests() {
 	waitiperf $netns2 $!
 	n1 iperf3 -Z -t 3 -b 0 -u -c fd00::2
 
+	# Old TCP stack bugs make the below tests problematic
+	[[ $(< /proc/version) =~ ^Linux\ version\ 5\.4[.\ ] ]] || return 0
+
 	# TCP over IPv4, in parallel
 	for max in 4 5 50; do
 		local pids=( )
