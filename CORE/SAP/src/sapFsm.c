@@ -854,6 +854,11 @@ sapSignalHDDevent
             event->HTCaps = pCsrRoamInfo->ht_caps;
             event->VHTCaps = pCsrRoamInfo->vht_caps;
 
+            if (pCsrRoamInfo->fReassocReq) {
+                event->iesLen -= VOS_MAC_ADDR_SIZE;
+                event->ies += VOS_MAC_ADDR_SIZE;
+            }
+
             //TODO: Need to fill sapAuthType
             //event->SapAuthType = pCsrRoamInfo->pProfile->negotiatedAuthType;
             break;

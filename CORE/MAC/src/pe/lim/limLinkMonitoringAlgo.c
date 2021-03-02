@@ -545,6 +545,11 @@ void limHandleHeartBeatFailure(tpAniSirGlobal pMac,tpPESession psessionEntry)
               FL("Heart Beat missed from AP on DFS chanel moving to passive"));)
 
             if (psessionEntry->gLimSpecMgmt.dfs_channel_csa) {
+#ifdef WLAN_FEATURE_ROAM_SCAN_OFFLOAD
+               if (pMac->roam.configParam.isRoamOffloadScanEnabled) {
+                  csrRoamOffloadScan(pMac, ROAM_SCAN_OFFLOAD_START, REASON_CONNECT);
+               }
+#endif
                limFrameTransmissionControl(pMac, eLIM_TX_ALL, eLIM_RESUME_TX);
                psessionEntry->gLimSpecMgmt.dfs_channel_csa = false;
 	    }

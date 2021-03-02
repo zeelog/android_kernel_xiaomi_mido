@@ -99,7 +99,7 @@
 #include "qwlan_version.h"
 #include "wlan_logging_sock_svc.h"
 #include "wlan_hdd_misc.h"
-
+#include <linux/wcnss_wlan.h>
 
 #define g_mode_rates_size (12)
 #define a_mode_rates_size (8)
@@ -623,7 +623,8 @@ static const struct nla_policy wlan_hdd_tm_policy[WLAN_HDD_TM_ATTR_MAX + 1] =
 #ifdef FEATURE_WLAN_SW_PTA
 bool hdd_is_sw_pta_enabled(hdd_context_t *hdd_ctx)
 {
-	return hdd_ctx->cfg_ini->is_sw_pta_enabled;
+	return hdd_ctx->cfg_ini->is_sw_pta_enabled ||
+		wcnss_is_sw_pta_enabled();
 }
 #endif
 
