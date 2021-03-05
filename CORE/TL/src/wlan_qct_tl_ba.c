@@ -845,6 +845,7 @@ WLANTL_AMSDUProcess
   static v_U32_t  numAMSDUFrames;
   vos_pkt_t*      vosDataBuff;
   uint8_t llc_hdr[6] = {0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00};
+  uint8_t broadcast_addr[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 
   /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
   /*------------------------------------------------------------------------
@@ -969,10 +970,13 @@ WLANTL_AMSDUProcess
   }
 
   /**
-   * Set drop_amsdu flag and drop AMSDU subframe if AMSDU subframe DA
-   * is equal to LLC header
+   * Set drop_amsdu flag and drop AMSDU subframe if
+   * 1. AMSDU subframe header's DA is equal to LLC header or
+   * 2. AMPDU header's DA is a broadcast address
    */
-   if (vos_mem_compare2(MPDUHeaderAMSDUHeader + ucMPDUHLen, llc_hdr, 6) == 0) {
+   if ((vos_mem_compare2(MPDUHeaderAMSDUHeader + ucMPDUHLen,
+        llc_hdr, 6) == 0) ||
+       (vos_mem_compare2(MPDUHeaderAMSDUHeader + 4, broadcast_addr, 6) == 0)) {
       pClientSTA->drop_amsdu = true;
       vos_pkt_return_packet(vosDataBuff);
       *ppVosDataBuff = NULL;
