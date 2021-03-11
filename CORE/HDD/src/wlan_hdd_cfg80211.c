@@ -16777,6 +16777,102 @@ static int wlan_hdd_cfg80211_set_cipher( hdd_adapter_t *pAdapter,
     return 0;
 }
 
+static void framesntohs(v_U16_t *pOut,
+                        v_U8_t  *pIn,
+                        unsigned char fMsb)
+{
+#   if defined ( DOT11F_LITTLE_ENDIAN_HOST )
+    if ( !fMsb )
+    {
+        vos_mem_copy(( v_U16_t* )pOut, pIn, 2);
+    }
+    else
+    {
+        *pOut = ( v_U16_t )( *pIn << 8 ) | *( pIn + 1 );
+    }
+#   else
+    if ( !fMsb )
+    {
+        *pOut = ( v_U16_t )( *pIn | ( *( pIn + 1 ) << 8 ) );
+    }
+    else
+    {
+        vos_mem_copy(( v_U16_t* )pOut, pIn, 2);
+    }
+#   endif
+}
+
+void
+wlan_hdd_mask_unsupported_rsn_caps(tANI_U8 *pBuf, tANI_S16 ielen)
+{
+    u16 pwise_cipher_suite_count, akm_suite_cnt, mask = 0;
+    u8 *rsn_cap;
+
+    if (unlikely(ielen < 2)) {
+        return;
+    }
+
+    pBuf += 2;
+    ielen -= (tANI_U8)2;
+
+    if (unlikely(ielen < 4)) {
+        return;
+    }
+
+    pBuf += 4;
+    ielen -= (tANI_U8)4;
+
+    if (unlikely(ielen < 2)) {
+        return;
+    }
+
+    framesntohs(&pwise_cipher_suite_count, pBuf, 0);
+    pBuf += 2;
+    ielen -= (tANI_U8)2;
+
+    if (unlikely(ielen < pwise_cipher_suite_count * 4)) {
+        return;
+    }
+
+    if (!pwise_cipher_suite_count ||
+        pwise_cipher_suite_count > 4){
+        return;
+    }
+
+    pBuf += (pwise_cipher_suite_count * 4);
+    ielen -= (pwise_cipher_suite_count * 4);
+
+    if (unlikely(ielen < 2)) {
+        return;
+    }
+
+    framesntohs(&akm_suite_cnt, pBuf, 0);
+    pBuf += 2;
+    ielen -= (tANI_U8)2;
+
+    if (unlikely(ielen < akm_suite_cnt * 4)) {
+        return;
+    }
+
+    if (!akm_suite_cnt ||
+        akm_suite_cnt > 4){
+        return;
+    }
+
+    pBuf += (akm_suite_cnt * 4);
+    ielen -= (akm_suite_cnt * 4);
+
+    if (unlikely(ielen < 2)) {
+        return;
+    }
+
+    rsn_cap = pBuf;
+    mask = ~(JOINT_MULTI_BAND_RSNA | PEER_KEY_ENABLED | AMSDU_CAPABLE |
+             AMSDU_REQUIRED | PBAC | EXT_KEY_ID | OCVC | RESERVED);
+    rsn_cap[1] &= mask;
+
+    return;
+}
 
 /*
  * FUNCTION: wlan_hdd_cfg80211_set_ie
@@ -17089,6 +17185,8 @@ int wlan_hdd_cfg80211_set_ie( hdd_adapter_t *pAdapter,
                 memcpy( pWextState->WPARSNIE, genie - 2, (eLen + 2)/*ie_len*/);
                 pWextState->roamProfile.pRSNReqIE = pWextState->WPARSNIE;
                 pWextState->roamProfile.nRSNReqIELength = eLen + 2; //ie_len;
+                wlan_hdd_mask_unsupported_rsn_caps(pWextState->WPARSNIE + 2,
+                                                   eLen);
                 break;
 
                 /* Appending extended capabilities with Interworking or
