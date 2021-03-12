@@ -1541,14 +1541,14 @@ static int queue_no_sg_merge(struct dm_target *ti, struct dm_dev *dev,
 	return q && test_bit(QUEUE_FLAG_NO_SG_MERGE, &q->queue_flags);
 }
 
-static int queue_supports_inline_encryption(struct dm_target *ti,
-					    struct dm_dev *dev,
-					    sector_t start, sector_t len,
-					    void *data)
+static int queue_no_inline_encryption(struct dm_target *ti,
+				      struct dm_dev *dev,
+				      sector_t start, sector_t len,
+				      void *data)
 {
 	struct request_queue *q = bdev_get_queue(dev->bdev);
 
-	return q && blk_queue_inlinecrypt(q);
+	return q && !blk_queue_inlinecrypt(q);
 }
 
 static int device_not_write_same_capable(struct dm_target *ti, struct dm_dev *dev,
@@ -1654,10 +1654,10 @@ void dm_table_set_restrictions(struct dm_table *t, struct request_queue *q,
 	else
 		queue_flag_clear_unlocked(QUEUE_FLAG_NO_SG_MERGE, q);
 
-	if (dm_table_all_devices_attribute(t, queue_supports_inline_encryption))
-		queue_flag_set_unlocked(QUEUE_FLAG_INLINECRYPT, q);
-	else
+	if (dm_table_any_dev_attr(t, queue_no_inline_encryption))
 		queue_flag_clear_unlocked(QUEUE_FLAG_INLINECRYPT, q);
+	else
+		queue_flag_set_unlocked(QUEUE_FLAG_INLINECRYPT, q);
 
 	dm_table_verify_integrity(t);
 
