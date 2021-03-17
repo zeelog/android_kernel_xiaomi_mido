@@ -8634,7 +8634,6 @@ static void __hdd_uninit (struct net_device *dev)
       /* after uninit our adapter structure will no longer be valid */
       pAdapter->dev = NULL;
       pAdapter->magic = 0;
-      pAdapter->pHddCtx = NULL;
    } while (0);
 
    EXIT();
