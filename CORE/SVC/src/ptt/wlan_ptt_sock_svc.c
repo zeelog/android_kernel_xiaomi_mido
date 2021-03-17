@@ -299,7 +299,7 @@ static int ptt_sock_rx_nlink_msg (struct sk_buff * skb)
    type = wnl->nlh.nlmsg_type;
 
    if (wnl->nlh.nlmsg_len < (sizeof(struct nlmsghdr) +
-       sizeof(int) + sizeof(tAniHdr) + wnl->wmsg.length))
+       sizeof(int) + sizeof(tAniHdr) + be16_to_cpu(wnl->wmsg.length)))
 	   return -EINVAL;
 
    switch (type) {
