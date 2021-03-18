@@ -12067,6 +12067,8 @@ static int __wlan_hdd_cfg80211_stop_ap (struct wiphy *wiphy,
         return status;
     }
 
+    wlan_hdd_cfg80211_deregister_frames(pAdapter);
+
     pScanInfo =  &pHddCtx->scan_info;
 
     hddLog(VOS_TRACE_LEVEL_INFO, "%s: device_mode = %s (%d)",
