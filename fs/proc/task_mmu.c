@@ -1658,7 +1658,7 @@ cont:
 		if (!page)
 			continue;
 
-		if (isolate_lru_page(compound_head(page)))
+		if (isolate_lru_page(page))
 			continue;
 
 		list_add(&page->lru, &page_list);
