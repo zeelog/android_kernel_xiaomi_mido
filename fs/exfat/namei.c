@@ -818,7 +818,7 @@ static int exfat_unlink(struct inode *dir, struct dentry *dentry)
 	clear_nlink(inode);
 	inode->i_mtime = inode->i_atime = current_time(inode);
 	exfat_truncate_atime(&inode->i_atime);
-	exfat_unhash_inode(inode);
+	exfat_inode_tree_erase(inode);
 	exfat_d_version_set(dentry, inode_query_iversion(dir));
 unlock:
 	mutex_unlock(&EXFAT_SB(sb)->s_lock);
@@ -983,7 +983,7 @@ static int exfat_rmdir(struct inode *dir, struct dentry *dentry)
 	clear_nlink(inode);
 	inode->i_mtime = inode->i_atime = current_time(inode);
 	exfat_truncate_atime(&inode->i_atime);
-	exfat_unhash_inode(inode);
+	exfat_inode_tree_erase(inode);
 	exfat_d_version_set(dentry, inode_query_iversion(dir));
 unlock:
 	mutex_unlock(&EXFAT_SB(inode->i_sb)->s_lock);
@@ -1352,8 +1352,8 @@ static int exfat_rename(struct inode *old_dir, struct dentry *old_dentry,
 
 	i_pos = ((loff_t)EXFAT_I(old_inode)->dir.dir << 32) |
 		(EXFAT_I(old_inode)->entry & 0xffffffff);
-	exfat_unhash_inode(old_inode);
-	exfat_hash_inode(old_inode, i_pos);
+	exfat_inode_tree_erase(old_inode);
+	exfat_inode_tree_insert(old_inode, i_pos);
 	if (IS_DIRSYNC(new_dir))
 		exfat_sync_inode(old_inode);
 	else
@@ -1373,7 +1373,7 @@ static int exfat_rename(struct inode *old_dir, struct dentry *old_dentry,
 		mark_inode_dirty(old_dir);
 
 	if (new_inode) {
-		exfat_unhash_inode(new_inode);
+		exfat_inode_tree_erase(new_inode);
 
 		/* skip drop_nlink if new_inode already has been dropped */
 		if (new_inode->i_nlink) {

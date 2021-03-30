@@ -500,50 +500,87 @@ static const struct address_space_operations exfat_aops = {
 	.bmap		= exfat_aop_bmap
 };
 
-static inline unsigned long exfat_hash(loff_t i_pos)
+static struct exfat_inode_info *exfat_inode_tree_find(struct super_block *sb,
+						      loff_t i_pos)
 {
-	return hash_32(i_pos, EXFAT_HASH_BITS);
+	struct exfat_sb_info *sbi = EXFAT_SB(sb);
+	struct rb_node *node = sbi->inode_tree.rb_node;
+	struct exfat_inode_info *info;
+
+	spin_lock(&sbi->inode_tree_lock);
+	while (node) {
+		info = rb_entry(node, struct exfat_inode_info, rbnode);
+		WARN_ON(info->vfs_inode.i_sb != sb);
+
+		if (i_pos == info->i_pos) {
+			spin_unlock(&sbi->inode_tree_lock);
+			return info;
+		}
+
+		if (i_pos < info->i_pos)
+			node = node->rb_left;
+		else /* i_pos > info->i_pos */
+			node = node->rb_right;
+	}
+	spin_unlock(&sbi->inode_tree_lock);
+	return NULL;
 }
 
-void exfat_hash_inode(struct inode *inode, loff_t i_pos)
+void exfat_inode_tree_insert(struct inode *inode, loff_t i_pos)
 {
 	struct exfat_sb_info *sbi = EXFAT_SB(inode->i_sb);
-	struct hlist_head *head = sbi->inode_hashtable + exfat_hash(i_pos);
+	struct exfat_inode_info *info, *ei = EXFAT_I(inode);
+	struct rb_root *root = &sbi->inode_tree;
+	struct rb_node **rb_ptr = &root->rb_node;
+	struct rb_node *parent = NULL;
 
-	spin_lock(&sbi->inode_hash_lock);
-	EXFAT_I(inode)->i_pos = i_pos;
-	hlist_add_head(&EXFAT_I(inode)->i_hash_fat, head);
-	spin_unlock(&sbi->inode_hash_lock);
+	spin_lock(&sbi->inode_tree_lock);
+	ei->i_pos = i_pos;
+	while (*rb_ptr) {
+		parent = *rb_ptr;
+		info = rb_entry(*rb_ptr, struct exfat_inode_info, rbnode);
+		if (i_pos == info->i_pos) {
+			/* already exists */
+			rb_replace_node(*rb_ptr, &ei->rbnode, &sbi->inode_tree);
+			RB_CLEAR_NODE(*rb_ptr);
+			spin_unlock(&sbi->inode_tree_lock);
+			return;
+		}
+
+		if (i_pos < info->i_pos)
+			rb_ptr = &(*rb_ptr)->rb_left;
+		else /* (i_pos > info->i_pos) */
+			rb_ptr = &(*rb_ptr)->rb_right;
+	}
+
+	rb_link_node(&ei->rbnode, parent, rb_ptr);
+	rb_insert_color(&ei->rbnode, root);
+	spin_unlock(&sbi->inode_tree_lock);
 }
 
-void exfat_unhash_inode(struct inode *inode)
+void exfat_inode_tree_erase(struct inode *inode)
 {
 	struct exfat_sb_info *sbi = EXFAT_SB(inode->i_sb);
+	struct exfat_inode_info *ei = EXFAT_I(inode);
+	struct rb_root *root = &sbi->inode_tree;
 
-	spin_lock(&sbi->inode_hash_lock);
-	hlist_del_init(&EXFAT_I(inode)->i_hash_fat);
-	EXFAT_I(inode)->i_pos = 0;
-	spin_unlock(&sbi->inode_hash_lock);
+	spin_lock(&sbi->inode_tree_lock);
+	if (!RB_EMPTY_NODE(&ei->rbnode)) {
+		rb_erase(&ei->rbnode, root);
+		RB_CLEAR_NODE(&ei->rbnode);
+	}
+	spin_unlock(&sbi->inode_tree_lock);
 }
 
 struct inode *exfat_iget(struct super_block *sb, loff_t i_pos)
 {
-	struct exfat_sb_info *sbi = EXFAT_SB(sb);
 	struct exfat_inode_info *info;
-	struct hlist_head *head = sbi->inode_hashtable + exfat_hash(i_pos);
 	struct inode *inode = NULL;
 
-	spin_lock(&sbi->inode_hash_lock);
-	hlist_for_each_entry(info, head, i_hash_fat) {
-		WARN_ON(info->vfs_inode.i_sb != sb);
-
-		if (i_pos != info->i_pos)
-			continue;
+	info = exfat_inode_tree_find(sb, i_pos);
+	if (info)
 		inode = igrab(&info->vfs_inode);
-		if (inode)
-			break;
-	}
-	spin_unlock(&sbi->inode_hash_lock);
+
 	return inode;
 }
 
@@ -633,7 +670,7 @@ struct inode *exfat_build_inode(struct super_block *sb,
 		inode = ERR_PTR(err);
 		goto out;
 	}
-	exfat_hash_inode(inode, i_pos);
+	exfat_inode_tree_insert(inode, i_pos);
 	insert_inode_hash(inode);
 out:
 	return inode;
@@ -653,5 +690,5 @@ void exfat_evict_inode(struct inode *inode)
 	invalidate_inode_buffers(inode);
 	clear_inode(inode);
 	exfat_cache_inval_inode(inode);
-	exfat_unhash_inode(inode);
+	exfat_inode_tree_erase(inode);
 }
