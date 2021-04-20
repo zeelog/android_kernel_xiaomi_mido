@@ -427,7 +427,7 @@ bool kgsl_pool_avaialable(int page_size)
 		return true;
 
 	for (i = 0; i < kgsl_num_pools; i++)
-		if (ilog2(page_size >> PAGE_SHIFT) == kgsl_pools[i].pool_order)
+		if (get_order(page_size) == kgsl_pools[i].pool_order)
 			return true;
 
 	return false;
@@ -530,7 +530,7 @@ static void kgsl_of_parse_mempools(struct device_node *node)
 		allocation_allowed = of_property_read_bool(child,
 				"qcom,mempool-allocate");
 
-		kgsl_pool_config(ilog2(page_size >> PAGE_SHIFT), reserved_pages,
+		kgsl_pool_config(get_order(page_size), reserved_pages,
 				allocation_allowed);
 	}
 }
