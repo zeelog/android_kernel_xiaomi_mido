@@ -4980,7 +4980,7 @@ static int cas_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
 					  cas_cacheline_size)) {
 			dev_err(&pdev->dev, "Could not set PCI cache "
 			       "line size\n");
-			goto err_out_free_res;
+			goto err_write_cacheline;
 		}
 	}
 #endif
@@ -5151,6 +5151,7 @@ err_out_iounmap:
 err_out_free_res:
 	pci_release_regions(pdev);
 
+err_write_cacheline:
 	/* Try to restore it in case the error occurred after we
 	 * set it.
 	 */
