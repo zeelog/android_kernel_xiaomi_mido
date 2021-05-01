@@ -738,7 +738,7 @@ TRACE_EVENT(sched_task_util,
 		 int target_cpu, bool need_idle, int fastpath,
 		 bool placement_boost, int rtg_cpu, u64 start_t),
 
-	TP_ARGS(p, next_cpu, backup_cpu, target_cpu, sync, need_idle, fastpath,
+	TP_ARGS(p, next_cpu, backup_cpu, target_cpu, need_idle, fastpath,
 		placement_boost, rtg_cpu, start_t),
 
 	TP_STRUCT__entry(
