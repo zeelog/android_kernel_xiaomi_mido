@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2018 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2012-2018, 2021 The Linux Foundation. All rights reserved.
  *
  * Previously licensed under the ISC license by Qualcomm Atheros, Inc.
  *
@@ -2158,17 +2158,20 @@ void hdd_set_wlan_suspend_mode(bool suspend)
     vos_ssr_unprotect(__func__);
 }
 
-static void hdd_ssr_timer_init(void)
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 19, 0))
+static void hdd_ssr_timer_cb(struct timer_list *data)
 {
-    init_timer(&ssr_timer);
+	hddLog(VOS_TRACE_LEVEL_FATAL, "%s: HDD SSR timer expired", __func__);
+
+#ifdef WCN_PRONTO
+	if (wcnss_hardware_type() == WCNSS_PRONTO_HW)
+		wcnss_pronto_log_debug_regs();
+#endif
+
+	VOS_BUG(0);
 }
 
-static void hdd_ssr_timer_del(void)
-{
-    del_timer(&ssr_timer);
-    ssr_timer_started = false;
-}
-
+#else
 static void hdd_ssr_timer_cb(unsigned long data)
 {
     hddLog(VOS_TRACE_LEVEL_FATAL, "%s: HDD SSR timer expired", __func__);
@@ -2179,6 +2182,26 @@ static void hdd_ssr_timer_cb(unsigned long data)
 #endif
 
     VOS_BUG(0);
+}
+#endif
+
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 19, 0))
+static void hdd_ssr_timer_init(void)
+{
+	timer_setup(&ssr_timer, hdd_ssr_timer_cb, 0);
+}
+
+#else
+static void hdd_ssr_timer_init(void)
+{
+	init_timer(&ssr_timer);
+}
+#endif
+
+static void hdd_ssr_timer_del(void)
+{
+    del_timer(&ssr_timer);
+    ssr_timer_started = false;
 }
 
 static void hdd_ssr_timer_start(int msec)

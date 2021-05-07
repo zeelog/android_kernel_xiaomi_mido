@@ -77,8 +77,17 @@ typedef struct vos_lock_s
 typedef spinlock_t vos_spin_lock_t;
 
 #if defined(WLAN_OPEN_SOURCE)
+
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 19, 0)
-typedef struct wakeup_source vos_wake_lock_t;
+/**
+ * typedef struct - vos_wake_lock_t
+ * @lock: this lock needs to be used in kernel version < 4.19
+ * @priv: this lock pointer needs to be used in kernel version >= 4.19
+ */
+typedef struct vos_wake_lock {
+	struct wakeup_source lock;
+	struct wakeup_source *priv;
+} vos_wake_lock_t;
 #else
 typedef struct wake_lock vos_wake_lock_t;
 #endif

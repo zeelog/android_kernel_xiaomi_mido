@@ -5556,6 +5556,15 @@ VOS_STATUS hdd_init_ap_mode( hdd_adapter_t *pAdapter, bool re_init)
                                 ini_cfg->apEndChannelNum,
                                 ini_cfg->apOperatingBand);
     }
+
+    status = hdd_sta_id_hash_attach(pAdapter);
+    if (VOS_STATUS_SUCCESS != status)
+    {
+	    hddLog(VOS_TRACE_LEVEL_ERROR,
+			    FL("Failed to initialize hash for AP"));
+	    goto error_wmm_init;
+    }
+
    /* Action frame registered in one adapter which will
     * applicable to all interfaces
     */
