@@ -36,16 +36,12 @@
 #include <linux/msm-bus.h>
 #include <linux/msm-bus-board.h>
 #include <linux/i2c/i2c-msm-v2.h>
-#include <linux/suspend.h>
 
 #ifdef DEBUG
 static const enum msm_i2_debug_level DEFAULT_DBG_LVL = MSM_DBG;
 #else
 static const enum msm_i2_debug_level DEFAULT_DBG_LVL = MSM_ERR;
 #endif
-
-static DECLARE_COMPLETION(i2c_resume_done);
-static atomic_t i2c_suspended = ATOMIC_INIT(0);
 
 /* Forward declarations */
 static bool i2c_msm_xfer_next_buf(struct i2c_msm_ctrl *ctrl);
@@ -2328,7 +2324,6 @@ i2c_msm_frmwrk_xfer(struct i2c_adapter *adap, struct i2c_msg msgs[], int num)
 	int ret = 0;
 	struct i2c_msm_ctrl      *ctrl = i2c_get_adapdata(adap);
 	struct i2c_msm_xfer      *xfer = &ctrl->xfer;
-	bool release_wakeup = false;
 
 	if (IS_ERR_OR_NULL(msgs) || num < 1) {
 		dev_err(ctrl->dev,
@@ -2336,24 +2331,17 @@ i2c_msm_frmwrk_xfer(struct i2c_adapter *adap, struct i2c_msg msgs[], int num)
 		return -EINVAL;
 	}
 
-	/* If system is suspended then make it resume */
-	if (atomic_read(&i2c_suspended)) {
-		release_wakeup = true;
-		pm_stay_awake(ctrl->dev);
-		ret = wait_for_completion_timeout(&i2c_resume_done,
-			msecs_to_jiffies(I2C_MSM_TIMEOUT_PM_RESUME_MSEC));
-		if (!ret) {
-			ret = -EIO;
-			dev_err(ctrl->dev,
+	/* if system is suspended just bail out */
+	if (ctrl->pwr_state == I2C_MSM_PM_SYS_SUSPENDED) {
+		dev_err(ctrl->dev,
 				"slave:0x%x is calling xfer when system is suspended\n",
 				msgs->addr);
-			goto end;
-		}
+		return -EIO;
 	}
 
 	ret = i2c_msm_pm_xfer_start(ctrl);
 	if (ret)
-		goto end;
+		return ret;
 
 	/* init xfer */
 	xfer->msgs         = msgs;
@@ -2412,9 +2400,6 @@ i2c_msm_frmwrk_xfer(struct i2c_adapter *adap, struct i2c_msg msgs[], int num)
 		i2c_msm_prof_evnt_dump(ctrl);
 
 	i2c_msm_pm_xfer_end(ctrl);
-end:
-	if (release_wakeup)
-		pm_relax(ctrl->dev);
 	return ret;
 }
 
@@ -2819,31 +2804,6 @@ static int i2c_msm_pm_sys_resume_noirq(struct device *dev)
 	mutex_unlock(&ctrl->xfer.mtx);
 	return  0;
 }
-
-static int pm_notifier_callback(struct notifier_block *nb,
-		unsigned long action, void *data)
-{
-	/* Wait until the entire system is resumed to unblock i2c transfers */
-	switch (action) {
-	case PM_POST_SUSPEND:
-		atomic_set(&i2c_suspended, 0);
-		complete_all(&i2c_resume_done);
-		break;
-	case PM_SUSPEND_PREPARE:
-		reinit_completion(&i2c_resume_done);
-		atomic_set(&i2c_suspended, 1);
-		break;
-	default:
-		break;
-	}
-
-	return NOTIFY_OK;
-}
-
-static struct notifier_block pm_notifier_callback_nb = {
-	.notifier_call = pm_notifier_callback,
-	.priority = INT_MIN,
-};
 #endif
 
 #ifdef CONFIG_PM
@@ -2920,7 +2880,6 @@ static int i2c_msm_frmwrk_reg(struct platform_device *pdev,
 	ctrl->adapter.dev.parent = &pdev->dev;
 	ctrl->adapter.dev.of_node = pdev->dev.of_node;
 	ctrl->adapter.retries = I2C_MSM_MAX_RETRIES;
-	device_init_wakeup(ctrl->dev, true);
 	ret = i2c_add_numbered_adapter(&ctrl->adapter);
 	if (ret) {
 		dev_err(ctrl->dev, "error i2c_add_adapter failed\n");
@@ -3072,7 +3031,6 @@ static struct platform_driver i2c_msm_driver = {
 
 static int i2c_msm_init(void)
 {
-	register_pm_notifier(&pm_notifier_callback_nb);
 	return platform_driver_register(&i2c_msm_driver);
 }
 subsys_initcall(i2c_msm_init);
