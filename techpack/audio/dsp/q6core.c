@@ -26,10 +26,6 @@
 #include <ipc/apr.h>
 #include "adsp_err.h"
 
-/* For legacy version retrieval */
-#include <dsp/q6adm-v2.h>
-#include <dsp/q6afe-v2.h>
-
 #define TIMEOUT_MS 1000
 /*
  * AVS bring up in the modem is optimitized for the new
@@ -63,8 +59,7 @@ struct q6core_str {
 	u32 bus_bw_resp_received;
 	enum cmd_flags {
 		FLAG_NONE,
-		FLAG_CMDRSP_LICENSE_RESULT,
-		FLAG_AVCS_GET_VERSIONS_RESULT,
+		FLAG_CMDRSP_LICENSE_RESULT
 	} cmd_resp_received_flag;
 	u32 avcs_fwk_ver_resp_received;
 	struct mutex cmd_lock;
@@ -78,7 +73,6 @@ struct q6core_str {
 	uint32_t mem_map_cal_handle;
 	int32_t adsp_status;
 	struct q6core_avcs_ver_info q6core_avcs_ver_info;
-	u32 q6_core_avs_version;
 };
 
 static struct q6core_str q6core_lcl;
@@ -357,36 +351,6 @@ static int32_t aprv2_core_fn_q(struct apr_client_data *data, void *priv)
 		q6core_lcl.bus_bw_resp_received = 1;
 		wake_up(&q6core_lcl.bus_bw_req_wait);
 		break;
-	case AVCS_GET_VERSIONS_RSP:
-		if (data->payload_size < 4 * sizeof(uint32_t)) {
-			pr_err("%s: payload has invalid size %d\n",
-				__func__, data->payload_size);
-			return -EINVAL;
-		}
-		payload1 = data->payload;
-		pr_debug("%s: Received ADSP version response[3]0x%x\n",
-					 __func__, payload1[3]);
-		q6core_lcl.cmd_resp_received_flag =
-						FLAG_AVCS_GET_VERSIONS_RESULT;
-		if (AVCS_CMDRSP_Q6_ID_2_6 == payload1[3]) {
-			q6core_lcl.q6_core_avs_version = Q6_SUBSYS_AVS2_6;
-			pr_debug("%s: Received ADSP version as 2.6\n",
-							 __func__);
-		} else if (AVCS_CMDRSP_Q6_ID_2_7 == payload1[3]) {
-			q6core_lcl.q6_core_avs_version = Q6_SUBSYS_AVS2_7;
-			pr_debug("%s: Received ADSP version as 2.7\n",
-							 __func__);
-		} else if (AVCS_CMDRSP_Q6_ID_2_8 == payload1[3]) {
-			q6core_lcl.q6_core_avs_version = Q6_SUBSYS_AVS2_8;
-			pr_info("%s: Received ADSP version as 2.8\n",
-							 __func__);
-		} else {
-			pr_err("%s: ADSP version is neither 2.6 nor 2.7\n",
-							 __func__);
-			q6core_lcl.q6_core_avs_version = Q6_SUBSYS_INVALID;
-		}
-		wake_up(&q6core_lcl.cmd_req_wait);
-		break;
 	case AVCS_CMDRSP_GET_LICENSE_VALIDATION_RESULT:
 		if (data->payload_size < sizeof(uint32_t)) {
 			pr_err("%s: payload has invalid size %d\n",
@@ -609,7 +573,6 @@ static int q6core_get_avcs_fwk_version(void)
                 break;
         }
         mutex_unlock(&(q6core_lcl.ver_lock));
-
         return ret;
 }
 
@@ -670,22 +633,6 @@ done:
 }
 EXPORT_SYMBOL(q6core_get_fwk_version_size);
 
-static int q6core_get_legacy_avcs_fwk_version(uint32_t service_id)
-{
-	switch (service_id) {
-	case APRV2_IDS_SERVICE_ID_ADSP_ADM_V:
-		return ADSP_ADM_API_VERSION_V1;
-	case APRV2_IDS_SERVICE_ID_ADSP_ASM_V:
-		return ADSP_ASM_API_VERSION_V1;
-	case APRV2_IDS_SERVICE_ID_ADSP_AFE_V:
-		return AFE_API_VERSION_V1;
-	default:
-		break;
-	}
-
-	return -EOPNOTSUPP;
-}
-
 /**
  * q6core_get_avcs_version_per_service -
  *       to get api version of a particular service
@@ -706,13 +653,7 @@ int q6core_get_avcs_api_version_per_service(uint32_t service_id)
 
         ret = q6core_get_avcs_fwk_version();
         if (ret < 0) {
-		if (ret == -EOPNOTSUPP) {
-			/* Look in legacy support... */
-			ret = q6core_get_legacy_avcs_fwk_version(service_id);
-		} else {
-			pr_err("%s: failure in getting AVCS version\n",
-			       __func__);
-		}
+                pr_err("%s: failure in getting AVCS version\n", __func__);
                 return ret;
         }
 
@@ -812,65 +753,6 @@ cmd_unlock:
 	return rc;
 }
 EXPORT_SYMBOL(core_set_license);
-
-int core_get_adsp_ver(void)
-{
-	struct avcs_cmd_get_version_result get_aver_cmd;
-	int ret = 0;
-
-	mutex_lock(&(q6core_lcl.cmd_lock));
-	ocm_core_open();
-	if (q6core_lcl.core_handle_q == NULL) {
-		pr_err("%s: apr registration for CORE failed\n", __func__);
-		ret  = -ENODEV;
-		goto fail_cmd;
-	}
-
-	get_aver_cmd.hdr.hdr_field = APR_HDR_FIELD(APR_MSG_TYPE_SEQ_CMD,
-				APR_HDR_LEN(APR_HDR_SIZE), APR_PKT_VER);
-	get_aver_cmd.hdr.pkt_size =	sizeof(get_aver_cmd);
-	get_aver_cmd.hdr.src_port = 0;
-	get_aver_cmd.hdr.dest_port = 0;
-	get_aver_cmd.hdr.token = 0;
-	get_aver_cmd.hdr.opcode = AVCS_GET_VERSIONS;
-
-	q6core_lcl.cmd_resp_received_flag &= ~(FLAG_AVCS_GET_VERSIONS_RESULT);
-	ret = apr_send_pkt(q6core_lcl.core_handle_q,
-				 (uint32_t *) &get_aver_cmd);
-	if (ret < 0) {
-		pr_err("%s: Core get DSP version  request failed, err %d\n",
-							__func__, ret);
-		ret = -EREMOTE;
-		goto fail_cmd;
-	}
-
-	mutex_unlock(&(q6core_lcl.cmd_lock));
-	ret = wait_event_timeout(q6core_lcl.cmd_req_wait,
-			(q6core_lcl.cmd_resp_received_flag ==
-				FLAG_AVCS_GET_VERSIONS_RESULT),
-				msecs_to_jiffies(TIMEOUT_MS));
-	mutex_lock(&(q6core_lcl.cmd_lock));
-	if (!ret) {
-		pr_err("%s: wait_event timeout for AVCS_GET_VERSIONS_RESULT\n",
-				__func__);
-		ret = -ETIMEDOUT;
-		goto fail_cmd;
-	}
-	q6core_lcl.cmd_resp_received_flag &= ~(FLAG_AVCS_GET_VERSIONS_RESULT);
-
-fail_cmd:
-	if (ret < 0)
-		q6core_lcl.q6_core_avs_version = Q6_SUBSYS_INVALID;
-	mutex_unlock(&(q6core_lcl.cmd_lock));
-	return ret;
-}
-
-enum q6_subsys_image q6core_get_avs_version(void)
-{
-	if (q6core_lcl.q6_core_avs_version == 0)
-		core_get_adsp_ver();
-	return q6core_lcl.q6_core_avs_version;
-}
 
 /**
  * core_get_license_status -
