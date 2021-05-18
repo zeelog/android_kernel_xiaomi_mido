@@ -852,6 +852,8 @@ static int qti_haptics_upload_effect(struct input_dev *dev,
 	if (hrtimer_active(&chip->hap_disable_timer)) {
 		rem = hrtimer_get_remaining(&chip->hap_disable_timer);
 		time_us = ktime_to_us(rem);
+		if (time_us <= 0)
+			time_us = 100;
 		dev_dbg(chip->dev, "waiting for playing clear sequence: %lld us\n",
 				time_us);
 		usleep_range(time_us, time_us + 100);
