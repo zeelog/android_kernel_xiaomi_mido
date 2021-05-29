@@ -140,11 +140,9 @@ static int get_parent_ino(struct inode *inode, nid_t *pino)
 {
 	struct dentry *dentry;
 
-	/*
-	 * Make sure to get the non-deleted alias.  The alias associated with
-	 * the open file descriptor being fsync()'ed may be deleted already.
-	 */
-	dentry = d_find_alias(inode);
+	inode = igrab(inode);
+	dentry = d_find_any_alias(inode);
+	iput(inode);
 	if (!dentry)
 		return 0;
 
@@ -890,7 +888,9 @@ const struct inode_operations f2fs_file_inode_operations = {
 	.setattr	= f2fs_setattr,
 	.get_acl	= f2fs_get_acl,
 	.set_acl	= f2fs_set_acl,
+#ifdef CONFIG_F2FS_FS_XATTR
 	.listxattr	= f2fs_listxattr,
+#endif
 	.fiemap		= f2fs_fiemap,
 };
 
@@ -1573,11 +1573,7 @@ next_alloc:
 
 		down_write(&sbi->pin_sem);
 		map.m_seg_type = CURSEG_COLD_DATA_PINNED;
-
-		f2fs_lock_op(sbi);
 		f2fs_allocate_new_segments(sbi, CURSEG_COLD_DATA);
-		f2fs_unlock_op(sbi);
-
 		err = f2fs_map_blocks(inode, &map, 1, F2FS_GET_BLOCK_PRE_DIO);
 		up_write(&sbi->pin_sem);
 

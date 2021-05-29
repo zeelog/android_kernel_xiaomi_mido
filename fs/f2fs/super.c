@@ -23,7 +23,6 @@
 #include <linux/f2fs_fs.h>
 #include <linux/sysfs.h>
 #include <linux/quota.h>
-#include <linux/cleancache.h>
 
 #include "f2fs.h"
 #include "node.h"
@@ -3488,8 +3487,6 @@ reset_checkpoint:
 	f2fs_update_time(sbi, CP_TIME);
 	f2fs_update_time(sbi, REQ_TIME);
 	clear_sbi_flag(sbi, SBI_CP_DISABLED_QUICK);
-
-	cleancache_init_fs(sb);
 	return 0;
 
 sync_free_meta:
