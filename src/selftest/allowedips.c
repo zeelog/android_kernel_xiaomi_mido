@@ -414,6 +414,16 @@ static __init bool randomized_test(void)
 			goto free;
 		}
 	}
+
+	mutex_lock(&mutex);
+	for (i = 0; i < NUM_PEERS; ++i)
+		wg_allowedips_remove_by_peer(&t, peers[i], &mutex);
+	mutex_unlock(&mutex);
+	if (t.root4 || t.root6) {
+		pr_err("allowedips random self-test removal: FAIL\n");
+		goto free;
+	}
+
 	ret = true;
 
 free:
