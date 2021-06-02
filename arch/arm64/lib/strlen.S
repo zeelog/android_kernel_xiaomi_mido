@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2013, Arm Limited.
+ * Copyright (c) 2013-2021, Arm Limited.
  *
  * Adapted from the original at:
- * https://github.com/ARM-software/optimized-routines/blob/master/string/aarch64/strlen.S
+ * https://github.com/ARM-software/optimized-routines/blob/98e4d6a5c13c8e54/string/aarch64/strlen.S
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as

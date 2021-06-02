@@ -1,12 +1,12 @@
 /*
- * Copyright (c) 2013-2020, Arm Limited.
+ * Copyright (c) 2013-2021, Arm Limited.
  *
  * This code is based on glibc cortex strings work originally authored by Linaro
  * and re-licensed under GPLv2 for the Linux kernel. The original code can
  * be found @
  *
  * Adapted from the original at:
- * https://github.com/ARM-software/optimized-routines/blob/master/string/aarch64/memcmp.S
+ * https://github.com/ARM-software/optimized-routines/blob/e823e3abf5f89ecb/string/aarch64/memcmp.S
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as

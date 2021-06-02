@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2013, Arm Limited.
+ * Copyright (c) 2013-2021, Arm Limited.
  *
  * Adapted from the original at:
- * https://github.com/ARM-software/optimized-routines/blob/master/string/aarch64/strncmp.S
+ * https://github.com/ARM-software/optimized-routines/blob/e823e3abf5f89ecb/string/aarch64/strncmp.S
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
