@@ -793,10 +793,8 @@ int acpi_cppc_processor_probe(struct acpi_processor *pr)
 
 	ret = kobject_init_and_add(&cpc_ptr->kobj, &cppc_ktype, &cpu_dev->kobj,
 			"acpi_cppc");
-	if (ret) {
-		kobject_put(&cpc_ptr->kobj);
+	if (ret)
 		goto out_free;
-	}
 
 	kfree(output.pointer);
 	return 0;
