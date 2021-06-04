@@ -16289,9 +16289,9 @@ void hdd_indicate_mgmt_frame(tSirSmeMgmtFrameInd *frame_ind)
    }
 
    /* Try to retrieve the adapter from the mac address list*/
+     pbFrames = frame_ind->frameBuf;
      type = WLAN_HDD_GET_TYPE_FRM_FC(pbFrames[0]);
      subType = WLAN_HDD_GET_SUBTYPE_FRM_FC(pbFrames[0]);
-     pbFrames = frame_ind->frameBuf;
      nFrameLength = frame_ind->frameLen;
 
     /* Get pAdapter from Destination mac address of the frame */
