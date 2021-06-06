@@ -30,7 +30,7 @@ struct wg_peer *wg_peer_create(struct wg_device *wg,
 	if (wg->num_peers >= MAX_PEERS_PER_DEVICE)
 		return ERR_PTR(ret);
 
-	peer = kmem_cache_alloc(peer_cache, GFP_KERNEL | __GFP_ZERO);
+	peer = kmem_cache_zalloc(peer_cache, GFP_KERNEL);
 	if (unlikely(!peer))
 		return ERR_PTR(ret);
 	if (unlikely(dst_cache_init(&peer->endpoint_cache, GFP_KERNEL)))
