@@ -2493,6 +2493,12 @@ REG_TABLE_ENTRY g_registry_table[] =
               CFG_ENABLE_RX_STBC_DEFAULT,
               CFG_ENABLE_RX_STBC_MIN,
               CFG_ENABLE_RX_STBC_MAX ),
+   REG_VARIABLE( CFG_ENABLE_TX_STBC, WLAN_PARAM_Integer,
+              hdd_config_t, enableTxSTBC,
+              VAR_FLAGS_OPTIONAL | VAR_FLAGS_RANGE_CHECK_ASSUME_DEFAULT,
+              CFG_ENABLE_TX_STBC_DEFAULT,
+              CFG_ENABLE_TX_STBC_MIN,
+              CFG_ENABLE_TX_STBC_MAX ),
 #ifdef FEATURE_WLAN_TDLS
    REG_VARIABLE( CFG_TDLS_SUPPORT_ENABLE, WLAN_PARAM_Integer,
               hdd_config_t, fEnableTDLSSupport,
@@ -5926,6 +5932,14 @@ v_BOOL_t hdd_update_config_dat( hdd_context_t *pHddCtx )
      {
          fStatus = FALSE;
          hddLog(LOGE, "Could not pass on WNI_CFG_VHT_RXSTBC to CCM");
+     }
+
+     if (ccmCfgSetInt(pHddCtx->hHal, WNI_CFG_VHT_TXSTBC,
+                     pConfig->enableTxSTBC, NULL, eANI_BOOLEAN_FALSE)
+         == eHAL_STATUS_FAILURE)
+     {
+         fStatus = FALSE;
+         hddLog(LOGE, "Could not pass on WNI_CFG_VHT_TXSTBC to CCM");
      }
 
 #ifdef WLAN_SOFTAP_VSTA_FEATURE
