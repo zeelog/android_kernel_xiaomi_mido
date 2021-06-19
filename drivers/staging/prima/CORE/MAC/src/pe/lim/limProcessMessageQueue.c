@@ -674,10 +674,10 @@ limCheckMgmtRegisteredFrames(tpAniSirGlobal pMac, tANI_U8 *pBd,
         pNext = NULL;
     }
    
+    limLog( pMac, LOG1,
+                FL("rcvd frame match with registered frame params match %d fc.type %d fc.subType %d"), match, fc.type, fc.subType);
     if (match)
     {
-        limLog( pMac, LOG1, 
-                FL("rcvd frame match with registered frame params"));
 
         /* Indicate this to SME */
         limSendSmeMgmtFrameInd( pMac, pLimMgmtRegistration->sessionId,

@@ -16268,8 +16268,12 @@ void hdd_indicate_mgmt_frame(tSirSmeMgmtFrameInd *frame_ind)
    hdd_context_t *hdd_ctx = NULL;
    hdd_adapter_t *adapter = NULL;
    v_CONTEXT_t vos_context = NULL;
+   tANI_U8 type = 0;
+   tANI_U8 subType = 0;
    struct ieee80211_mgmt *mgmt =
            (struct ieee80211_mgmt *)frame_ind->frameBuf;
+   tANI_U8* pbFrames;
+   tANI_U32 nFrameLength;
 
    /* Get the global VOSS context.*/
    vos_context = vos_get_global_context(VOS_MODULE_ID_SYS, NULL);
@@ -16291,7 +16295,38 @@ void hdd_indicate_mgmt_frame(tSirSmeMgmtFrameInd *frame_ind)
         return;
    }
 
-   adapter = hdd_get_adapter_by_sme_session_id(hdd_ctx,
+   /* Try to retrieve the adapter from the mac address list*/
+     type = WLAN_HDD_GET_TYPE_FRM_FC(pbFrames[0]);
+     subType = WLAN_HDD_GET_SUBTYPE_FRM_FC(pbFrames[0]);
+     pbFrames = frame_ind->frameBuf;
+     nFrameLength = frame_ind->frameLen;
+
+    /* Get pAdapter from Destination mac address of the frame */
+    if ((type == SIR_MAC_MGMT_FRAME) &&
+        (subType != SIR_MAC_MGMT_PROBE_REQ) &&
+        (frame_ind->frameLen > WLAN_HDD_80211_FRM_DA_OFFSET + VOS_MAC_ADDR_SIZE)
+	&&
+        !vos_is_macaddr_broadcast(
+         (v_MACADDR_t *)&pbFrames[WLAN_HDD_80211_FRM_DA_OFFSET]))
+      {
+         adapter = hdd_get_adapter_by_macaddr(hdd_ctx,
+                               &pbFrames[WLAN_HDD_80211_FRM_DA_OFFSET]);
+         if (NULL == adapter)
+         {
+             /* Under assumtion that we don't receive any action frame
+              * with BCST as destination we dropping action frame
+              */
+             hddLog(VOS_TRACE_LEVEL_FATAL,"pAdapter for action frame is NULL Macaddr = "
+                               MAC_ADDRESS_STR ,
+                               MAC_ADDR_ARRAY(&pbFrames[WLAN_HDD_80211_FRM_DA_OFFSET]));
+             hddLog(VOS_TRACE_LEVEL_FATAL, "%s: Frame Type = %d Frame Length = %d"
+                              " subType = %d",__func__,frame_ind->frameType,nFrameLength,subType);
+             return;
+         }
+       }
+
+   if (adapter == NULL)
+       adapter = hdd_get_adapter_by_sme_session_id(hdd_ctx,
                                           frame_ind->sessionId);
 
    if ((NULL != adapter) &&
