@@ -237,13 +237,11 @@ eHalStatus wlan_hdd_remain_on_channel_callback( tHalHandle hHal, void* pCtx,
        )
     {
         tANI_U8 sessionId = pAdapter->sessionId;
-        if( REMAIN_ON_CHANNEL_REQUEST == req_type )
-        {
+            wlan_hdd_cfg80211_deregister_frames(pAdapter);
             sme_DeregisterMgmtFrame(
                        hHal, sessionId,
                       (SIR_MAC_MGMT_FRAME << 2) | ( SIR_MAC_MGMT_PROBE_REQ << 4),
                        NULL, 0 );
-        }
     }
     else if (WLAN_HDD_P2P_GO == pAdapter->device_mode)
     {
@@ -645,8 +643,6 @@ static int wlan_hdd_p2p_start_remain_on_channel(
             return -EINVAL;
         }
 
-        if( REMAIN_ON_CHANNEL_REQUEST == request_type)
-        {
             if( eHAL_STATUS_SUCCESS != sme_RegisterMgmtFrame(
                         WLAN_HDD_GET_HAL_CTX(pAdapter),
                         sessionId, (SIR_MAC_MGMT_FRAME << 2) |
@@ -654,7 +650,7 @@ static int wlan_hdd_p2p_start_remain_on_channel(
             {
                 hddLog(VOS_TRACE_LEVEL_ERROR,    "sme_RegisterMgmtFrame returned fail");
             }
-        }
+	    wlan_hdd_cfg80211_register_frames(pAdapter);
 
     }
     else if (WLAN_HDD_P2P_GO == pAdapter->device_mode)
@@ -2797,32 +2793,6 @@ void __hdd_indicate_mgmt_frame(hdd_adapter_t *pAdapter,
     {
         hddLog(LOGE, FL("pbFrames is NULL"));
         return;
-    }
-
-    type = WLAN_HDD_GET_TYPE_FRM_FC(pbFrames[0]);
-    subType = WLAN_HDD_GET_SUBTYPE_FRM_FC(pbFrames[0]);
-
-    /* Get pAdapter from Destination mac address of the frame */
-    if ((type == SIR_MAC_MGMT_FRAME) &&
-        (subType != SIR_MAC_MGMT_PROBE_REQ) &&
-        (nFrameLength > WLAN_HDD_80211_FRM_DA_OFFSET + VOS_MAC_ADDR_SIZE) &&
-        !vos_is_macaddr_broadcast(
-         (v_MACADDR_t *)&pbFrames[WLAN_HDD_80211_FRM_DA_OFFSET]))
-    {
-         pAdapter = hdd_get_adapter_by_macaddr( WLAN_HDD_GET_CTX(pAdapter),
-                            &pbFrames[WLAN_HDD_80211_FRM_DA_OFFSET]);
-         if (NULL == pAdapter)
-         {
-             /* Under assumtion that we don't receive any action frame
-              * with BCST as destination we dropping action frame
-              */
-             hddLog(VOS_TRACE_LEVEL_FATAL,"pAdapter for action frame is NULL Macaddr = "
-                               MAC_ADDRESS_STR ,
-                               MAC_ADDR_ARRAY(&pbFrames[WLAN_HDD_80211_FRM_DA_OFFSET]));
-             hddLog(VOS_TRACE_LEVEL_FATAL, "%s: Frame Type = %d Frame Length = %d"
-                              " subType = %d",__func__,frameType,nFrameLength,subType);
-             return;
-         }
     }
 
 

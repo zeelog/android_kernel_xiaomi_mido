@@ -2110,6 +2110,11 @@ static __inline tANI_U32 defHddRateToDefCfgRate( tANI_U32 defRateIndex )
 #define CFG_ENABLE_RX_STBC_MAX                   ( 1 )
 #define CFG_ENABLE_RX_STBC_DEFAULT               ( 1 )
 
+#define CFG_ENABLE_TX_STBC                       "gEnableTXSTBC"
+#define CFG_ENABLE_TX_STBC_MIN                   ( 0 )
+#define CFG_ENABLE_TX_STBC_MAX                   ( 1 )
+#define CFG_ENABLE_TX_STBC_DEFAULT               ( 1 )
+
 /* 
  * Enable/Disable vsta based on MAX Assoc limit 
  * defined in WCNSS_qcom_cfg.ini.
@@ -3695,6 +3700,7 @@ typedef struct
    v_U16_t                     configMccParam;
    v_U32_t                     numBuffAdvert;
    v_BOOL_t                    enableRxSTBC;
+   v_BOOL_t                    enableTxSTBC;
 #ifdef FEATURE_WLAN_TDLS       
    v_BOOL_t                    fEnableTDLSSupport;
    v_BOOL_t                    fEnableTDLSImplicitTrigger;
