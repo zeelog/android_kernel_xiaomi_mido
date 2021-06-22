@@ -12800,14 +12800,6 @@ int __wlan_hdd_cfg80211_change_iface( struct wiphy *wiphy,
 		}
                 hdd_set_conparam(1);
 
-                status = hdd_sta_id_hash_attach(pAdapter);
-                if (VOS_STATUS_SUCCESS != status)
-                {
-                    hddLog(VOS_TRACE_LEVEL_ERROR,
-                           FL("Failed to initialize hash for AP"));
-                    return -EINVAL;
-                }
-
                 /*interface type changed update in wiphy structure*/
                 if(wdev)
                 {
@@ -15901,14 +15893,23 @@ int __wlan_hdd_cfg80211_scan( struct wiphy *wiphy,
 
     if( request->n_channels )
     {
-        char chList [(request->n_channels*5)+1];
         int len;
+	char *chList;
+
+	chList = vos_mem_malloc((request->n_channels * 5) + 1);
+	if (!chList) {
+		hddLog(VOS_TRACE_LEVEL_ERROR,
+		       "%s: memory alloc failed channelList", __func__);
+		status = -ENOMEM;
+	}
+
         channelList = vos_mem_malloc( request->n_channels );
         if( NULL == channelList )
         {
             hddLog(VOS_TRACE_LEVEL_ERROR,
                            "%s: memory alloc failed channelList", __func__);
             status = -ENOMEM;
+	    vos_mem_free(chList);
             goto free_mem;
         }
 
@@ -15920,6 +15921,7 @@ int __wlan_hdd_cfg80211_scan( struct wiphy *wiphy,
 
         hddLog(VOS_TRACE_LEVEL_INFO,
                            "Channel-List:  %s ", chList);
+	vos_mem_free(chList);
     }
 
     scanRequest.ChannelInfo.numOfChannels = request->n_channels;
@@ -16706,6 +16708,102 @@ static int wlan_hdd_cfg80211_set_cipher( hdd_adapter_t *pAdapter,
     return 0;
 }
 
+static void framesntohs(v_U16_t *pOut,
+                        v_U8_t  *pIn,
+                        unsigned char fMsb)
+{
+#   if defined ( DOT11F_LITTLE_ENDIAN_HOST )
+    if ( !fMsb )
+    {
+        vos_mem_copy(( v_U16_t* )pOut, pIn, 2);
+    }
+    else
+    {
+        *pOut = ( v_U16_t )( *pIn << 8 ) | *( pIn + 1 );
+    }
+#   else
+    if ( !fMsb )
+    {
+        *pOut = ( v_U16_t )( *pIn | ( *( pIn + 1 ) << 8 ) );
+    }
+    else
+    {
+        vos_mem_copy(( v_U16_t* )pOut, pIn, 2);
+    }
+#   endif
+}
+
+void
+wlan_hdd_mask_unsupported_rsn_caps(tANI_U8 *pBuf, tANI_S16 ielen)
+{
+    u16 pwise_cipher_suite_count, akm_suite_cnt, mask = 0;
+    u8 *rsn_cap;
+
+    if (unlikely(ielen < 2)) {
+        return;
+    }
+
+    pBuf += 2;
+    ielen -= (tANI_U8)2;
+
+    if (unlikely(ielen < 4)) {
+        return;
+    }
+
+    pBuf += 4;
+    ielen -= (tANI_U8)4;
+
+    if (unlikely(ielen < 2)) {
+        return;
+    }
+
+    framesntohs(&pwise_cipher_suite_count, pBuf, 0);
+    pBuf += 2;
+    ielen -= (tANI_U8)2;
+
+    if (unlikely(ielen < pwise_cipher_suite_count * 4)) {
+        return;
+    }
+
+    if (!pwise_cipher_suite_count ||
+        pwise_cipher_suite_count > 4){
+        return;
+    }
+
+    pBuf += (pwise_cipher_suite_count * 4);
+    ielen -= (pwise_cipher_suite_count * 4);
+
+    if (unlikely(ielen < 2)) {
+        return;
+    }
+
+    framesntohs(&akm_suite_cnt, pBuf, 0);
+    pBuf += 2;
+    ielen -= (tANI_U8)2;
+
+    if (unlikely(ielen < akm_suite_cnt * 4)) {
+        return;
+    }
+
+    if (!akm_suite_cnt ||
+        akm_suite_cnt > 4){
+        return;
+    }
+
+    pBuf += (akm_suite_cnt * 4);
+    ielen -= (akm_suite_cnt * 4);
+
+    if (unlikely(ielen < 2)) {
+        return;
+    }
+
+    rsn_cap = pBuf;
+    mask = ~(JOINT_MULTI_BAND_RSNA | PEER_KEY_ENABLED | AMSDU_CAPABLE |
+             AMSDU_REQUIRED | PBAC | EXT_KEY_ID | OCVC | RESERVED);
+    rsn_cap[1] &= mask;
+
+    return;
+}
 
 /*
  * FUNCTION: wlan_hdd_cfg80211_set_ie
@@ -17018,6 +17116,8 @@ int wlan_hdd_cfg80211_set_ie( hdd_adapter_t *pAdapter,
                 memcpy( pWextState->WPARSNIE, genie - 2, (eLen + 2)/*ie_len*/);
                 pWextState->roamProfile.pRSNReqIE = pWextState->WPARSNIE;
                 pWextState->roamProfile.nRSNReqIELength = eLen + 2; //ie_len;
+                wlan_hdd_mask_unsupported_rsn_caps(pWextState->WPARSNIE + 2,
+                                                   eLen);
                 break;
 
                 /* Appending extended capabilities with Interworking or
@@ -20340,9 +20440,17 @@ static int __wlan_hdd_cfg80211_sched_scan_start(struct wiphy *wiphy,
     num_ch = 0;
     if (request->n_channels)
     {
-        char chList [(request->n_channels*5)+1];
         int len;
-        for (i = 0, len = 0; i < request->n_channels; i++)
+	char *chList;
+
+	chList = vos_mem_malloc((request->n_channels * 5) + 1);
+	if (!chList) {
+		hddLog(VOS_TRACE_LEVEL_ERROR,
+		       "%s: memory alloc failed channelList", __func__);
+		status = -ENOMEM;
+	}
+
+	for (i = 0, len = 0; i < request->n_channels; i++)
         {
             for (indx = 0; indx < num_channels_allowed; indx++)
             {
@@ -20373,8 +20481,10 @@ static int __wlan_hdd_cfg80211_sched_scan_start(struct wiphy *wiphy,
             VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_INFO,
              "%s : All requested channels are DFS channels", __func__);
             ret = -EINVAL;
+	    vos_mem_free(chList);
             goto error;
         }
+	vos_mem_free(chList);
      }
 
     pnoRequest.aNetworks =
