@@ -423,9 +423,6 @@ enum {
 int hdd_validate_mcc_config(hdd_adapter_t *pAdapter, v_UINT_t staId,
                                 v_UINT_t arg1, v_UINT_t arg2, v_UINT_t arg3);
 
-#ifdef WLAN_FEATURE_PACKET_FILTERING
-int wlan_hdd_set_filter(hdd_adapter_t *pAdapter, tpPacketFilterCfg pRequest);
-#endif
 /**---------------------------------------------------------------------------
 
   \brief mem_alloc_copy_from_user_helper -
