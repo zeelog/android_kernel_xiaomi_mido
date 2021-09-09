@@ -1977,7 +1977,6 @@ SYSCALL_DEFINE4(epoll_ctl, int, epfd, int, op, int, fd,
 error_tgt_fput:
 	if (full_check) {
 		clear_tfile_check_list();
-		loop_check_gen++;
 		mutex_unlock(&epmutex);
 	}
 
