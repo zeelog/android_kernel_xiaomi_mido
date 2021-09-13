@@ -899,7 +899,7 @@ void ft5435_change_scanning_frq_switch(struct work_struct *work)
 	data = container_of(work, struct ft5435_ts_data, work);
 
 	if (data->suspended) {
-		printk(KERN_ERR"changer_in  = %d \n", data->charger_in);
+		printk(KERN_DEBUG"changer_in  = %d \n", data->charger_in);
 		return ;
 	}
 	if (ft_g_client == NULL)
