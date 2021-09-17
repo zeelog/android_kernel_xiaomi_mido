@@ -2222,7 +2222,7 @@ int mdss_mdp_pipe_addr_setup(struct mdss_data_type *mdata,
 		pipe->multirect.max_rects = rects_per_sspp;
 		pipe->multirect.next = NULL;
 
-		pr_info("type:%d ftchid:%d xinid:%d num:%d rect:%d ndx:0x%x prio:%d\n",
+		pr_debug("type:%d ftchid:%d xinid:%d num:%d rect:%d ndx:0x%x prio:%d\n",
 			pipe->type, pipe->ftch_id, pipe->xin_id, pipe->num,
 			pipe->multirect.num, pipe->ndx, pipe->priority);
 
@@ -2234,7 +2234,7 @@ int mdss_mdp_pipe_addr_setup(struct mdss_data_type *mdata,
 			next->multirect.num++;
 			next->multirect.next = pipe;
 
-			pr_info("type:%d ftchid:%d xinid:%d num:%d rect:%d ndx:0x%x prio:%d\n",
+			pr_debug("type:%d ftchid:%d xinid:%d num:%d rect:%d ndx:0x%x prio:%d\n",
 				next->type, next->ftch_id, next->xin_id,
 				next->num, next->multirect.num, next->ndx,
 				next->priority);
