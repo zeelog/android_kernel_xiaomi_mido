@@ -2056,6 +2056,7 @@ static v_BOOL_t put_wifi_iface_stats(hdd_adapter_t *pAdapter,
     hdd_station_ctx_t *pHddStaCtx = WLAN_HDD_GET_STATION_CTX_PTR(pAdapter);
     WLANTL_InterfaceStatsType *pWifiIfaceStatTL = NULL;
     tSirWifiWmmAcStat accessclassStats;
+    v_S7_t rssi_value;
 
     if (FALSE == put_wifi_interface_info(
                                 &pWifiIfaceStat->info,
@@ -2175,6 +2176,18 @@ static v_BOOL_t put_wifi_iface_stats(hdd_adapter_t *pAdapter,
                FL("QCA_WLAN_VENDOR_ATTR put fail"));
                vos_mem_free(pWifiIfaceStatTL);
         return FALSE;
+    }
+
+    if (pWifiIfaceStat->info.state == WIFI_DISCONNECTED)
+    {
+   /* we are not connected or our SSID is too long
+      so we can report an disconnected rssi */
+        wlan_hdd_get_rssi(pAdapter, &rssi_value);
+        nla_put_s32(vendor_event,
+                    QCA_WLAN_VENDOR_ATTR_LL_STATS_IFACE_RSSI_MGMT,
+                    rssi_value);
+        hddLog(VOS_TRACE_LEVEL_INFO,
+               FL("Rssi value on disconnect %d "), rssi_value);
     }
 
 #ifdef FEATURE_EXT_LL_STAT
