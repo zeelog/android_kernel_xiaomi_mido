@@ -7539,7 +7539,7 @@ static VOS_STATUS hdd_parse_pktfilter_params(tANI_U8 *pValue,
     if ((inPtr = remove_firstoccurence_of_spaces(inPtr)) == NULL) return -EINVAL;
 
     /*getting the first three value i.e. fiter action, id and numparams*/
-    v = sscanf(inPtr, "%d %d %d",&pRequest->filterAction, &pRequest->filterId,
+    v = sscanf(inPtr, "%hhu %hhu %hhu",&pRequest->filterAction, &pRequest->filterId,
                                  &pRequest->numParams);
     if (3 != v) return -EINVAL;
 
@@ -7552,7 +7552,7 @@ static VOS_STATUS hdd_parse_pktfilter_params(tANI_U8 *pValue,
     for (j = 0; j < pRequest->numParams; j++)
     {
         /*getting the sub filter parameters based on numparams*/
-        v = sscanf(inPtr, "%d %d %d %d",&pRequest->paramsData[j].protocolLayer,
+        v = sscanf(inPtr, "%hhu %hhu %hhu %hhu",&pRequest->paramsData[j].protocolLayer,
                           &pRequest->paramsData[j].cmpFlag, &pRequest->paramsData[j].dataOffset,
                           &pRequest->paramsData[j].dataLength);
 
@@ -7562,7 +7562,7 @@ static VOS_STATUS hdd_parse_pktfilter_params(tANI_U8 *pValue,
             if ((inPtr = remove_firstoccurence_of_spaces(inPtr)) == NULL) return -EINVAL;
         }
 
-        v = sscanf(inPtr, "%d %d %d %d %d %d %d %d",
+        v = sscanf(inPtr, "%hhu %hhu %hhu %hhu %hhu %hhu %hhu %hhu",
                           &pRequest->paramsData[j].compareData[0], &pRequest->paramsData[j].compareData[1],
                           &pRequest->paramsData[j].compareData[2], &pRequest->paramsData[j].compareData[3],
                           &pRequest->paramsData[j].compareData[4], &pRequest->paramsData[j].compareData[5],
@@ -7573,7 +7573,7 @@ static VOS_STATUS hdd_parse_pktfilter_params(tANI_U8 *pValue,
             if ((inPtr = remove_firstoccurence_of_spaces(inPtr)) == NULL) return -EINVAL;
         }
 
-        v = sscanf(inPtr, "%d %d %d %d %d %d %d %d",
+        v = sscanf(inPtr, "%hhu %hhu %hhu %hhu %hhu %hhu %hhu %hhu",
                           &pRequest->paramsData[j].dataMask[0], &pRequest->paramsData[j].dataMask[1],
                           &pRequest->paramsData[j].dataMask[2], &pRequest->paramsData[j].dataMask[3],
                           &pRequest->paramsData[j].dataMask[4], &pRequest->paramsData[j].dataMask[5],
