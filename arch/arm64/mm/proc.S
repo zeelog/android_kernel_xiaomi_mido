@@ -503,6 +503,8 @@ ENTRY(__cpu_setup)
 	cmp	x9, #2
 	b.lt	1f
 #ifdef CONFIG_ARM64_ERRATUM_1024718
+        /* Disable hardware DBM on Cortex-A55 all versions */
+	cpu_midr_match MIDR_CORTEX_A55, MIDR_CPU_VAR_REV(0, 0), MIDR_CPU_VAR_REV(0xf, 0xf), x1, x2, x3, x4
 	/* Disable hardware DBM on Kryo3S */
 	cpu_midr_match MIDR_KRYO3S, MIDR_CPU_VAR_REV(7, 12), \
 			MIDR_CPU_VAR_REV(7, 13), x1, x2, x3, x4
