@@ -121,8 +121,6 @@ int msm_tz_set_cb_format(enum tz_smmu_device_id sec_id, int cbndx)
 			SMMU_CHANGE_PAGETABLE_FORMAT), &desc);
 
 	if (ret) {
-		WARN(1, "Format change failed for CB %d with ret %d\n",
-		     cbndx, ret);
 		return ret;
 	}
 
