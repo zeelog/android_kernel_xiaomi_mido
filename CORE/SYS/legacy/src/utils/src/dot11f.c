@@ -494,7 +494,7 @@ static tANI_U32 GetContainerIesLen(tpAniSirGlobal pCtx,
     len += *(pBufRemaining+1);
     pBufRemaining += len + 2;
     len += 2;
-    while ( len < nBuf )
+    while ( len + 1 < nBuf )
     {
         if( NULL == (pIe =  FindIEDefn(pCtx, pBufRemaining, nBuf - len, IEs)))
              break;
