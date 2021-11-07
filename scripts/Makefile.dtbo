@@ -12,7 +12,7 @@ DTC_OVERLAY_TEST = $(DTC_OVERLAY_TEST_EXT)
 quiet_cmd_dtbo_verify	= VERIFY  $@
 cmd_dtbo_verify = $(foreach m,\
 	$(addprefix $(obj)/,$($(@F)-base)),\
-		$(if $(m),\
+		$($(Q)if $(m),\
 			$(DTC_OVERLAY_TEST) $(m) $@ \
 			$(dot-target).$(patsubst $(obj)/%.dtb,%,$(m)).tmp;))\
 			true
