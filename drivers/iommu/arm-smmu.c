@@ -580,7 +580,6 @@ static struct arm_smmu_option_prop arm_smmu_options[] = {
 	{ ARM_SMMU_OPT_MMU500_ERRATA1, "qcom,mmu500-errata-1" },
 	{ ARM_SMMU_OPT_STATIC_CB, "qcom,enable-static-cb"},
 	{ ARM_SMMU_OPT_HALT, "qcom,enable-smmu-halt"},
-	{ ARM_SMMU_OPT_NO_AARCH64, "qcom,no-aarch64"},
 	{ 0, NULL},
 };
 
@@ -683,11 +682,6 @@ static bool is_iommu_pt_coherent(struct arm_smmu_domain *smmu_domain)
 static bool arm_smmu_is_static_cb(struct arm_smmu_device *smmu)
 {
 	return smmu->options & ARM_SMMU_OPT_STATIC_CB;
-}
-
-static bool arm_smmu_no_aarch64(struct arm_smmu_device *smmu)
-{
-	return smmu->options & ARM_SMMU_OPT_NO_AARCH64;
 }
 
 static bool arm_smmu_has_secure_vmid(struct arm_smmu_domain *smmu_domain)
@@ -4577,15 +4571,12 @@ static int arm_smmu_device_cfg_probe(struct arm_smmu_device *smmu)
 	} else {
 		size = (id >> ID2_UBS_SHIFT) & ID2_UBS_MASK;
 		smmu->va_size = arm_smmu_id_size_to_bits(size);
-
-		if (!arm_smmu_no_aarch64(smmu)) {
-			if (id & ID2_PTFS_4K)
-				smmu->features |= ARM_SMMU_FEAT_FMT_AARCH64_4K;
-			if (id & ID2_PTFS_16K)
-				smmu->features |= ARM_SMMU_FEAT_FMT_AARCH64_16K;
-			if (id & ID2_PTFS_64K)
-				smmu->features |= ARM_SMMU_FEAT_FMT_AARCH64_64K;
-		}
+		if (id & ID2_PTFS_4K)
+			smmu->features |= ARM_SMMU_FEAT_FMT_AARCH64_4K;
+		if (id & ID2_PTFS_16K)
+			smmu->features |= ARM_SMMU_FEAT_FMT_AARCH64_16K;
+		if (id & ID2_PTFS_64K)
+			smmu->features |= ARM_SMMU_FEAT_FMT_AARCH64_64K;
 	}
 
 	/* Now we've corralled the various formats, what'll it do? */
