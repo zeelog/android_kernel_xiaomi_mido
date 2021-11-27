@@ -122,6 +122,9 @@ int wlan_hdd_ftm_start(hdd_context_t *pAdapter);
 #include "wlan_hdd_debugfs.h"
 #include "sapInternal.h"
 #include "wlan_hdd_request_manager.h"
+#ifdef WLAN_FEATURE_PACKET_FILTERING
+#include "wlan_hdd_packet_filtering.h"
+#endif
 
 #ifdef MODULE
 #define WLAN_MODULE_NAME  module_name(THIS_MODULE)
@@ -213,6 +216,11 @@ static VOS_STATUS hdd_parse_ese_beacon_req(tANI_U8 *pValue,
 
 //wait time for beacon miss rate.
 #define BCN_MISS_RATE_TIME 500
+
+#ifdef WLAN_FEATURE_PACKET_FILTERING
+static VOS_STATUS hdd_parse_pktfilter_params(tANI_U8 *pValue,
+                                     tPacketFilterCfg *pRequest);
+#endif
 
 /*
  * Android DRIVER command structures
@@ -7302,6 +7310,45 @@ free_bcn_miss_rate_req:
             VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_INFO,
                       FL("data:%s"), extra);
        }
+#ifdef WLAN_FEATURE_PACKET_FILTERING
+       else if (strncmp(command, "setPktFilter", 12) == 0)
+       {
+           tANI_U8 *value = command;
+           tPacketFilterCfg *pRequest = NULL;
+           eHalStatus status = eHAL_STATUS_SUCCESS;
+
+           VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_INFO,
+                " Received Command to set / reset pkt filter %s: ", __func__);
+
+           pRequest = (tPacketFilterCfg *) kmalloc(sizeof(tPacketFilterCfg), GFP_KERNEL);
+
+           if (pRequest == NULL) {
+               ret = -EINVAL;
+               goto exit;
+           }
+
+           memset(pRequest, 0x00, sizeof(tPacketFilterCfg));
+           status = hdd_parse_pktfilter_params(value, pRequest);
+           if (eHAL_STATUS_SUCCESS != status)
+           {
+               VOS_TRACE( VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_ERROR,
+                  "%s: Failed to parse pkt Filterreq", __func__);
+               ret = -EINVAL;
+               kfree(pRequest);
+               goto exit;
+           }
+           status = wlan_hdd_set_filter(pAdapter, pRequest);
+           if (eHAL_STATUS_SUCCESS != status)
+           {
+               VOS_TRACE( VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_ERROR,
+                  "%s: Failed to set DRIVER command", __func__);
+               ret = -EINVAL;
+               kfree(pRequest);
+               goto exit;
+           }
+           kfree(pRequest);
+       }
+#endif
        else {
            MTRACE(vos_trace(VOS_MODULE_ID_HDD,
                             TRACE_CODE_HDD_UNSUPPORTED_IOCTL,
@@ -7438,6 +7485,111 @@ int hdd_mon_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
 {
   return 0;
 }
+
+static tANI_U8* remove_firstoccurence_of_spaces(tANI_U8 *inPtr)
+{
+    tANI_U8 *tPtr = NULL;
+
+    tPtr = strnchr(inPtr, strlen(inPtr), SPACE_ASCII_VALUE);
+    /*no argument after the command or argument is NULL*/
+    if (NULL == tPtr)
+    {
+        return inPtr;
+    }
+    /*no space after the command*/
+    else if (SPACE_ASCII_VALUE != *tPtr)
+    {
+        return NULL;
+    }
+
+    /*removing empty spaces*/
+    while ((SPACE_ASCII_VALUE  == *tPtr) && ('\0' !=  *tPtr)) tPtr++;
+
+    /*no argument followed by spaces*/
+    if ('\0' == *tPtr) return tPtr;
+
+    return tPtr;
+}
+
+#ifdef WLAN_FEATURE_PACKET_FILTERING
+/**---------------------------------------------------------------------------
+
+  brief hdd_parse_pktfilter_params() - Parse packet filter request
+
+  This function parse the packet filtere parameters in the format
+  setPktFilter<space><filterAction><space><filterId><space>numParams>
+  <space><sub-filters1>....<sub-filter Params>
+  <sub-filter> format: <protocolLayer><space><cmpFlag><space><dataOffset>
+                       <space><datalength><space><compareData><space><dataMask>
+  For example, setPkFilter 1 8 3 2 1 1 1 30 2 44 0 40.
+
+  \param  - pValue Pointer to data
+  \param  - pRequest output pointer to store parsed parameters
+
+  \return - 0 for success non-zero for failure
+
+  --------------------------------------------------------------------------*/
+static VOS_STATUS hdd_parse_pktfilter_params(tANI_U8 *pValue,
+                                     tPacketFilterCfg *pRequest)
+{
+    tANI_U8 *inPtr = pValue;
+    int j = 0, i = 0;
+    int v = 0;
+
+    if ((inPtr = remove_firstoccurence_of_spaces(inPtr)) == NULL) return -EINVAL;
+
+    /*getting the first three value i.e. fiter action, id and numparams*/
+    v = sscanf(inPtr, "%hhu %hhu %hhu",&pRequest->filterAction, &pRequest->filterId,
+                                 &pRequest->numParams);
+    if (3 != v) return -EINVAL;
+
+    if (pRequest->numParams > 5) return -EINVAL;
+
+    for(i = 0; i < 3 ; i++) {
+        if ((inPtr = remove_firstoccurence_of_spaces(inPtr)) == NULL) return -EINVAL;
+    }
+
+    for (j = 0; j < pRequest->numParams; j++)
+    {
+        /*getting the sub filter parameters based on numparams*/
+        v = sscanf(inPtr, "%hhu %hhu %hhu %hhu",&pRequest->paramsData[j].protocolLayer,
+                          &pRequest->paramsData[j].cmpFlag, &pRequest->paramsData[j].dataOffset,
+                          &pRequest->paramsData[j].dataLength);
+
+        if (4 != v) return -EINVAL;
+
+        for(i = 0; i < 4 ; i++) {
+            if ((inPtr = remove_firstoccurence_of_spaces(inPtr)) == NULL) return -EINVAL;
+        }
+
+        v = sscanf(inPtr, "%hhu %hhu %hhu %hhu %hhu %hhu %hhu %hhu",
+                          &pRequest->paramsData[j].compareData[0], &pRequest->paramsData[j].compareData[1],
+                          &pRequest->paramsData[j].compareData[2], &pRequest->paramsData[j].compareData[3],
+                          &pRequest->paramsData[j].compareData[4], &pRequest->paramsData[j].compareData[5],
+                          &pRequest->paramsData[j].compareData[6], &pRequest->paramsData[j].compareData[7]);
+        if (8 != v) return -EINVAL;
+
+        for(i = 0; i < 8 ; i++) {
+            if ((inPtr = remove_firstoccurence_of_spaces(inPtr)) == NULL) return -EINVAL;
+        }
+
+        v = sscanf(inPtr, "%hhu %hhu %hhu %hhu %hhu %hhu %hhu %hhu",
+                          &pRequest->paramsData[j].dataMask[0], &pRequest->paramsData[j].dataMask[1],
+                          &pRequest->paramsData[j].dataMask[2], &pRequest->paramsData[j].dataMask[3],
+                          &pRequest->paramsData[j].dataMask[4], &pRequest->paramsData[j].dataMask[5],
+                          &pRequest->paramsData[j].dataMask[6], &pRequest->paramsData[j].dataMask[7]);
+
+        if (8 != v) return -EINVAL;
+
+        for(i = 0; i < 8 ; i++) {
+            if ((inPtr = remove_firstoccurence_of_spaces(inPtr)) == NULL) return -EINVAL;
+        }
+
+    }
+
+    return VOS_STATUS_SUCCESS;
+}
+#endif
 
 #if defined(FEATURE_WLAN_ESE) && defined(FEATURE_WLAN_ESE_UPLOAD)
 /**---------------------------------------------------------------------------
@@ -8634,7 +8786,6 @@ static void __hdd_uninit (struct net_device *dev)
       /* after uninit our adapter structure will no longer be valid */
       pAdapter->dev = NULL;
       pAdapter->magic = 0;
-      pAdapter->pHddCtx = NULL;
    } while (0);
 
    EXIT();
@@ -16290,9 +16441,9 @@ void hdd_indicate_mgmt_frame(tSirSmeMgmtFrameInd *frame_ind)
    }
 
    /* Try to retrieve the adapter from the mac address list*/
+     pbFrames = frame_ind->frameBuf;
      type = WLAN_HDD_GET_TYPE_FRM_FC(pbFrames[0]);
      subType = WLAN_HDD_GET_SUBTYPE_FRM_FC(pbFrames[0]);
-     pbFrames = frame_ind->frameBuf;
      nFrameLength = frame_ind->frameLen;
 
     /* Get pAdapter from Destination mac address of the frame */
