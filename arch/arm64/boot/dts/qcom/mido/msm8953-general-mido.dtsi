@@ -205,10 +205,6 @@
 };
 
 &soc {
-	apps_iommu: qcom,iommu@1e00000 {
-		qcom,no-aarch64;
-	};
-
 	i2c@78b6000 { /* BLSP1 QUP2 */
 		aw2013@45 {
 			compatible = "awinic,aw2013";
