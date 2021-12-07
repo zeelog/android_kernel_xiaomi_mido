@@ -581,8 +581,8 @@ static inline void fsqr(u64 *out, const u64 *f, u64 *tmp)
 		"  cmovc %%rdx, %%rax;"
 		"  add %%rax, %%r8;"
 		"  movq %%r8, 0(%0);"
-	: "+&r,&r" (tmp), "+&r,&r" (f), "+&r,m" (out)
-	:
+	: "+&r,&r" (tmp), "+&r,&r" (f)
+	: "r,m" (out)
 	: "%rax", "%rcx", "%rdx", "%r8", "%r9", "%r10", "%r11", "%rbx", "%r13", "%r14", "%r15", "memory", "cc"
 	);
 }
@@ -743,8 +743,13 @@ static inline void fsqr2(u64 *out, const u64 *f, u64 *tmp)
 		"  cmovc %%rdx, %%rax;"
 		"  add %%rax, %%r8;"
 		"  movq %%r8, 32(%0);"
+<<<<<<< HEAD:net/wireguard/src/crypto/zinc/curve25519/curve25519-x86_64.c
 	: "+&r,&r" (tmp), "+&r,&r" (f), "+&r,m" (out)
 	:
+=======
+	: "+&r,&r" (tmp), "+&r,&r" (f)
+	: "r,m" (out)
+>>>>>>> 3c9f3b6997fe8cbb5e7b80ea5d622b5d0e827003:src/crypto/zinc/curve25519/curve25519-x86_64.c
 	: "%rax", "%rcx", "%rdx", "%r8", "%r9", "%r10", "%r11", "%rbx", "%r13", "%r14", "%r15", "memory", "cc"
 	);
 }
