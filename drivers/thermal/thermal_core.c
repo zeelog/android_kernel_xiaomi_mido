@@ -620,9 +620,10 @@ static void thermal_zone_device_init(struct thermal_zone_device *tz)
 		tz->temperature = THERMAL_TEMP_INVALID_LOW;
 	else
 		tz->temperature = THERMAL_TEMP_INVALID;
-
-	list_for_each_entry(pos, &tz->thermal_instances, tz_node)
-		pos->initialized = false;
+		tz->prev_low_trip = -INT_MAX;
+       	tz->prev_high_trip = INT_MAX;
+	        list_for_each_entry(pos, &tz->thermal_instances, tz_node)
+		        pos->initialized = false;
 }
 
 static void thermal_zone_device_reset(struct thermal_zone_device *tz)
