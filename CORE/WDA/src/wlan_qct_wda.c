@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2012-2019 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Previously licensed under the ISC license by Qualcomm Atheros, Inc.
  *
@@ -18392,6 +18393,8 @@ void WDA_lowLevelIndCallback(WDI_LowLevelIndType *wdiLowLevelInd,
             pPrefNetworkFoundInd->frameLength = 0;
          }
          pPrefNetworkFoundInd ->rssi = wdiLowLevelInd->wdiIndicationData.wdiPrefNetworkFoundInd.rssi; 
+         pPrefNetworkFoundInd->freq =
+                    wdiLowLevelInd->wdiIndicationData.wdiPrefNetworkFoundInd.freq;
          /* VOS message wrapper */
          vosMsg.type = eWNI_SME_PREF_NETWORK_FOUND_IND;
          vosMsg.bodyptr = (void *) pPrefNetworkFoundInd;

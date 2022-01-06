@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2012-2017, 2020 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Previously licensed under the ISC license by Qualcomm Atheros, Inc.
  *
@@ -584,6 +585,7 @@ typedef struct
   /* Indicates the RSSI */
   wpt_uint8     rssi;
   wpt_uint16    frameLength;
+  wpt_uint32    freq;
   wpt_uint8     *pData;
 } WDI_PrefNetworkFoundInd;
 #endif // FEATURE_WLAN_SCAN_PNO
