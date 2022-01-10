@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2012-2020 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2021 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Previously licensed under the ISC license by Qualcomm Atheros, Inc.
  *
@@ -8698,13 +8699,6 @@ int __hdd_stop (struct net_device *dev)
    }
 
    pAdapter->dev->wireless_handlers = NULL;
-
-   /*
-    * Upon wifi turn off, DUT has to flush the scan results so if
-    * this is the last cli iface, flush the scan database.
-    */
-   if (!hdd_is_cli_iface_up(pHddCtx))
-       sme_ScanFlushResult(pHddCtx->hHal, 0);
 
    EXIT();
    return 0;
