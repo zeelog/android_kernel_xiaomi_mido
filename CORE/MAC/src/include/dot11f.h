@@ -3599,6 +3599,8 @@ typedef struct sDot11fIEExtCap {
 
 #define DOT11F_IE_EXTCAP_MAX_LEN ( 15 )
 
+#define WLAN_ELEMID_RSNXE ( 244 )
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* C++ */
