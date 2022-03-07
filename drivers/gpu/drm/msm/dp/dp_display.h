@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2020, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2017-2021, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -28,6 +28,7 @@ struct dp_display {
 	bool is_primary;
 	u32 max_pclk_khz;
 	bool yuv_support;
+	bool is_bootsplash_en;
 
 	int (*enable)(struct dp_display *dp_display);
 	int (*post_enable)(struct dp_display *dp_display);
@@ -62,4 +63,6 @@ bool dp_connector_mode_needs_full_range(void *display);
 bool dp_connector_mode_is_cea_mode(void *display);
 enum sde_csc_type dp_connector_get_csc_type(struct drm_connector *conn,
 	void *data);
+int dp_display_set_power(struct drm_connector *connector,
+	int power_mode, void *display);
 #endif /* _DP_DISPLAY_H_ */

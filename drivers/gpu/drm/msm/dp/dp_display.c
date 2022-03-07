@@ -22,6 +22,7 @@
 #include <linux/of_irq.h>
 #include <linux/hdcp_qseecom.h>
 
+#include <drm/drm_client.h>
 #include "sde_connector.h"
 
 #include "msm_drv.h"
@@ -98,6 +99,8 @@ static const struct of_device_id dp_dt_match[] = {
 	{}
 };
 
+static void dp_display_update_hdcp_info(struct dp_display_private *dp);
+
 static bool dp_display_framework_ready(struct dp_display_private *dp)
 {
 	return dp->dp_display.post_open ? false : true;
@@ -142,6 +145,13 @@ static void dp_display_hdcp_cb_work(struct work_struct *work)
 	u32 hdcp_auth_state;
 
 	dp = container_of(dw, struct dp_display_private, hdcp_cb_work);
+
+	dp_display_update_hdcp_info(dp);
+
+	if (!dp_display_is_hdcp_enabled(dp))
+		return;
+
+	dp->link->hdcp_status.hdcp_state = HDCP_STATE_AUTHENTICATING;
 
 	rc = dp->catalog->ctrl.read_hdcp_status(&dp->catalog->ctrl);
 	if (rc >= 0) {
@@ -467,8 +477,14 @@ static int dp_display_send_hpd_notification(struct dp_display_private *dp,
 
 	dp->dp_display.is_connected = hpd;
 
-	if (!dp_display_framework_ready(dp))
+	if (!dp_display_framework_ready(dp)) {
+		pr_err("%s: dp display framework not ready\n", __func__);
+		if (!dp->dp_display.is_bootsplash_en) {
+			dp->dp_display.is_bootsplash_en = true;
+			drm_client_dev_register(dp->dp_display.drm_dev);
+		}
 		return ret;
+	}
 
 	dp->aux->state |= DP_STATE_NOTIFICATION_SENT;
 
@@ -961,7 +977,7 @@ static int dp_init_sub_modules(struct dp_display_private *dp)
 
 	dp->debug = dp_debug_get(dev, dp->panel, dp->usbpd,
 				dp->link, dp->aux, &dp->dp_display.connector,
-				dp->catalog);
+				dp->catalog, dp->ctrl);
 	if (IS_ERR(dp->debug)) {
 		rc = PTR_ERR(dp->debug);
 		pr_err("failed to initialize debug, rc = %d\n", rc);
@@ -1142,12 +1158,9 @@ static int dp_display_post_enable(struct dp_display *dp_display)
 		dp->audio_status = dp->audio->on(dp->audio);
 	}
 
-	dp_display_update_hdcp_info(dp);
-
-	if (dp_display_is_hdcp_enabled(dp)) {
+	if (dp->hdcp.feature_enabled && 0) { /* bootsplash check */
 		cancel_delayed_work_sync(&dp->hdcp_cb_work);
 
-		dp->link->hdcp_status.hdcp_state = HDCP_STATE_AUTHENTICATING;
 		queue_delayed_work(dp->wq, &dp->hdcp_cb_work, HZ / 2);
 	}
 
@@ -1399,6 +1412,60 @@ static int dp_display_get_modes(struct dp_display *dp,
 	if (dp_mode->timing.pixel_clk_khz)
 		dp->max_pclk_khz = dp_mode->timing.pixel_clk_khz;
 	return ret;
+}
+
+int dp_display_set_power(struct drm_connector *connector,
+			int power_mode, void *disp)
+{
+	struct dp_display *dp = disp;
+	struct dp_display_private *dp_priv =
+			container_of(dp, struct dp_display_private, dp_display);
+	int rc = 0;
+
+	if (!dp) {
+		pr_err("invalid display\n");
+		return -EINVAL;
+	}
+
+	if (!dp_priv) {
+		pr_err("invalid display private\n");
+		return -EINVAL;
+	}
+
+	if (!dp_priv->panel) {
+		pr_err("invalid link_info\n");
+		return -EINVAL;
+	}
+
+	if (!dp_priv->aux->drm_aux) {
+		pr_err("Invalid drm_aux");
+		return -EINVAL;
+	}
+
+	if (!dp_priv->link) {
+		pr_err("invalid dp_link\n");
+		return -EINVAL;
+	}
+
+	switch (power_mode) {
+	case SDE_MODE_DPMS_STANDBY:
+		dp_priv->link->power_mode = DRM_MODE_DPMS_STANDBY;
+		rc = dp_priv->link->psm_config(dp_priv->link,
+				&dp_priv->panel->link_info, true);
+		dp_priv->ctrl->push_idle(dp_priv->ctrl);
+		break;
+	case SDE_MODE_DPMS_SUSPEND:
+		dp_priv->link->power_mode = DRM_MODE_DPMS_SUSPEND;
+		rc = dp_priv->link->psm_config(dp_priv->link,
+				&dp_priv->panel->link_info, true);
+		dp_priv->ctrl->push_idle(dp_priv->ctrl);
+		break;
+	default:
+		pr_err("conn %d dpms set to unrecognized mode %d\n",
+		connector->base.id, power_mode);
+		break;
+	}
+	return rc;
 }
 
 static int dp_display_config_hdr(struct dp_display *dp_display,
