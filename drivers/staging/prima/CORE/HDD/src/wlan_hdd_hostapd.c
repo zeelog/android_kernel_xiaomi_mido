@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2012-2018, 2020 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2021 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Previously licensed under the ISC license by Qualcomm Atheros, Inc.
  *
@@ -298,8 +299,6 @@ int __hdd_hostapd_stop (struct net_device *dev)
  clear_bit(DEVICE_IFACE_OPENED, &adapter->event_flags);
  adapter->dev->wireless_handlers = NULL;
 
-   if (!hdd_is_cli_iface_up(hdd_ctx))
-       sme_ScanFlushResult(hdd_ctx->hHal, 0);
 
    EXIT();
    return 0;

@@ -1735,6 +1735,7 @@ VOS_STATUS hdd_softap_rx_packet_cbk( v_VOID_t *vosContext,
                                pAdapter->macAddressCurrent.bytes, 6) != 0) {
               VOS_TRACE(VOS_MODULE_ID_HDD_SAP_DATA, VOS_TRACE_LEVEL_ERROR,
                         "Packet is not destined to this address, dropping");
+	      pVosPacket->pSkb = NULL;
               kfree_skb(skb);
               pVosPacket = pNextVosPacket;
               continue;
