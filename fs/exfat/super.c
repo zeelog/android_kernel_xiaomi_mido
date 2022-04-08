@@ -177,7 +177,9 @@ static int exfat_show_options(struct seq_file *m, struct dentry *root)
 		seq_puts(m, ",discard");
 	if (opts->keep_last_dots)
 		seq_puts(m, ",keep_last_dots");
-	if (opts->time_offset)
+	if (opts->sys_tz)
+		seq_puts(m, ",sys_tz");
+	else if (opts->time_offset)
 		seq_printf(m, ",time_offset=%d", opts->time_offset);
 	return 0;
 }
@@ -245,6 +247,7 @@ enum {
 	Opt_err_ro,
 	Opt_discard,
 	Opt_keep_last_dots,
+	Opt_sys_tz,
 	Opt_time_offset,
 
 	/* Deprecated options */
@@ -268,6 +271,7 @@ static const match_table_t exfat_tokens = {
 	{Opt_err_ro, "errors=remount-ro"},
 	{Opt_discard, "discard"},
 	{Opt_keep_last_dots, "keep_last_dots"},
+	{Opt_sys_tz, "sys_tz"},
 	{Opt_time_offset, "time_offset=%d"},
 
 	/* Deprecated options */
@@ -334,6 +338,9 @@ static int __exfat_parse_option(struct super_block *sb, char *p, substring_t *ar
 		break;
 	case Opt_keep_last_dots:
 		opts->keep_last_dots = 1;
+		break;
+	case Opt_sys_tz:
+		opts->sys_tz = 1;
 		break;
 	case Opt_time_offset:
 		if (match_int(&args[0], &option))
