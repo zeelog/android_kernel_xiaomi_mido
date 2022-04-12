@@ -464,6 +464,14 @@ static const struct midr_range arm64_bp_harden_smccc_cpus[] = {
 	{},
 };
 
+static const struct midr_range arm64_psci_bp_harden_cpus[] = {
+#ifdef CONFIG_PSCI_BP_HARDENING
+	MIDR_ALL_VERSIONS(MIDR_KRYO3G),
+	MIDR_ALL_VERSIONS(MIDR_KRYO2XX_GOLD),
+#endif
+	{},
+};
+
 #endif
 
 const struct arm64_cpu_capabilities arm64_errata[] = {
@@ -562,12 +570,7 @@ const struct arm64_cpu_capabilities arm64_errata[] = {
 #ifdef CONFIG_PSCI_BP_HARDENING
 	{
 		.capability = ARM64_HARDEN_BRANCH_PREDICTOR,
-		MIDR_ALL_VERSIONS(MIDR_KRYO3G),
-		.cpu_enable = enable_psci_bp_hardening,
-	},
-	{
-		.capability = ARM64_HARDEN_BRANCH_PREDICTOR,
-		MIDR_ALL_VERSIONS(MIDR_KRYO2XX_GOLD),
+		ERRATA_MIDR_RANGE_LIST(arm64_psci_bp_harden_cpus),
 		.cpu_enable = enable_psci_bp_hardening,
 	},
 #endif
