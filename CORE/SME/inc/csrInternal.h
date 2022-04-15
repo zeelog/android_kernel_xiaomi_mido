@@ -720,6 +720,7 @@ typedef struct tagCsrConfig
     tANI_BOOLEAN agg_btc_sco_enabled;
     tANI_U8 num_ba_buff_btc_sco;
     tANI_U8 num_ba_buff;
+    bool isPeriodicRoamScanEnabled;
 }tCsrConfig;
 
 typedef struct tagCsrChannelPowerInfo

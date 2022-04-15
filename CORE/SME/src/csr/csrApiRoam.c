@@ -2148,6 +2148,8 @@ eHalStatus csrChangeDefaultConfigParam(tpAniSirGlobal pMac, tCsrConfigParam *pPa
         pMac->roam.configParam.edca_be_aifs = pParam->edca_be_aifs;
         pMac->sta_sap_scc_on_dfs_chan = pParam->sta_sap_scc_on_dfs_chan;
         pMac->force_scc_with_ecsa = pParam->force_scc_with_ecsa;
+        pMac->roam.configParam.isPeriodicRoamScanEnabled =
+                                pParam->isPeriodicRoamScanEnabled;
         for (i = 0; i < 3; i++) {
              pMac->roam.configParam.agg_btc_sco_oui[i] =
                                                      pParam->agg_btc_sco_oui[i];
@@ -2356,6 +2358,8 @@ eHalStatus csrGetConfigParam(tpAniSirGlobal pMac, tCsrConfigParam *pParam)
         pParam->edca_be_aifs = pMac->roam.configParam.edca_be_aifs;
         pParam->sta_sap_scc_on_dfs_chan = pMac->sta_sap_scc_on_dfs_chan;
         pParam->force_scc_with_ecsa = pMac->force_scc_with_ecsa;
+        pParam->isPeriodicRoamScanEnabled =
+                     pMac->roam.configParam.isPeriodicRoamScanEnabled;
 
         for (i = 0; i < 3; i++) {
              pParam->agg_btc_sco_oui[i] =

@@ -180,6 +180,8 @@ typedef struct sCsrNeighborRoamControlInfo
     vos_timer_t                 neighborScanTimer;
     vos_timer_t                 neighborResultsRefreshTimer;
     vos_timer_t                 emptyScanRefreshTimer;
+    vos_timer_t                 neighborPeriodicScanTimer;
+    tANI_U16                    neighborPeriodicScanTimerPeriod;
     tCsrNeighborRoamChannelInfo roamChannelInfo;
     tANI_U8                     currentNeighborLookupThreshold;
     tANI_BOOLEAN                scanRspPending;
@@ -221,7 +223,10 @@ typedef struct sCsrNeighborRoamControlInfo
 #ifdef WLAN_FEATURE_LFR_MBB
      bool is_pre_auth_reassoc_mbb_timer_started;
 #endif
-
+     bool                       isPeriodicScanRunning;
+     bool                       isPeriodicTimerRunning;
+     bool                       isPeriodicScanEnabled;
+     v_U32_t                    scanId;
 } tCsrNeighborRoamControlInfo, *tpCsrNeighborRoamControlInfo;
 
 

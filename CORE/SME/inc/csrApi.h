@@ -1267,6 +1267,7 @@ typedef struct tagCsrConfigParam
     tANI_U8 num_ba_buff_btc_sco;
     tANI_U8 num_ba_buff;
     bool force_scc_with_ecsa;
+    bool isPeriodicRoamScanEnabled;
 }tCsrConfigParam;
 
 //Tush
