@@ -2218,6 +2218,23 @@ static eHalStatus csrNeighborRoamProcessScanComplete (tpAniSirGlobal pMac)
                         
 //                        vos_timer_stop(&pNeighborRoamInfo->neighborScanTimer);
                     }
+                    if (pNeighborRoamInfo->isPeriodicScanEnabled)
+                    {
+                         smsLog(pMac, LOG1, FL("Periodic Scan stop"));
+                         if (pNeighborRoamInfo->isPeriodicTimerRunning)
+                         {
+                              pNeighborRoamInfo->isPeriodicTimerRunning = FALSE;
+                              vos_timer_stop(&pNeighborRoamInfo->neighborPeriodicScanTimer);
+                         }
+                         if (pNeighborRoamInfo->isPeriodicScanRunning)
+                         {
+                             pNeighborRoamInfo->isPeriodicScanRunning = FALSE;
+                             csrScanAbortMacScan(pMac, pNeighborRoamInfo->csrSessionId, eCSR_SCAN_ABORT_DEFAULT);
+                         }
+                         pNeighborRoamInfo->isPeriodicScanEnabled = FALSE;
+                         /* Valid APs are found after scan. Now we can initiate pre-authentication */
+                         CSR_NEIGHBOR_ROAM_STATE_TRANSITION(eCSR_NEIGHBOR_ROAM_STATE_REPORT_SCAN)
+                     }
                 }
                 else
                 {
@@ -4507,6 +4524,23 @@ VOS_STATUS csrNeighborRoamNeighborLookupUPCallback (v_PVOID_t pAdapter, v_U8_t r
        return VOS_STATUS_SUCCESS;
     }
 
+    /* Stop Periodic Scan */
+    if (pNeighborRoamInfo->isPeriodicScanEnabled)
+    {
+        smsLog(pMac, LOG1, FL("Periodic Scan stop"));
+        if (pNeighborRoamInfo->isPeriodicTimerRunning)
+        {
+            pNeighborRoamInfo->isPeriodicTimerRunning = FALSE;
+            vos_timer_stop(&pNeighborRoamInfo->neighborPeriodicScanTimer);
+        }
+        if (pNeighborRoamInfo->isPeriodicScanRunning)
+        {
+            pNeighborRoamInfo->isPeriodicScanRunning = FALSE;
+            csrScanAbortMacScan(pMac, pNeighborRoamInfo->csrSessionId, eCSR_SCAN_ABORT_DEFAULT);
+        }
+        pNeighborRoamInfo->isPeriodicScanEnabled = FALSE;
+    }
+
     VOS_ASSERT(WLANTL_HO_THRESHOLD_UP == rssiNotification);
     vosStatus = csrNeighborRoamNeighborLookupUpEvent(pMac);
     return vosStatus;
@@ -4545,6 +4579,23 @@ VOS_STATUS csrNeighborRoamNeighborLookupDOWNCallback (v_PVOID_t pAdapter, v_U8_t
     {
        smsLog(pMac, LOGW, "Ignoring the indication as we are not connected");
        return VOS_STATUS_SUCCESS;
+    }
+
+    /* Stop Periodic Scan */
+    if (pNeighborRoamInfo->isPeriodicScanEnabled)
+    {
+        smsLog(pMac, LOG1, FL("Periodic Scan stop"));
+        if (pNeighborRoamInfo->isPeriodicTimerRunning)
+        {
+            pNeighborRoamInfo->isPeriodicTimerRunning = FALSE;
+            vos_timer_stop(&pNeighborRoamInfo->neighborPeriodicScanTimer);
+        }
+        if (pNeighborRoamInfo->isPeriodicScanRunning)
+        {
+            pNeighborRoamInfo->isPeriodicScanRunning = FALSE;
+            csrScanAbortMacScan(pMac, pNeighborRoamInfo->csrSessionId, eCSR_SCAN_ABORT_DEFAULT);
+        }
+        pNeighborRoamInfo->isPeriodicScanEnabled = FALSE;
     }
 
     VOS_ASSERT(WLANTL_HO_THRESHOLD_DOWN == rssiNotification);
