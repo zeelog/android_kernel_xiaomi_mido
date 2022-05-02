@@ -17280,7 +17280,29 @@ int wlan_hdd_cfg80211_set_ie( hdd_adapter_t *pAdapter,
                 }
                 break;
 
-            default:
+	    case WLAN_ELEMID_RSNXE:
+		{
+		    v_U16_t curAddIELen = pWextState->assocAddIE.length;
+		    if (SIR_MAC_MAX_ADD_IE_LENGTH <
+			(pWextState->assocAddIE.length + eLen)) {
+			hddLog(VOS_TRACE_LEVEL_FATAL, "Cannot accommodate assocAddIE "
+			       "Need bigger buffer space");
+			VOS_ASSERT(0);
+			return -ENOMEM;
+		    }
+		    hddLog(VOS_TRACE_LEVEL_INFO, "Set RSNXE(len %d)",
+			   eLen + 2);
+		    memcpy( pWextState->assocAddIE.addIEdata + curAddIELen,
+		            genie - 2, eLen + 2);
+		    pWextState->assocAddIE.length += eLen + 2;
+		    pWextState->roamProfile.pAddIEAssoc =
+					pWextState->assocAddIE.addIEdata;
+		    pWextState->roamProfile.nAddIEAssocLength =
+					pWextState->assocAddIE.length;
+		    break;
+		}
+
+	    default:
                 hddLog (VOS_TRACE_LEVEL_ERROR,
                         "%s Set UNKNOWN IE %X", __func__, elementId);
                 /* when Unknown IE is received we should break and continue
