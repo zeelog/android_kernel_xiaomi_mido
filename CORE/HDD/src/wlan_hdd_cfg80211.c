@@ -10107,6 +10107,55 @@ static int wlan_hdd_add_ie(hdd_adapter_t* pHostapdAdapter, v_U8_t *genie,
     return 0;
 }
 
+/**
+ * wlan_hdd_add_extra_ie() - add extra ies in beacon
+ * @adapter: Pointer to hostapd adapter
+ * @genie: Pointer to extra ie
+ * @total_ielen: Pointer to store total ie length
+ * @temp_ie_id: ID of extra ie
+ *
+ * Return: none
+ */
+static void wlan_hdd_add_extra_ie(hdd_adapter_t* pHostapdAdapter,
+                                  v_U8_t *genie, v_U8_t *total_ielen,
+                                  v_U8_t temp_ie_id)
+{
+    v_U16_t ielen = 0;
+    beacon_data_t *pBeacon = pHostapdAdapter->sessionCtx.ap.beacon;
+    v_U32_t left = pBeacon->tail_len;
+    v_U8_t *ptr = pBeacon->tail;
+    v_U8_t elem_id, elem_len;
+
+    if (NULL == ptr || 0 == left)
+         return;
+
+    while (left >= 2) {
+         elem_id = ptr[0];
+         elem_len = ptr[1];
+         left -= 2;
+         if (elem_len > left) {
+             hddLog( VOS_TRACE_LEVEL_ERROR, "**Invalid IEs***");
+             return;
+         }
+
+         if (temp_ie_id == elem_id)
+         {
+             ielen = ptr[1] + 2;
+             if ((*total_ielen + ielen) <= MAX_GENIE_LEN)
+             {
+                 vos_mem_copy(&genie[*total_ielen], ptr, ielen);
+                 *total_ielen += ielen;
+             }
+             else
+             {
+                  hddLog( VOS_TRACE_LEVEL_ERROR, "**Ie Length is too big***");
+             }
+         }
+         left -= elem_len;
+         ptr += (elem_len + 2);
+    }
+}
+
 static void wlan_hdd_add_hostapd_conf_vsie(hdd_adapter_t* pHostapdAdapter,
                                            v_U8_t *genie, v_U8_t *total_ielen)
 {
@@ -10184,6 +10233,9 @@ int wlan_hdd_cfg80211_update_apies(hdd_adapter_t *pHostapdAdapter)
     }
 
     pBeacon = pHostapdAdapter->sessionCtx.ap.beacon;
+
+    wlan_hdd_add_extra_ie(pHostapdAdapter, genie, &total_ielen, WLAN_ELEMID_RSNXE);
+
     if (0 != wlan_hdd_add_ie(pHostapdAdapter, genie,
                               &total_ielen, WPS_OUI_TYPE, WPS_OUI_TYPE_SIZE))
     {
