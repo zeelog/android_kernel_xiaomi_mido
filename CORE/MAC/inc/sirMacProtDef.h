@@ -300,7 +300,7 @@
 #define SIR_MAC_SSID_EID_MAX               32
 #define SIR_MAC_RATESET_EID            1
 #define SIR_MAC_RATESET_EID_MIN            1
-#define SIR_MAC_RATESET_EID_MAX            12
+#define SIR_MAC_RATESET_EID_MAX            13
 #define SIR_MAC_FH_PARAM_SET_EID       2
 #define SIR_MAC_FH_PARAM_SET_EID_MIN       5
 #define SIR_MAC_FH_PARAM_SET_EID_MAX       5
@@ -479,6 +479,8 @@
 #define SIR_MAX_NOA_DESCR           2
 #define SIR_P2P_IE_HEADER_LEN       6
 
+#define SIR_MAC_RSNXE 0xf4
+
 #define SIR_MAC_CISCO_OUI "\x00\x40\x96"
 #define SIR_MAC_CISCO_OUI_SIZE 3
 
@@ -603,7 +605,7 @@
 /// Protocol defined MAX definitions
 #define SIR_MAC_ADDR_LENGTH                  6
 #define SIR_MAC_MAX_SSID_LENGTH              32
-#define SIR_MAC_MAX_NUMBER_OF_RATES          12
+#define SIR_MAC_MAX_NUMBER_OF_RATES          13
 #define SIR_MAC_MAX_NUM_OF_DEFAULT_KEYS      4
 #define SIR_MAC_KEY_LENGTH                   13   // WEP Maximum key length size
 #define SIR_MAC_AUTH_CHALLENGE_LENGTH        253
@@ -2794,6 +2796,7 @@ typedef __ani_attr_pre_packed struct sSirMacQoSDelBARsp
 #define SIR_MAC_RATE_36  0x48
 #define SIR_MAC_RATE_48  0x60
 #define SIR_MAC_RATE_54  0x6C
+#define SIR_MAC_RATE_SAE_H2E 0xF6
 
 // ANI legacy supported rates
 #define SIR_MAC_RATE_72  0x01
@@ -2822,6 +2825,7 @@ typedef __ani_attr_pre_packed struct sSirMacQoSDelBARsp
 #define SIR_MAC_RATE_36_BITMAP   (1<<9)
 #define SIR_MAC_RATE_48_BITMAP   (1<<10)
 #define SIR_MAC_RATE_54_BITMAP   (1<<11)
+#define SIR_MAC_RATE_SAE_H2E_BITMAP   (1<<12)
 
 #define SIR_BSS_MEMBERSHIP_SELECTOR_SAE_H2E 123
 #define SIR_RATE_MASK 0x80
@@ -2833,12 +2837,14 @@ typedef __ani_attr_pre_packed struct sSirMacQoSDelBARsp
                        (((tANI_U8)x)==SIR_MAC_RATE_24)|| \
                        (((tANI_U8)x)==SIR_MAC_RATE_36)|| \
                        (((tANI_U8)x)==SIR_MAC_RATE_48)|| \
-                       (((tANI_U8)x)==SIR_MAC_RATE_54))
+                       (((tANI_U8)x)==SIR_MAC_RATE_54)|| \
+                       (((tANI_U8)x)==SIR_MAC_RATE_SAE_H2E))
 
 #define sirIsBrate(x) ((((tANI_U8)x)==SIR_MAC_RATE_1)  || \
                        (((tANI_U8)x)==SIR_MAC_RATE_2)  || \
                        (((tANI_U8)x)==SIR_MAC_RATE_5_5)|| \
-                       (((tANI_U8)x)==SIR_MAC_RATE_11))
+                       (((tANI_U8)x)==SIR_MAC_RATE_11) || \
+                       (((tANI_U8)x)==SIR_MAC_RATE_SAE_H2E))
 
 #define sirIsGrate(x) ((((tANI_U8)x)==SIR_MAC_RATE_1)  || \
                        (((tANI_U8)x)==SIR_MAC_RATE_2)  || \
@@ -2851,7 +2857,8 @@ typedef __ani_attr_pre_packed struct sSirMacQoSDelBARsp
                        (((tANI_U8)x)==SIR_MAC_RATE_24) || \
                        (((tANI_U8)x)==SIR_MAC_RATE_36) || \
                        (((tANI_U8)x)==SIR_MAC_RATE_48) || \
-                       (((tANI_U8)x)==SIR_MAC_RATE_54))
+                       (((tANI_U8)x)==SIR_MAC_RATE_54) || \
+                       (((tANI_U8)x)==SIR_MAC_RATE_SAE_H2E))
 
 #define sirIsProprate(x) ((((tANI_U8)x)==SIR_MAC_RATE_72) || \
                           (((tANI_U8)x)==SIR_MAC_RATE_96) || \
