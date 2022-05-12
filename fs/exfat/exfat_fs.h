@@ -15,7 +15,12 @@
 #include "version.h"
 #include "exfat_raw.h"
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 17, 0)
+#include <linux/magic.h>
+#else
 #define EXFAT_SUPER_MAGIC       0x2011BAB0UL
+#endif
+
 #define EXFAT_ROOT_INO		1
 
 #define EXFAT_CLUSTERS_UNTRACKED (~0u)
