@@ -526,6 +526,8 @@ typedef struct
    wpt_uint8  mgmtTxfailureCnt;
    uint8_t  mgmt_pktfree_fail;
    vos_lock_t mgmt_pkt_lock;
+   /* completion variable for ADD BA Responce Delay */
+   struct completion addBa_responce_delay;
 
 } tWDA_CbContext ; 
 
