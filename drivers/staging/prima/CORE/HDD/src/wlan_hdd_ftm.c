@@ -5572,7 +5572,7 @@ static int __iw_ftm_set_var_ints_getnone(struct net_device *dev, struct iw_reque
     hdd_adapter_t *pAdapter;
     hdd_context_t *pHddCtx;
     int sub_cmd = wrqu->data.flags;
-    int *value = (int*)wrqu->data.pointer;
+    int *value = (int*)extra;
     int ret = 0;
     VOS_STATUS status;
 
