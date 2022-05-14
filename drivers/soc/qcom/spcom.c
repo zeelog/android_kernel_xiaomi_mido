@@ -1536,7 +1536,6 @@ static int spcom_handle_create_channel_command(void *cmd_buf, int cmd_size)
 	int ret = 0;
 	struct spcom_user_create_channel_command *cmd = cmd_buf;
 	const char *ch_name;
-	const size_t maxlen = sizeof(cmd->ch_name);
 
 	if (cmd_size != sizeof(*cmd)) {
 		pr_err("cmd_size [%d] , expected [%d].\n",
@@ -1545,11 +1544,6 @@ static int spcom_handle_create_channel_command(void *cmd_buf, int cmd_size)
 	}
 
 	ch_name = cmd->ch_name;
-	if (strnlen(cmd->ch_name, maxlen) == maxlen) {
-		pr_err("channel name is not NULL terminated\n");
-		return -EINVAL;
-	}
-
 	pr_debug("ch_name [%s].\n", ch_name);
 
 	ret = spcom_create_channel_chardev(ch_name);
@@ -2584,6 +2578,12 @@ static int spcom_create_channel_chardev(const char *name)
 	void *priv;
 	struct cdev *cdev;
 
+	if (!name || strnlen(name, SPCOM_CHANNEL_NAME_SIZE) ==
+			SPCOM_CHANNEL_NAME_SIZE) {
+		pr_err("invalid channel name\n");
+		return -EINVAL;
+	}
+
 	pr_debug("Add channel [%s].\n", name);
 
 	ch = spcom_find_channel_by_name(name);
@@ -2605,7 +2605,12 @@ static int spcom_create_channel_chardev(const char *name)
 	spcom_dev->channel_count++;
 	devt = spcom_dev->device_no + spcom_dev->channel_count;
 	priv = ch;
-	dev = device_create(cls, parent, devt, priv, name);
+
+	/*
+	 * Pass channel name as formatted string to avoid abuse by using a
+	 * formatted string as channel name
+	 */
+	dev = device_create(cls, parent, devt, priv, "%s", name);
 	if (IS_ERR(dev)) {
 		pr_err("device_create failed.\n");
 		kfree(cdev);

@@ -113,7 +113,7 @@ static int drm_dp_cec_adap_transmit(struct cec_adapter *adap, u8 attempts,
 				    u32 signal_free_time, struct cec_msg *msg)
 {
 	struct drm_dp_aux *aux = cec_get_drvdata(adap);
-	unsigned int retries = min(5, attempts - 1);
+	unsigned int retries = min(2, attempts - 1);
 	ssize_t err;
 
 	err = drm_dp_dpcd_write(aux, DP_CEC_TX_MESSAGE_BUFFER,
