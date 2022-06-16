@@ -917,6 +917,9 @@ static int fastrpc_mmap_create(struct fastrpc_file *fl, int fd,
 				(unsigned int)map->attr);
 			map->refs = 2;
 		}
+		VERIFY(err, !IS_ERR_OR_NULL(map->buf = dma_buf_get(fd)));
+		if (err)
+			goto bail;
 		VERIFY(err, !IS_ERR_OR_NULL(map->handle =
 				ion_import_dma_buf_fd(fl->apps->client, fd)));
 		if (err)
@@ -947,9 +950,6 @@ static int fastrpc_mmap_create(struct fastrpc_file *fl, int fd,
 		if (map->attr & FASTRPC_ATTR_NOVA && !sess->smmu.coherent)
 			map->uncached = 1;
 
-		VERIFY(err, !IS_ERR_OR_NULL(map->buf = dma_buf_get(fd)));
-		if (err)
-			goto bail;
 		VERIFY(err, !IS_ERR_OR_NULL(map->attach =
 				dma_buf_attach(map->buf, sess->smmu.dev)));
 		if (err)

@@ -116,7 +116,7 @@
 
 /*
  * After both sides get CONNECTED,
- * there is a race between one side queueing rx buffer and the other side
+ * there is a race between one side queuing rx buffer and the other side
  * trying to call glink_tx() , this race is only on the 1st tx.
  * Do tx retry with some delay to allow the other side to queue rx buffer.
  */
@@ -1536,6 +1536,7 @@ static int spcom_handle_create_channel_command(void *cmd_buf, int cmd_size)
 	int ret = 0;
 	struct spcom_user_create_channel_command *cmd = cmd_buf;
 	const char *ch_name;
+	const size_t maxlen = sizeof(cmd->ch_name);
 
 	if (cmd_size != sizeof(*cmd)) {
 		pr_err("cmd_size [%d] , expected [%d].\n",
@@ -1544,6 +1545,11 @@ static int spcom_handle_create_channel_command(void *cmd_buf, int cmd_size)
 	}
 
 	ch_name = cmd->ch_name;
+	if (strnlen(cmd->ch_name, maxlen) == maxlen) {
+		pr_err("channel name is not NULL terminated\n");
+		return -EINVAL;
+	}
+
 	pr_debug("ch_name [%s].\n", ch_name);
 
 	ret = spcom_create_channel_chardev(ch_name);
