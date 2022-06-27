@@ -473,7 +473,7 @@ typedef struct sap_Config {
 #endif
     eCsrBand        scanBandPreference;
     v_U16_t         acsBandSwitchThreshold;
-
+    bool            require_h2e;
 } tsap_Config_t;
 
 typedef enum {

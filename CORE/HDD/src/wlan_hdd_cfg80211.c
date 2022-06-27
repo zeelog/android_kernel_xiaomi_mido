@@ -10034,6 +10034,20 @@ static void wlan_hdd_check_11gmode(u8 *pIe, u8* require_ht,
     return;
 }
 
+/* check SAE/H2E require flag from support rate sets */
+static void wlan_hdd_check_h2e(u8 *pIe, tsap_Config_t *pConfig, u8 num_rates)
+{
+    u8 i;
+
+    for ( i = 0; i < (num_rates + 1) ; i++)
+    {
+      if((BASIC_RATE_MASK | SIR_BSS_MEMBERSHIP_SELECTOR_SAE_H2E) == pIe[i])
+      {
+         pConfig->require_h2e = TRUE;
+      }
+    }
+}
+
 static void wlan_hdd_set_sapHwmode(hdd_adapter_t *pHostapdAdapter)
 {
     tsap_Config_t *pConfig = &pHostapdAdapter->sessionCtx.ap.sapConfig;
@@ -10042,6 +10056,7 @@ static void wlan_hdd_set_sapHwmode(hdd_adapter_t *pHostapdAdapter)
     u8 checkRatesfor11g = TRUE;
     u8 require_ht = FALSE;
     u8 *pIe=NULL;
+    u8 num_rates;
 
     pConfig->SapHw_mode= eSAP_DOT11_MODE_11b;
 
@@ -10050,8 +10065,10 @@ static void wlan_hdd_set_sapHwmode(hdd_adapter_t *pHostapdAdapter)
     if (pIe != NULL)
     {
         pIe += 1;
+        num_rates = pIe[0];
         wlan_hdd_check_11gmode(pIe, &require_ht, &checkRatesfor11g,
                                &pConfig->SapHw_mode);
+        wlan_hdd_check_h2e(pIe, pConfig, num_rates);
     }
 
     pIe = wlan_hdd_cfg80211_get_ie_ptr(pBeacon->tail, pBeacon->tail_len,
@@ -10060,8 +10077,10 @@ static void wlan_hdd_set_sapHwmode(hdd_adapter_t *pHostapdAdapter)
     {
 
         pIe += 1;
+        num_rates = pIe[0];
         wlan_hdd_check_11gmode(pIe, &require_ht, &checkRatesfor11g,
                                &pConfig->SapHw_mode);
+        wlan_hdd_check_h2e(pIe, pConfig, num_rates);
     }
 
     if( pConfig->channel > 14 )
@@ -11667,6 +11686,7 @@ static int wlan_hdd_cfg80211_start_bss(hdd_adapter_t *pHostapdAdapter,
     }
 
     wlan_hdd_set_sapHwmode(pHostapdAdapter);
+    pConfig->require_h2e = pHostapdAdapter->sessionCtx.ap.sapConfig.require_h2e;
 
 #ifdef WLAN_FEATURE_11AC
     /* Overwrite the hostapd setting for HW mode only for 11ac.

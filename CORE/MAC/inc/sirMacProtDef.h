@@ -2823,6 +2823,9 @@ typedef __ani_attr_pre_packed struct sSirMacQoSDelBARsp
 #define SIR_MAC_RATE_48_BITMAP   (1<<10)
 #define SIR_MAC_RATE_54_BITMAP   (1<<11)
 
+#define SIR_BSS_MEMBERSHIP_SELECTOR_SAE_H2E 123
+#define SIR_RATE_MASK 0x80
+
 #define sirIsArate(x) ((((tANI_U8)x)==SIR_MAC_RATE_6) || \
                        (((tANI_U8)x)==SIR_MAC_RATE_9) || \
                        (((tANI_U8)x)==SIR_MAC_RATE_12)|| \
