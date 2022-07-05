@@ -2410,7 +2410,7 @@ static void qpnp_regulator_set_point_init(void)
  * This initialization function should be called in systems in which driver
  * registration ordering must be controlled precisely.
  */
-int __init qpnp_regulator_init(void)
+static int __init qpnp_regulator_init(void)
 {
 	static bool has_registered;
 
@@ -2422,7 +2422,6 @@ int __init qpnp_regulator_init(void)
 
 	return platform_driver_register(&qpnp_regulator_driver);
 }
-EXPORT_SYMBOL(qpnp_regulator_init);
 
 static void __exit qpnp_regulator_exit(void)
 {

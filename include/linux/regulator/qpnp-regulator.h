@@ -175,23 +175,4 @@ struct qpnp_regulator_platform_data {
 	u16					base_addr;
 };
 
-#ifdef CONFIG_REGULATOR_QPNP
-
-/**
- * qpnp_regulator_init() - register spmi driver for qpnp-regulator
- *
- * This initialization function should be called in systems in which driver
- * registration ordering must be controlled precisely.
- */
-int __init qpnp_regulator_init(void);
-
-#else
-
-static inline int __init qpnp_regulator_init(void)
-{
-	return -ENODEV;
-}
-
-#endif /* CONFIG_REGULATOR_QPNP */
-
 #endif
