@@ -504,7 +504,6 @@ static int notify_online(unsigned int cpu)
 	cpu_notify(CPU_ONLINE, cpu);
 	return 0;
 }
-static void __cpuhp_kick_ap_work(struct cpuhp_cpu_state *st);
 
 static void __cpuhp_kick_ap_work(struct cpuhp_cpu_state *st);
 
