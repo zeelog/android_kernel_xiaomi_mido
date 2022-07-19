@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2012-2017, 2019-2020 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Previously licensed under the ISC license by Qualcomm Atheros, Inc.
  *
@@ -4109,6 +4110,8 @@ typedef struct
   /* Length of the beacon or probe response
    * corresponding to the candidate found by PNO */
   tANI_U32      frameLength;
+  /* Freq of the network */
+  tANI_U32      freq;
   /* Index to memory location where the contents of
    * beacon or probe response frame will be copied */
   tANI_U8       data[1];

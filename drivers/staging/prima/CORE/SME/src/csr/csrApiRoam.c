@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2012-2020 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Previously licensed under the ISC license by Qualcomm Atheros, Inc.
  *
@@ -2147,6 +2148,8 @@ eHalStatus csrChangeDefaultConfigParam(tpAniSirGlobal pMac, tCsrConfigParam *pPa
         pMac->roam.configParam.edca_be_aifs = pParam->edca_be_aifs;
         pMac->sta_sap_scc_on_dfs_chan = pParam->sta_sap_scc_on_dfs_chan;
         pMac->force_scc_with_ecsa = pParam->force_scc_with_ecsa;
+        pMac->roam.configParam.isPeriodicRoamScanEnabled =
+                                pParam->isPeriodicRoamScanEnabled;
         for (i = 0; i < 3; i++) {
              pMac->roam.configParam.agg_btc_sco_oui[i] =
                                                      pParam->agg_btc_sco_oui[i];
@@ -2355,6 +2358,8 @@ eHalStatus csrGetConfigParam(tpAniSirGlobal pMac, tCsrConfigParam *pParam)
         pParam->edca_be_aifs = pMac->roam.configParam.edca_be_aifs;
         pParam->sta_sap_scc_on_dfs_chan = pMac->sta_sap_scc_on_dfs_chan;
         pParam->force_scc_with_ecsa = pMac->force_scc_with_ecsa;
+        pParam->isPeriodicRoamScanEnabled =
+                     pMac->roam.configParam.isPeriodicRoamScanEnabled;
 
         for (i = 0; i < 3; i++) {
              pParam->agg_btc_sco_oui[i] =
@@ -7333,6 +7338,12 @@ eHalStatus csrRoamReassoc(tpAniSirGlobal pMac, tANI_U32 sessionId, tCsrRoamProfi
       smsLog(pMac, LOGP, FL("No profile specified"));
       return eHAL_STATUS_FAILURE;
    }
+
+   if (!pSession) {
+      smsLog(pMac, LOGE, FL("Session_id invalid %d"), sessionId);
+      return eHAL_STATUS_FAILURE;
+   }
+
    smsLog(pMac, LOG1, FL("called  BSSType = %s (%d) authtype = %d "
                                                   "encryType = %d"),
             lim_BssTypetoString(pProfile->BSSType),
@@ -15813,6 +15824,12 @@ eHalStatus csrSendMBSetContextReqMsg( tpAniSirGlobal pMac, tANI_U32 sessionId,
     vos_msg_t msg;
     smsLog( pMac, LOG1, FL("keylength is %d, Encry type is : %d"),
                             keyLength, edType);
+
+    if (!pSession) {
+	smsLog(pMac, LOGE, FL("Session_id invalid %d"), sessionId);
+	return eHAL_STATUS_FAILURE;
+    }
+
     do {
         if( ( 1 != numKeys ) && ( 0 != numKeys ) ) break;
         // all of these fields appear in every SET_CONTEXT message.  Below we'll add in the size for each 
@@ -16512,6 +16529,10 @@ void csrCleanupSession(tpAniSirGlobal pMac, tANI_U32 sessionId)
     if( CSR_IS_SESSION_VALID( pMac, sessionId ) )
     {
         tCsrRoamSession *pSession = CSR_GET_SESSION( pMac, sessionId );
+	if (!pSession) {
+		smsLog(pMac, LOGE, FL("Session_id invalid %d"), sessionId);
+		return;
+	}
         csrRoamStop(pMac, sessionId);
         csrFreeConnectBssDesc(pMac, sessionId);
         csrRoamFreeConnectProfile( pMac, &pSession->connectedProfile );

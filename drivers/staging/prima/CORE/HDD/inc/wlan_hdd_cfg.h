@@ -3327,6 +3327,12 @@ This feature requires the dependent cfg.ini "gRoamPrefer5GHz" set to 1 */
 #define CFG_SW_PTA_ENABLE_MIN          (0)
 #define CFG_SW_PTA_ENABLE_MAX          (1)
 
+/* Enable/disable periodic scan no candidate found */
+#define CFG_PERIODIC_ROAM_SCAN_ENABLED         "gPeriodicRoamScanEnabled"
+#define CFG_PERIODIC_ROAM_SCAN_ENABLED_MIN     (0)
+#define CFG_PERIODIC_ROAM_SCAN_ENABLED_MAX     (1)
+#define CFG_PERIODIC_ROAM_SCAN_ENABLED_DEFAULT (0)
+
 /*--------------------------------------------------------------------------- 
   Type declarations
   -------------------------------------------------------------------------*/ 
@@ -3954,6 +3960,7 @@ typedef struct
 #ifdef FEATURE_WLAN_SW_PTA
    bool                        is_sw_pta_enabled;
 #endif
+   bool                        isPeriodicRoamScanEnabled;
 } hdd_config_t;
 
 /*--------------------------------------------------------------------------- 

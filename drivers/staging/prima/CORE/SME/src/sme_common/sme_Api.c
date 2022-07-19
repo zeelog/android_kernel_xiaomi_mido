@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2012-2020 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Previously licensed under the ISC license by Qualcomm Atheros, Inc.
  *
@@ -9013,8 +9014,9 @@ eHalStatus sme_PreferredNetworkFoundInd (tHalHandle hHal, void* pMsg)
                               pPrefNetworkFoundInd->ssId.length);
          vos_mem_copy(dumpSsId, pPrefNetworkFoundInd->ssId.ssId, ssIdLength);
          dumpSsId[ssIdLength] = 0;
-         smsLog(pMac, LOG1, FL(" SSID=%s frame length %d"),
-             dumpSsId, pPrefNetworkFoundInd->frameLength);
+         smsLog(pMac, LOG1, FL(" SSID=%s frame length %d Freq %d"),
+                dumpSsId, pPrefNetworkFoundInd->frameLength,
+                pPrefNetworkFoundInd->freq);
 
          /* Flush scan results, So as to avoid indication/updation of
           * stale entries, which may not have aged out during APPS collapse

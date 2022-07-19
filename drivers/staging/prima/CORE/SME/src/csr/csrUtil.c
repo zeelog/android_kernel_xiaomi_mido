@@ -7001,6 +7001,11 @@ eHalStatus csrSetModifyProfileFields(tpAniSirGlobal pMac, tANI_U32 sessionId,
 {
    tCsrRoamSession *pSession = CSR_GET_SESSION( pMac, sessionId );
 
+   if (!pSession) {
+      smsLog(pMac, LOGE, FL("Session_id invalid %d"), sessionId);
+      return eHAL_STATUS_FAILURE;
+   }
+
    vos_mem_copy(&pSession->connectedProfile.modifyProfileFields,
                  pModifyProfileFields,
                  sizeof(tCsrRoamModifyProfileFields));

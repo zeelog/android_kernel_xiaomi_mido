@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2012-2019 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Previously licensed under the ISC license by Qualcomm Atheros, Inc.
  *
@@ -141,6 +142,7 @@
 #define WDA_BA_MAX_RETRY_THRESHOLD 10
 #define WDA_BA_RETRY_TIME 300000   /* Time is in msec, equal to 5 mins */
 
+#define ADDBA_MAX_DELAY_COUNT 5
 /* extern declarations */
 extern void vos_WDAComplete_cback(v_PVOID_t pVosContext);
 extern wpt_uint8 WDI_GetActiveSessionsCount (void *pWDICtx, wpt_macAddr macBSSID, wpt_boolean skipBSSID);
@@ -544,6 +546,8 @@ VOS_STATUS WDA_open(v_PVOID_t pVosContext, v_PVOID_t devHandle,
    }
 
    wda_register_debug_callback();
+
+   init_completion(&wdaContext->addBa_responce_delay);
 
    return status;
 
@@ -7847,6 +7851,7 @@ VOS_STATUS WDA_ProcessAddBASessionReq(tWDA_CbContext *pWDA,
                           sizeof(WDI_AddBASessionReqParamsType)) ;
    tWDA_ReqParams *pWdaParams ;
    WLANTL_STAStateType tlSTAState = 0;
+   static uint8_t AddBaMax_Delay_Count = 0;
 
    VOS_TRACE( VOS_MODULE_ID_WDA, VOS_TRACE_LEVEL_INFO,
                                           "------> %s " ,__func__);
@@ -7899,21 +7904,45 @@ VOS_STATUS WDA_ProcessAddBASessionReq(tWDA_CbContext *pWDA,
    /* In TDLS case, there is a possibility that TL hasn't registered peer yet, but
       the peer thinks that we already setup TDLS link, and send us ADDBA request packet
    */
-   if((VOS_STATUS_SUCCESS != WDA_TL_GET_STA_STATE(pWDA->pVosContext, pAddBAReqParams->staIdx, &tlSTAState)) ||
-    ((WLANTL_STA_CONNECTED != tlSTAState) && (WLANTL_STA_AUTHENTICATED != tlSTAState)))
-   {
-       VOS_TRACE( VOS_MODULE_ID_WDA, VOS_TRACE_LEVEL_WARN,
-        "Peer staIdx %d hasn't established yet(%d). Send ADD BA failure to PE.", pAddBAReqParams->staIdx, tlSTAState );
-       status = WDI_STATUS_E_NOT_ALLOWED;
-       pAddBAReqParams->status =
-             CONVERT_WDI2SIR_STATUS(status) ;
-       WDA_SendMsg(pWDA, WDA_ADDBA_RSP, (void *)pAddBAReqParams , 0) ;
-       /*Reset the WDA state to READY */
-       pWDA->wdaState = WDA_READY_STATE;
-       vos_mem_free(pWdaParams->wdaWdiApiMsgParam) ;
-       vos_mem_free(pWdaParams);
 
-       return CONVERT_WDI2VOS_STATUS(status) ;
+   if((VOS_STATUS_SUCCESS != WDA_TL_GET_STA_STATE(pWDA->pVosContext, pAddBAReqParams->staIdx, &tlSTAState)) ||
+       ((WLANTL_STA_CONNECTED != tlSTAState) && (WLANTL_STA_AUTHENTICATED != tlSTAState)))
+   {
+       for (AddBaMax_Delay_Count = 0; AddBaMax_Delay_Count < ADDBA_MAX_DELAY_COUNT; AddBaMax_Delay_Count++)
+       {
+           INIT_COMPLETION(pWDA->addBa_responce_delay);
+
+           VOS_TRACE( VOS_MODULE_ID_WDA, VOS_TRACE_LEVEL_INFO,
+                     "ADD BA : Not in connected state.Add delay : %d",pWDA->addBa_responce_delay);
+           status = wait_for_completion_interruptible_timeout(&pWDA->addBa_responce_delay,
+                                                              msecs_to_jiffies(10));
+
+           VOS_TRACE( VOS_MODULE_ID_WDA, VOS_TRACE_LEVEL_ERROR,"completion status =%d", status);
+
+           if((VOS_STATUS_SUCCESS == WDA_TL_GET_STA_STATE(pWDA->pVosContext, pAddBAReqParams->staIdx, &tlSTAState)) &&
+               ((WLANTL_STA_CONNECTED == tlSTAState) || (WLANTL_STA_AUTHENTICATED == tlSTAState)))
+           {
+               VOS_TRACE( VOS_MODULE_ID_WDA, VOS_TRACE_LEVEL_ERROR,"State : %d",tlSTAState);
+               break;
+           }
+       }
+
+       if ((AddBaMax_Delay_Count >= ADDBA_MAX_DELAY_COUNT) &&
+            ((WLANTL_STA_CONNECTED != tlSTAState) && (WLANTL_STA_AUTHENTICATED != tlSTAState)))
+       {
+           VOS_TRACE( VOS_MODULE_ID_WDA, VOS_TRACE_LEVEL_WARN,
+               "Peer staIdx %d hasn't established yet(%d). Send ADD BA failure to PE.", pAddBAReqParams->staIdx, tlSTAState );
+           status = WDI_STATUS_E_NOT_ALLOWED;
+           pAddBAReqParams->status =
+                 CONVERT_WDI2SIR_STATUS(status) ;
+           WDA_SendMsg(pWDA, WDA_ADDBA_RSP, (void *)pAddBAReqParams , 0) ;
+           /*Reset the WDA state to READY */
+           pWDA->wdaState = WDA_READY_STATE;
+           vos_mem_free(pWdaParams->wdaWdiApiMsgParam) ;
+           vos_mem_free(pWdaParams);
+
+           return CONVERT_WDI2VOS_STATUS(status) ;
+       }
    }
 
    status = WDI_AddBASessionReq(wdiAddBASessionReqParam, 
@@ -18392,6 +18421,8 @@ void WDA_lowLevelIndCallback(WDI_LowLevelIndType *wdiLowLevelInd,
             pPrefNetworkFoundInd->frameLength = 0;
          }
          pPrefNetworkFoundInd ->rssi = wdiLowLevelInd->wdiIndicationData.wdiPrefNetworkFoundInd.rssi; 
+         pPrefNetworkFoundInd->freq =
+                    wdiLowLevelInd->wdiIndicationData.wdiPrefNetworkFoundInd.freq;
          /* VOS message wrapper */
          vosMsg.type = eWNI_SME_PREF_NETWORK_FOUND_IND;
          vosMsg.bodyptr = (void *) pPrefNetworkFoundInd;

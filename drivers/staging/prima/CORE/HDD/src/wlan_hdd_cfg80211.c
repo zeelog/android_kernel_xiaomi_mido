@@ -15648,6 +15648,8 @@ int __wlan_hdd_cfg80211_scan( struct wiphy *wiphy,
     bool is_p2p_scan = false;
     v_U8_t curr_session_id;
     scan_reject_states curr_reason;
+    tHalHandle hHal = NULL;
+    tpAniSirGlobal pMac = NULL;
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,6,0))
     struct net_device *dev = NULL;
@@ -15664,7 +15666,36 @@ int __wlan_hdd_cfg80211_scan( struct wiphy *wiphy,
     pHddCtx = WLAN_HDD_GET_CTX( pAdapter );
     pwextBuf = WLAN_HDD_GET_WEXT_STATE_PTR(pAdapter);
 
+    hHal = WLAN_HDD_GET_HAL_CTX(pAdapter);
+
+
     ENTER();
+
+    if (NULL != hHal)
+    {
+        pMac = PMAC_STRUCT( hHal );
+    }
+
+    if (NULL != pMac
+        && pMac->roam.neighborRoamInfo.isPeriodicScanEnabled)
+    {
+        if (pMac->roam.neighborRoamInfo.isPeriodicTimerRunning)
+        {
+            hddLog(VOS_TRACE_LEVEL_INFO,"%s: Stop Periodic Timer",__func__);
+            vos_timer_stop(&pMac->roam.neighborRoamInfo.neighborPeriodicScanTimer);
+            pMac->roam.neighborRoamInfo.isPeriodicTimerRunning = FALSE;
+        }
+        if (pMac->roam.neighborRoamInfo.isPeriodicScanRunning)
+        {
+            hddLog(VOS_TRACE_LEVEL_INFO,
+                   "%s: Abort Periodic scan on User triggered scan for SessionId : %d",
+                    __func__,pMac->roam.neighborRoamInfo.csrSessionId);
+            pMac->roam.neighborRoamInfo.isPeriodicScanRunning = FALSE;
+            hdd_abort_mac_scan(pHddCtx,
+                      pMac->roam.neighborRoamInfo.csrSessionId,eCSR_SCAN_ABORT_DEFAULT);
+        }
+        pMac->roam.neighborRoamInfo.isPeriodicScanEnabled = FALSE;
+    }
 
     hddLog(VOS_TRACE_LEVEL_INFO, "%s: device_mode = %s (%d)",
            __func__, hdd_device_modetoString(pAdapter->device_mode),

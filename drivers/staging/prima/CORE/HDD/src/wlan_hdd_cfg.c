@@ -4069,8 +4069,14 @@ REG_VARIABLE( CFG_EXTSCAN_ENABLE, WLAN_PARAM_Integer,
                VAR_FLAGS_OPTIONAL | VAR_FLAGS_RANGE_CHECK_ASSUME_DEFAULT,
                CFG_SW_PTA_ENABLE_DEFAULT,
                CFG_SW_PTA_ENABLE_MIN,
-               CFG_SW_PTA_ENABLE_MAX)
+               CFG_SW_PTA_ENABLE_MAX),
 #endif
+  REG_VARIABLE(CFG_PERIODIC_ROAM_SCAN_ENABLED, WLAN_PARAM_Integer,
+              hdd_config_t, isPeriodicRoamScanEnabled,
+              VAR_FLAGS_OPTIONAL | VAR_FLAGS_RANGE_CHECK_ASSUME_DEFAULT,
+              CFG_PERIODIC_ROAM_SCAN_ENABLED_DEFAULT,
+              CFG_PERIODIC_ROAM_SCAN_ENABLED_MIN,
+              CFG_PERIODIC_ROAM_SCAN_ENABLED_MAX)
 };
 
 /*
@@ -4783,6 +4789,9 @@ static void print_hdd_cfg(hdd_context_t *pHddCtx)
             "Name = [%s] Value = [%s] ",
             CFG_ENABLE_DEFAULT_SAP,
             pHddCtx->cfg_ini->enabledefaultSAP);
+    VOS_TRACE(VOS_MODULE_ID_HDD, VOS_TRACE_LEVEL_INFO_HIGH,
+            "Name = [gPeriodicRoamScanEnabled] Value = [%u] ",
+            pHddCtx->cfg_ini->isPeriodicRoamScanEnabled);
     hdd_cfg_print_sae(pHddCtx);
     hdd_cfg_print_sae_sap(pHddCtx);
     hdd_cfg_print_sw_pta(pHddCtx);
@@ -6852,6 +6861,8 @@ VOS_STATUS hdd_set_sme_config( hdd_context_t *pHddCtx )
                         pHddCtx->cfg_ini->edca_bk_aifs;
    smeConfig->csrConfig.edca_be_aifs =
                         pHddCtx->cfg_ini->edca_be_aifs;
+   smeConfig->csrConfig.isPeriodicRoamScanEnabled =
+                        pHddCtx->cfg_ini->isPeriodicRoamScanEnabled;
 
    smeConfig->csrConfig.sta_auth_retries_for_code17 =
                         pHddCtx->cfg_ini->sta_auth_retries_for_code17;
