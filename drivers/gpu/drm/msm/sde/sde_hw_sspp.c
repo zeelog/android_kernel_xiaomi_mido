@@ -860,7 +860,7 @@ static void sde_hw_sspp_setup_ts_prefill(struct sde_hw_pipe *ctx,
 		ts_offset = SSPP_TRAFFIC_SHAPER_REC1;
 		ts_prefill_offset = SSPP_TRAFFIC_SHAPER_REC1_PREFILL;
 	} else {
-		pr_err("%s: unexpected idx:%d\n", __func__, index);
+		pr_debug("%s: unexpected idx:%d\n", __func__, index);
 		return;
 	}
 
@@ -900,7 +900,7 @@ static void sde_hw_sspp_setup_cdp(struct sde_hw_pipe *ctx,
 	} else if (index == SDE_SSPP_RECT_1) {
 		cdp_cntl_offset = SSPP_CDP_CNTL_REC1;
 	} else {
-		pr_err("%s: unexpected idx:%d\n", __func__, index);
+		pr_debug("%s: unexpected idx:%d\n", __func__, index);
 		return;
 	}
 

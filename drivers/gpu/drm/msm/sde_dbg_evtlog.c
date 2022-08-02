@@ -128,7 +128,7 @@ static bool _sde_evtlog_dump_calc_range(struct sde_dbg_evtlog *evtlog,
 	}
 
 	if ((evtlog->last_dump - evtlog->first) > SDE_EVTLOG_PRINT_ENTRY) {
-		pr_info("evtlog skipping %d entries, last=%d\n",
+		pr_debug("evtlog skipping %d entries, last=%d\n",
 			evtlog->last_dump - evtlog->first -
 			SDE_EVTLOG_PRINT_ENTRY,
 			evtlog->last_dump - 1);
@@ -194,7 +194,7 @@ void sde_evtlog_dump_all(struct sde_dbg_evtlog *evtlog)
 
 	while (sde_evtlog_dump_to_buffer(
 				evtlog, buf, sizeof(buf), update_last_entry)) {
-		pr_info("%s", buf);
+		pr_debug("%s", buf);
 		update_last_entry = false;
 	}
 }

@@ -470,7 +470,7 @@ int sde_i2c_byte_read(struct i2c_client *client, uint8_t slave_addr,
 
 	ret = i2c_transfer(client->adapter, msgs, 2);
 	if (ret < 1) {
-		pr_err("%s: I2C READ FAILED=[%d]\n", __func__, ret);
+		pr_debug("%s: I2C READ FAILED=[%d]\n", __func__, ret);
 		return -EACCES;
 	}
 	pr_debug("%s: i2c buf is [%x]\n", __func__, *read_buf);
@@ -498,7 +498,7 @@ int sde_i2c_byte_write(struct i2c_client *client, uint8_t slave_addr,
 
 	status = i2c_transfer(client->adapter, msgs, 1);
 	if (status < 1) {
-		pr_err("I2C WRITE FAILED=[%d]\n", status);
+		pr_debug("I2C WRITE FAILED=[%d]\n", status);
 		return -EACCES;
 	}
 	pr_debug("%s: I2C write status=%x\n", __func__, status);

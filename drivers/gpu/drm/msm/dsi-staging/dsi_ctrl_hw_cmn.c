@@ -468,7 +468,7 @@ void dsi_ctrl_hw_cmn_debug_bus(struct dsi_ctrl_hw *ctrl, u32 *entries, u32 size)
 		/* make sure that debug test point is enabled */
 		wmb();
 		reg = DSI_R32(ctrl, DSI_DEBUG_BUS_STATUS);
-		pr_err("[DSI_%d] debug bus ctrl: 0x%x status:0x%x\n",
+		pr_debug("[DSI_%d] debug bus ctrl: 0x%x status:0x%x\n",
 				ctrl->index, entries[i], reg);
 	}
 }
@@ -781,7 +781,7 @@ u32 dsi_ctrl_hw_cmn_get_cmd_read_data(struct dsi_ctrl_hw *ctrl,
 	if (ack_err)
 		read_cnt -= 4;
 	if (!read_cnt) {
-		pr_err("Panel detected error, no data read\n");
+		pr_debug("Panel detected error, no data read\n");
 		return 0;
 	}
 
@@ -1499,7 +1499,7 @@ int dsi_ctrl_hw_cmn_wait_for_cmd_mode_mdp_idle(struct dsi_ctrl_hw *ctrl)
 	rc = readl_poll_timeout(ctrl->base + DSI_STATUS, val,
 			!(val & cmd_mode_mdp_busy_mask), sleep_us, timeout_us);
 	if (rc)
-		pr_err("%s: timed out waiting for idle\n", __func__);
+		pr_debug("%s: timed out waiting for idle\n", __func__);
 
 	return rc;
 }
@@ -1527,7 +1527,7 @@ int dsi_ctrl_hw_cmn_wait4dynamic_refresh_done(struct dsi_ctrl_hw *ctrl)
 	rc = readl_poll_timeout(ctrl->base + DSI_INT_CTRL, reg,
 				(reg & dyn_refresh_done), sleep_us, timeout_us);
 	if (rc) {
-		pr_err("wait4dynamic refresh timedout %d\n", rc);
+		pr_debug("wait4dynamic refresh timedout %d\n", rc);
 		return rc;
 	}
 

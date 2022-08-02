@@ -238,7 +238,7 @@ int dsi_phy_hw_timing_val_v2_0(struct dsi_phy_per_lane_cfgs *timing_cfg,
 	int i = 0, j = 0;
 
 	if (size != (DSI_LANE_MAX * DSI_MAX_SETTINGS)) {
-		pr_err("Unexpected timing array size %d\n", size);
+		pr_debug("Unexpected timing array size %d\n", size);
 		return -EINVAL;
 	}
 

@@ -118,7 +118,7 @@ static irqreturn_t dp_display_irq(int irq, void *dev_id)
 	struct dp_display_private *dp = dev_id;
 
 	if (!dp) {
-		pr_err("invalid data\n");
+		pr_debug("invalid data\n");
 		return IRQ_NONE;
 	}
 
@@ -131,7 +131,7 @@ static irqreturn_t dp_display_irq(int irq, void *dev_id)
 	/* HDCP isr */
 	if (dp_display_is_hdcp_enabled(dp) && dp->hdcp.ops->isr) {
 		if (dp->hdcp.ops->isr(dp->hdcp.data))
-			pr_err("dp_hdcp_isr failed\n");
+			pr_debug("dp_hdcp_isr failed\n");
 	}
 
 	return IRQ_HANDLED;
@@ -169,7 +169,7 @@ static void dp_display_hdcp_cb_work(struct work_struct *work)
 			if (ops && ops->reauthenticate) {
 				rc = ops->reauthenticate(dp->hdcp.data);
 				if (rc)
-					pr_err("failed rc=%d\n", rc);
+					pr_debug("failed rc=%d\n", rc);
 			}
 		} else {
 			pr_debug("not reauthenticating, cable disconnected\n");
@@ -186,7 +186,7 @@ static void dp_display_notify_hdcp_status_cb(void *ptr,
 	struct dp_display_private *dp = ptr;
 
 	if (!dp) {
-		pr_err("invalid input\n");
+		pr_debug("invalid input\n");
 		return;
 	}
 
@@ -260,7 +260,7 @@ static void dp_display_update_hdcp_info(struct dp_display_private *dp)
 static void dp_display_deinitialize_hdcp(struct dp_display_private *dp)
 {
 	if (!dp) {
-		pr_err("invalid input\n");
+		pr_debug("invalid input\n");
 		return;
 	}
 
@@ -276,7 +276,7 @@ static int dp_display_initialize_hdcp(struct dp_display_private *dp)
 	int rc = 0;
 
 	if (!dp) {
-		pr_err("invalid input\n");
+		pr_debug("invalid input\n");
 		return -EINVAL;
 	}
 
@@ -303,7 +303,7 @@ static int dp_display_initialize_hdcp(struct dp_display_private *dp)
 
 	dp->hdcp.hdcp1 = sde_hdcp_1x_init(&hdcp_init_data);
 	if (IS_ERR_OR_NULL(dp->hdcp.hdcp1)) {
-		pr_err("Error initializing HDCP 1.x\n");
+		pr_debug("Error initializing HDCP 1.x\n");
 		rc = -EINVAL;
 		goto error;
 	}
@@ -312,7 +312,7 @@ static int dp_display_initialize_hdcp(struct dp_display_private *dp)
 
 	dp->hdcp.hdcp2 = sde_dp_hdcp2p2_init(&hdcp_init_data);
 	if (IS_ERR_OR_NULL(dp->hdcp.hdcp2)) {
-		pr_err("Error initializing HDCP 2.x\n");
+		pr_debug("Error initializing HDCP 2.x\n");
 		rc = -EINVAL;
 		goto error;
 	}
@@ -336,7 +336,7 @@ static int dp_display_bind(struct device *dev, struct device *master,
 	struct platform_device *pdev = to_platform_device(dev);
 
 	if (!dev || !pdev || !master) {
-		pr_err("invalid param(s), dev %pK, pdev %pK, master %pK\n",
+		pr_debug("invalid param(s), dev %pK, pdev %pK, master %pK\n",
 				dev, pdev, master);
 		rc = -EINVAL;
 		goto end;
@@ -345,7 +345,7 @@ static int dp_display_bind(struct device *dev, struct device *master,
 	drm = dev_get_drvdata(master);
 	dp = platform_get_drvdata(pdev);
 	if (!drm || !dp) {
-		pr_err("invalid param(s), drm %pK, dp %pK\n",
+		pr_debug("invalid param(s), drm %pK, dp %pK\n",
 				drm, dp);
 		rc = -EINVAL;
 		goto end;
@@ -364,13 +364,13 @@ static void dp_display_unbind(struct device *dev, struct device *master,
 	struct platform_device *pdev = to_platform_device(dev);
 
 	if (!dev || !pdev) {
-		pr_err("invalid param(s)\n");
+		pr_debug("invalid param(s)\n");
 		return;
 	}
 
 	dp = platform_get_drvdata(pdev);
 	if (!dp) {
-		pr_err("Invalid params\n");
+		pr_debug("Invalid params\n");
 		return;
 	}
 
@@ -407,7 +407,7 @@ static void dp_display_send_hpd_event(struct dp_display_private *dp)
 	connector = dp->dp_display.connector;
 
 	if (!connector) {
-		pr_err("connector not set\n");
+		pr_debug("connector not set\n");
 		return;
 	}
 
@@ -440,20 +440,20 @@ static void dp_display_post_open(struct dp_display *dp_display)
 	struct dp_display_private *dp;
 
 	if (!dp_display) {
-		pr_err("invalid input\n");
+		pr_debug("invalid input\n");
 		return;
 	}
 
 	dp = container_of(dp_display, struct dp_display_private, dp_display);
 	if (IS_ERR_OR_NULL(dp)) {
-		pr_err("invalid params\n");
+		pr_debug("invalid params\n");
 		return;
 	}
 
 	connector = dp->dp_display.connector;
 
 	if (!connector) {
-		pr_err("connector not set\n");
+		pr_debug("connector not set\n");
 		return;
 	}
 
@@ -607,14 +607,14 @@ static int dp_display_usbpd_configure_cb(struct device *dev)
 	struct dp_display_private *dp;
 
 	if (!dev) {
-		pr_err("invalid dev\n");
+		pr_debug("invalid dev\n");
 		rc = -EINVAL;
 		goto end;
 	}
 
 	dp = dev_get_drvdata(dev);
 	if (!dp) {
-		pr_err("no driver data found\n");
+		pr_debug("no driver data found\n");
 		rc = -ENODEV;
 		goto end;
 	}
@@ -676,14 +676,14 @@ static int dp_display_usbpd_disconnect_cb(struct device *dev)
 	struct dp_display_private *dp;
 
 	if (!dev) {
-		pr_err("invalid dev\n");
+		pr_debug("invalid dev\n");
 		rc = -EINVAL;
 		goto end;
 	}
 
 	dp = dev_get_drvdata(dev);
 	if (!dp) {
-		pr_err("no driver data found\n");
+		pr_debug("no driver data found\n");
 		rc = -ENODEV;
 		goto end;
 	}
@@ -782,13 +782,13 @@ static int dp_display_usbpd_attention_cb(struct device *dev)
 	struct dp_display_private *dp;
 
 	if (!dev) {
-		pr_err("invalid dev\n");
+		pr_debug("invalid dev\n");
 		return -EINVAL;
 	}
 
 	dp = dev_get_drvdata(dev);
 	if (!dp) {
-		pr_err("no driver data found\n");
+		pr_debug("no driver data found\n");
 		return -ENODEV;
 	}
 
@@ -869,21 +869,21 @@ static int dp_init_sub_modules(struct dp_display_private *dp)
 	dp->parser = dp_parser_get(dp->pdev);
 	if (IS_ERR(dp->parser)) {
 		rc = PTR_ERR(dp->parser);
-		pr_err("failed to initialize parser, rc = %d\n", rc);
+		pr_debug("failed to initialize parser, rc = %d\n", rc);
 		dp->parser = NULL;
 		goto error;
 	}
 
 	rc = dp->parser->parse(dp->parser);
 	if (rc) {
-		pr_err("device tree parsing failed\n");
+		pr_debug("device tree parsing failed\n");
 		goto error_catalog;
 	}
 
 	dp->catalog = dp_catalog_get(dev, dp->parser);
 	if (IS_ERR(dp->catalog)) {
 		rc = PTR_ERR(dp->catalog);
-		pr_err("failed to initialize catalog, rc = %d\n", rc);
+		pr_debug("failed to initialize catalog, rc = %d\n", rc);
 		dp->catalog = NULL;
 		goto error_catalog;
 	}
@@ -891,35 +891,35 @@ static int dp_init_sub_modules(struct dp_display_private *dp)
 	dp->power = dp_power_get(dp->parser);
 	if (IS_ERR(dp->power)) {
 		rc = PTR_ERR(dp->power);
-		pr_err("failed to initialize power, rc = %d\n", rc);
+		pr_debug("failed to initialize power, rc = %d\n", rc);
 		dp->power = NULL;
 		goto error_power;
 	}
 
 	rc = dp->power->power_client_init(dp->power, &dp->priv->phandle);
 	if (rc) {
-		pr_err("Power client create failed\n");
+		pr_debug("Power client create failed\n");
 		goto error_aux;
 	}
 
 	dp->aux = dp_aux_get(dev, &dp->catalog->aux, dp->parser->aux_cfg);
 	if (IS_ERR(dp->aux)) {
 		rc = PTR_ERR(dp->aux);
-		pr_err("failed to initialize aux, rc = %d\n", rc);
+		pr_debug("failed to initialize aux, rc = %d\n", rc);
 		dp->aux = NULL;
 		goto error_aux;
 	}
 
 	rc = dp->aux->drm_aux_register(dp->aux);
 	if (rc) {
-		pr_err("DRM DP AUX register failed\n");
+		pr_debug("DRM DP AUX register failed\n");
 		goto error_link;
 	}
 
 	dp->link = dp_link_get(dev, dp->aux);
 	if (IS_ERR(dp->link)) {
 		rc = PTR_ERR(dp->link);
-		pr_err("failed to initialize link, rc = %d\n", rc);
+		pr_debug("failed to initialize link, rc = %d\n", rc);
 		dp->link = NULL;
 		goto error_link;
 	}
@@ -931,7 +931,7 @@ static int dp_init_sub_modules(struct dp_display_private *dp)
 	dp->panel = dp_panel_get(&panel_in);
 	if (IS_ERR(dp->panel)) {
 		rc = PTR_ERR(dp->panel);
-		pr_err("failed to initialize panel, rc = %d\n", rc);
+		pr_debug("failed to initialize panel, rc = %d\n", rc);
 		dp->panel = NULL;
 		goto error_panel;
 	}
@@ -946,7 +946,7 @@ static int dp_init_sub_modules(struct dp_display_private *dp)
 	dp->ctrl = dp_ctrl_get(&ctrl_in);
 	if (IS_ERR(dp->ctrl)) {
 		rc = PTR_ERR(dp->ctrl);
-		pr_err("failed to initialize ctrl, rc = %d\n", rc);
+		pr_debug("failed to initialize ctrl, rc = %d\n", rc);
 		dp->ctrl = NULL;
 		goto error_ctrl;
 	}
@@ -954,7 +954,7 @@ static int dp_init_sub_modules(struct dp_display_private *dp)
 	dp->audio = dp_audio_get(dp->pdev, dp->panel, &dp->catalog->audio);
 	if (IS_ERR(dp->audio)) {
 		rc = PTR_ERR(dp->audio);
-		pr_err("failed to initialize audio, rc = %d\n", rc);
+		pr_debug("failed to initialize audio, rc = %d\n", rc);
 		dp->audio = NULL;
 		goto error_audio;
 	}
@@ -966,7 +966,7 @@ static int dp_init_sub_modules(struct dp_display_private *dp)
 	dp->usbpd = dp_usbpd_get(dev, cb);
 	if (IS_ERR(dp->usbpd)) {
 		rc = PTR_ERR(dp->usbpd);
-		pr_err("failed to initialize usbpd, rc = %d\n", rc);
+		pr_debug("failed to initialize usbpd, rc = %d\n", rc);
 		dp->usbpd = NULL;
 		goto error_usbpd;
 	}
@@ -976,7 +976,7 @@ static int dp_init_sub_modules(struct dp_display_private *dp)
 				dp->catalog, dp->ctrl);
 	if (IS_ERR(dp->debug)) {
 		rc = PTR_ERR(dp->debug);
-		pr_err("failed to initialize debug, rc = %d\n", rc);
+		pr_debug("failed to initialize debug, rc = %d\n", rc);
 		dp->debug = NULL;
 		goto error_debug;
 	}
@@ -1011,14 +1011,14 @@ static void dp_display_post_init(struct dp_display *dp_display)
 	struct dp_display_private *dp;
 
 	if (!dp_display) {
-		pr_err("invalid input\n");
+		pr_debug("invalid input\n");
 		rc = -EINVAL;
 		goto end;
 	}
 
 	dp = container_of(dp_display, struct dp_display_private, dp_display);
 	if (IS_ERR_OR_NULL(dp)) {
-		pr_err("invalid params\n");
+		pr_debug("invalid params\n");
 		rc = -EINVAL;
 		goto end;
 	}
@@ -1043,7 +1043,7 @@ static int dp_display_set_mode(struct dp_display *dp_display,
 	u32 rate_ratio = RGB_24BPP_TMDS_CHAR_RATE_RATIO;
 
 	if (!dp_display) {
-		pr_err("invalid input\n");
+		pr_debug("invalid input\n");
 		return -EINVAL;
 	}
 	dp = container_of(dp_display, struct dp_display_private, dp_display);
@@ -1086,7 +1086,7 @@ static int dp_display_enable(struct dp_display *dp_display)
 	struct dp_display_private *dp;
 
 	if (!dp_display) {
-		pr_err("invalid input\n");
+		pr_debug("invalid input\n");
 		return -EINVAL;
 	}
 
@@ -1128,7 +1128,7 @@ static int dp_display_post_enable(struct dp_display *dp_display)
 	struct dp_display_private *dp;
 
 	if (!dp_display) {
-		pr_err("invalid input\n");
+		pr_debug("invalid input\n");
 		return -EINVAL;
 	}
 
@@ -1142,7 +1142,8 @@ static int dp_display_post_enable(struct dp_display *dp_display)
 	}
 
 	if (atomic_read(&dp->aborted)) {
-		pr_err("aborted\n");
+		pr_debug("aborted\n");
+
 		goto end;
 	}
 
@@ -1184,7 +1185,7 @@ static int dp_display_pre_disable(struct dp_display *dp_display)
 	struct dp_display_private *dp;
 
 	if (!dp_display) {
-		pr_err("invalid input\n");
+		pr_debug("invalid input\n");
 		return -EINVAL;
 	}
 
@@ -1227,7 +1228,7 @@ static int dp_display_disable(struct dp_display *dp_display)
 	struct sde_connector_state *c_state;
 
 	if (!dp_display) {
-		pr_err("invalid input\n");
+		pr_debug("invalid input\n");
 		return -EINVAL;
 	}
 
@@ -1277,7 +1278,7 @@ static int dp_request_irq(struct dp_display *dp_display)
 	struct dp_display_private *dp;
 
 	if (!dp_display) {
-		pr_err("invalid input\n");
+		pr_debug("invalid input\n");
 		return -EINVAL;
 	}
 
@@ -1286,14 +1287,14 @@ static int dp_request_irq(struct dp_display *dp_display)
 	dp->irq = irq_of_parse_and_map(dp->pdev->dev.of_node, 0);
 	if (dp->irq < 0) {
 		rc = dp->irq;
-		pr_err("failed to get irq: %d\n", rc);
+		pr_debug("failed to get irq: %d\n", rc);
 		return rc;
 	}
 
 	rc = devm_request_irq(&dp->pdev->dev, dp->irq, dp_display_irq,
 		IRQF_TRIGGER_HIGH, "dp_display_isr", dp);
 	if (rc < 0) {
-		pr_err("failed to request IRQ%u: %d\n",
+		pr_debug("failed to request IRQ%u: %d\n",
 				dp->irq, rc);
 		return rc;
 	}
@@ -1307,7 +1308,7 @@ static struct dp_debug *dp_get_debug(struct dp_display *dp_display)
 	struct dp_display_private *dp;
 
 	if (!dp_display) {
-		pr_err("invalid input\n");
+		pr_debug("invalid input\n");
 		return ERR_PTR(-EINVAL);
 	}
 
@@ -1331,7 +1332,7 @@ static int dp_display_get_dc_support(struct dp_display *dp,
 	u32 rate_ratio = RGB_24BPP_TMDS_CHAR_RATE_RATIO;
 
 	if (!dp || !mode_pclk_khz || !dp->connector) {
-		pr_err("invalid params\n");
+		pr_debug("invalid params\n");
 		return -EINVAL;
 	}
 
@@ -1405,7 +1406,7 @@ static int dp_display_get_modes(struct dp_display *dp,
 	int ret = 0;
 
 	if (!dp || !dp->connector) {
-		pr_err("invalid params\n");
+		pr_debug("invalid params\n");
 		return 0;
 	}
 
@@ -1427,7 +1428,7 @@ int dp_display_set_power(struct drm_connector *connector,
 	int rc = 0;
 
 	if (!dp) {
-		pr_err("invalid display\n");
+		pr_debug("invalid display\n");
 		return -EINVAL;
 	}
 
@@ -1479,7 +1480,7 @@ static int dp_display_config_hdr(struct dp_display *dp_display,
 	struct dp_display_private *dp;
 
 	if (!dp_display) {
-		pr_err("invalid input\n");
+		pr_debug("invalid input\n");
 		return -EINVAL;
 	}
 
@@ -1496,7 +1497,7 @@ static int dp_display_get_display_type(struct dp_display *dp_display,
 	struct dp_display_private *dp;
 
 	if (!dp_display || !display_type) {
-		pr_err("invalid input\n");
+		pr_debug("invalid input\n");
 		return -EINVAL;
 	}
 
@@ -1517,7 +1518,7 @@ static bool dp_display_vsc_sdp_supported(struct dp_display *dp_display)
 	struct dp_display_private *dp;
 
 	if (!dp_display) {
-		pr_err("invalid input\n");
+		pr_debug("invalid input\n");
 		return 0;
 	}
 
@@ -1547,7 +1548,7 @@ static int dp_display_probe(struct platform_device *pdev)
 	struct dp_display_private *dp;
 
 	if (!pdev || !pdev->dev.of_node) {
-		pr_err("pdev not found\n");
+		pr_debug("pdev not found\n");
 		rc = -ENODEV;
 		goto bail;
 	}
@@ -1567,7 +1568,7 @@ static int dp_display_probe(struct platform_device *pdev)
 
 	rc = dp_display_create_workqueue(dp);
 	if (rc) {
-		pr_err("Failed to create workqueue\n");
+		pr_debug("Failed to create workqueue\n");
 		goto error;
 	}
 
@@ -1595,7 +1596,7 @@ static int dp_display_probe(struct platform_device *pdev)
 
 	rc = component_add(&pdev->dev, &dp_display_comp_ops);
 	if (rc) {
-		pr_err("component add failed, rc=%d\n", rc);
+		pr_debug("component add failed, rc=%d\n", rc);
 		goto error;
 	}
 
@@ -1609,12 +1610,12 @@ bail:
 int dp_display_get_displays(void **displays, int count)
 {
 	if (!displays) {
-		pr_err("invalid data\n");
+		pr_debug("invalid data\n");
 		return -EINVAL;
 	}
 
 	if (count != 1) {
-		pr_err("invalid number of displays\n");
+		pr_debug("invalid number of displays\n");
 		return -EINVAL;
 	}
 
@@ -1663,7 +1664,7 @@ static int __init dp_display_init(void)
 
 	ret = platform_driver_register(&dp_display_driver);
 	if (ret) {
-		pr_err("driver register failed");
+		pr_debug("driver register failed");
 		return ret;
 	}
 

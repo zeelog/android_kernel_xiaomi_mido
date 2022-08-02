@@ -1074,7 +1074,7 @@ static void sde_kms_complete_commit(struct msm_kms *kms,
 			continue;
 		rc = c_conn->ops.post_kickoff(connector);
 		if (rc) {
-			pr_err("Connector Post kickoff failed rc=%d\n",
+			pr_debug("Connector Post kickoff failed rc=%d\n",
 					 rc);
 		}
 	}
@@ -3398,7 +3398,7 @@ static int sde_kms_hw_init(struct msm_kms *kms)
 
 	_sde_kms_core_hw_rev_init(sde_kms);
 
-	pr_info("sde hardware revision:0x%x\n", sde_kms->core_rev);
+	pr_debug("sde hardware revision:0x%x\n", sde_kms->core_rev);
 
 	sde_kms->catalog = sde_hw_catalog_init(dev, sde_kms->core_rev);
 	if (IS_ERR_OR_NULL(sde_kms->catalog)) {

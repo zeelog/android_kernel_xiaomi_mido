@@ -102,7 +102,7 @@ static int dp_link_get_period(struct dp_link_private *link, int const addr)
 	/* TEST_AUDIO_PERIOD_CH_XX */
 	if (drm_dp_dpcd_read(link->aux->drm_aux, addr, &bp,
 		param_len) < param_len) {
-		pr_err("failed to read test_audio_period (0x%x)\n", addr);
+		pr_debug("failed to read test_audio_period (0x%x)\n", addr);
 		ret = -EINVAL;
 		goto exit;
 	}
@@ -112,7 +112,7 @@ static int dp_link_get_period(struct dp_link_private *link, int const addr)
 	/* Period - Bits 3:0 */
 	data = data & 0xF;
 	if ((int)data > max_audio_period) {
-		pr_err("invalid test_audio_period_ch_1 = 0x%x\n", data);
+		pr_debug("invalid test_audio_period_ch_1 = 0x%x\n", data);
 		ret = -EINVAL;
 		goto exit;
 	}
@@ -199,7 +199,7 @@ static int dp_link_parse_audio_pattern_type(struct dp_link_private *link)
 	rlen = drm_dp_dpcd_read(link->aux->drm_aux,
 		DP_TEST_AUDIO_PATTERN_TYPE, &bp, param_len);
 	if (rlen < param_len) {
-		pr_err("failed to read link audio mode data\n");
+		pr_debug("failed to read link audio mode data\n");
 		ret = -EINVAL;
 		goto exit;
 	}
@@ -207,7 +207,7 @@ static int dp_link_parse_audio_pattern_type(struct dp_link_private *link)
 
 	/* Audio Pattern Type - Bits 7:0 */
 	if ((int)data > max_audio_pattern_type) {
-		pr_err("invalid audio pattern type = 0x%x\n", data);
+		pr_debug("invalid audio pattern type = 0x%x\n", data);
 		ret = -EINVAL;
 		goto exit;
 	}
@@ -234,7 +234,7 @@ static int dp_link_parse_audio_mode(struct dp_link_private *link)
 	rlen = drm_dp_dpcd_read(link->aux->drm_aux, DP_TEST_AUDIO_MODE,
 			&bp, param_len);
 	if (rlen < param_len) {
-		pr_err("failed to read link audio mode data\n");
+		pr_debug("failed to read link audio mode data\n");
 		ret = -EINVAL;
 		goto exit;
 	}
@@ -243,7 +243,7 @@ static int dp_link_parse_audio_mode(struct dp_link_private *link)
 	/* Sampling Rate - Bits 3:0 */
 	sampling_rate = data & 0xF;
 	if (sampling_rate > max_audio_sampling_rate) {
-		pr_err("sampling rate (0x%x) greater than max (0x%x)\n",
+		pr_debug("sampling rate (0x%x) greater than max (0x%x)\n",
 				sampling_rate, max_audio_sampling_rate);
 		ret = -EINVAL;
 		goto exit;
@@ -252,7 +252,7 @@ static int dp_link_parse_audio_mode(struct dp_link_private *link)
 	/* Channel Count - Bits 7:4 */
 	channel_count = ((data & 0xF0) >> 4) + 1;
 	if (channel_count > max_audio_channel_count) {
-		pr_err("channel_count (0x%x) greater than max (0x%x)\n",
+		pr_debug("channel_count (0x%x) greater than max (0x%x)\n",
 				channel_count, max_audio_channel_count);
 		ret = -EINVAL;
 		goto exit;
@@ -401,7 +401,7 @@ static int dp_link_parse_timing_params1(struct dp_link_private *link,
 	/* Read the requested video link pattern (Byte 0x221). */
 	rlen = drm_dp_dpcd_read(link->aux->drm_aux, addr, bp, len);
 	if (rlen < len) {
-		pr_err("failed to read 0x%x\n", addr);
+		pr_debug("failed to read 0x%x\n", addr);
 		return -EINVAL;
 	}
 
@@ -422,7 +422,7 @@ static int dp_link_parse_timing_params2(struct dp_link_private *link,
 	/* Read the requested video link pattern (Byte 0x221). */
 	rlen = drm_dp_dpcd_read(link->aux->drm_aux, addr, bp, len);
 	if (rlen < len) {
-		pr_err("failed to read 0x%x\n", addr);
+		pr_debug("failed to read 0x%x\n", addr);
 		return -EINVAL;
 	}
 
@@ -441,7 +441,7 @@ static int dp_link_parse_timing_params3(struct dp_link_private *link,
 
 	rlen = drm_dp_dpcd_read(link->aux->drm_aux, addr, &bp, len);
 	if (rlen < 1) {
-		pr_err("failed to read 0x%x\n", addr);
+		pr_debug("failed to read 0x%x\n", addr);
 		return -EINVAL;
 	}
 	*val = bp;
@@ -468,14 +468,14 @@ static int dp_link_parse_video_pattern_params(struct dp_link_private *link)
 	rlen = drm_dp_dpcd_read(link->aux->drm_aux, DP_TEST_PATTERN,
 			&bp, param_len);
 	if (rlen < param_len) {
-		pr_err("failed to read link video pattern\n");
+		pr_debug("failed to read link video pattern\n");
 		ret = -EINVAL;
 		goto exit;
 	}
 	data = bp;
 
 	if (!dp_link_is_video_pattern_valid(data)) {
-		pr_err("invalid link video pattern = 0x%x\n", data);
+		pr_debug("invalid link video pattern = 0x%x\n", data);
 		ret = -EINVAL;
 		goto exit;
 	}
@@ -490,7 +490,7 @@ static int dp_link_parse_video_pattern_params(struct dp_link_private *link)
 	rlen = drm_dp_dpcd_read(link->aux->drm_aux, DP_TEST_MISC0,
 			&bp, param_len);
 	if (rlen < param_len) {
-		pr_err("failed to read link bit depth\n");
+		pr_debug("failed to read link bit depth\n");
 		ret = -EINVAL;
 		goto exit;
 	}
@@ -499,7 +499,7 @@ static int dp_link_parse_video_pattern_params(struct dp_link_private *link)
 	/* Dynamic Range */
 	dyn_range = (data & DP_TEST_DYNAMIC_RANGE_CEA) >> 3;
 	if (!dp_link_is_dynamic_range_valid(dyn_range)) {
-		pr_err("invalid link dynamic range = 0x%x", dyn_range);
+		pr_debug("invalid link dynamic range = 0x%x", dyn_range);
 		ret = -EINVAL;
 		goto exit;
 	}
@@ -512,7 +512,7 @@ static int dp_link_parse_video_pattern_params(struct dp_link_private *link)
 	/* Color bit depth */
 	data &= DP_TEST_BIT_DEPTH_MASK;
 	if (!dp_link_is_bit_depth_valid(data)) {
-		pr_err("invalid link bit depth = 0x%x\n", data);
+		pr_debug("invalid link bit depth = 0x%x\n", data);
 		ret = -EINVAL;
 		goto exit;
 	}
@@ -527,7 +527,7 @@ static int dp_link_parse_video_pattern_params(struct dp_link_private *link)
 	ret = dp_link_parse_timing_params1(link, DP_TEST_H_TOTAL_HI, 2,
 			&link->dp_link.test_video.test_h_total);
 	if (ret) {
-		pr_err("failed to parse test_h_total (DP_TEST_H_TOTAL_HI)\n");
+		pr_debug("failed to parse test_h_total (DP_TEST_H_TOTAL_HI)\n");
 		goto exit;
 	}
 	pr_debug("TEST_H_TOTAL = %d\n", link->dp_link.test_video.test_h_total);
@@ -535,7 +535,7 @@ static int dp_link_parse_video_pattern_params(struct dp_link_private *link)
 	ret = dp_link_parse_timing_params1(link, DP_TEST_V_TOTAL_HI, 2,
 			&link->dp_link.test_video.test_v_total);
 	if (ret) {
-		pr_err("failed to parse test_v_total (DP_TEST_V_TOTAL_HI)\n");
+		pr_debug("failed to parse test_v_total (DP_TEST_V_TOTAL_HI)\n");
 		goto exit;
 	}
 	pr_debug("TEST_V_TOTAL = %d\n", link->dp_link.test_video.test_v_total);
@@ -543,7 +543,7 @@ static int dp_link_parse_video_pattern_params(struct dp_link_private *link)
 	ret = dp_link_parse_timing_params1(link, DP_TEST_H_START_HI, 2,
 			&link->dp_link.test_video.test_h_start);
 	if (ret) {
-		pr_err("failed to parse test_h_start (DP_TEST_H_START_HI)\n");
+		pr_debug("failed to parse test_h_start (DP_TEST_H_START_HI)\n");
 		goto exit;
 	}
 	pr_debug("TEST_H_START = %d\n", link->dp_link.test_video.test_h_start);
@@ -551,7 +551,7 @@ static int dp_link_parse_video_pattern_params(struct dp_link_private *link)
 	ret = dp_link_parse_timing_params1(link, DP_TEST_V_START_HI, 2,
 			&link->dp_link.test_video.test_v_start);
 	if (ret) {
-		pr_err("failed to parse test_v_start (DP_TEST_V_START_HI)\n");
+		pr_debug("failed to parse test_v_start (DP_TEST_V_START_HI)\n");
 		goto exit;
 	}
 	pr_debug("TEST_V_START = %d\n", link->dp_link.test_video.test_v_start);
@@ -560,7 +560,7 @@ static int dp_link_parse_video_pattern_params(struct dp_link_private *link)
 			&link->dp_link.test_video.test_hsync_pol,
 			&link->dp_link.test_video.test_hsync_width);
 	if (ret) {
-		pr_err("failed to parse (DP_TEST_HSYNC_HI)\n");
+		pr_debug("failed to parse (DP_TEST_HSYNC_HI)\n");
 		goto exit;
 	}
 	pr_debug("TEST_HSYNC_POL = %d\n",
@@ -572,7 +572,7 @@ static int dp_link_parse_video_pattern_params(struct dp_link_private *link)
 			&link->dp_link.test_video.test_vsync_pol,
 			&link->dp_link.test_video.test_vsync_width);
 	if (ret) {
-		pr_err("failed to parse (DP_TEST_VSYNC_HI)\n");
+		pr_debug("failed to parse (DP_TEST_VSYNC_HI)\n");
 		goto exit;
 	}
 	pr_debug("TEST_VSYNC_POL = %d\n",
@@ -583,7 +583,7 @@ static int dp_link_parse_video_pattern_params(struct dp_link_private *link)
 	ret = dp_link_parse_timing_params1(link, DP_TEST_H_WIDTH_HI, 2,
 			&link->dp_link.test_video.test_h_width);
 	if (ret) {
-		pr_err("failed to parse test_h_width (DP_TEST_H_WIDTH_HI)\n");
+		pr_debug("failed to parse test_h_width (DP_TEST_H_WIDTH_HI)\n");
 		goto exit;
 	}
 	pr_debug("TEST_H_WIDTH = %d\n", link->dp_link.test_video.test_h_width);
@@ -591,7 +591,7 @@ static int dp_link_parse_video_pattern_params(struct dp_link_private *link)
 	ret = dp_link_parse_timing_params1(link, DP_TEST_V_HEIGHT_HI, 2,
 			&link->dp_link.test_video.test_v_height);
 	if (ret) {
-		pr_err("failed to parse test_v_height (DP_TEST_V_HEIGHT_HI)\n");
+		pr_debug("failed to parse test_v_height (DP_TEST_V_HEIGHT_HI)\n");
 		goto exit;
 	}
 	pr_debug("TEST_V_HEIGHT = %d\n",
@@ -601,7 +601,7 @@ static int dp_link_parse_video_pattern_params(struct dp_link_private *link)
 		&link->dp_link.test_video.test_rr_d);
 	link->dp_link.test_video.test_rr_d &= DP_TEST_REFRESH_DENOMINATOR;
 	if (ret) {
-		pr_err("failed to parse test_rr_d (DP_TEST_MISC1)\n");
+		pr_debug("failed to parse test_rr_d (DP_TEST_MISC1)\n");
 		goto exit;
 	}
 	pr_debug("TEST_REFRESH_DENOMINATOR = %d\n",
@@ -610,7 +610,7 @@ static int dp_link_parse_video_pattern_params(struct dp_link_private *link)
 	ret = dp_link_parse_timing_params3(link, DP_TEST_REFRESH_RATE_NUMERATOR,
 		&link->dp_link.test_video.test_rr_n);
 	if (ret) {
-		pr_err("failed to parse test_rr_n (DP_TEST_REFRESH_RATE_NUMERATOR)\n");
+		pr_debug("failed to parse test_rr_n (DP_TEST_REFRESH_RATE_NUMERATOR)\n");
 		goto exit;
 	}
 	pr_debug("TEST_REFRESH_NUMERATOR = %d\n",
@@ -638,14 +638,14 @@ static int dp_link_parse_link_training_params(struct dp_link_private *link)
 	rlen = drm_dp_dpcd_read(link->aux->drm_aux, DP_TEST_LINK_RATE,
 			&bp, param_len);
 	if (rlen < param_len) {
-		pr_err("failed to read link rate\n");
+		pr_debug("failed to read link rate\n");
 		ret = -EINVAL;
 		goto exit;
 	}
 	data = bp;
 
 	if (!is_link_rate_valid(data)) {
-		pr_err("invalid link rate = 0x%x\n", data);
+		pr_debug("invalid link rate = 0x%x\n", data);
 		ret = -EINVAL;
 		goto exit;
 	}
@@ -656,7 +656,7 @@ static int dp_link_parse_link_training_params(struct dp_link_private *link)
 	rlen = drm_dp_dpcd_read(link->aux->drm_aux, DP_TEST_LANE_COUNT,
 			&bp, param_len);
 	if (rlen < param_len) {
-		pr_err("failed to read lane count\n");
+		pr_debug("failed to read lane count\n");
 		ret = -EINVAL;
 		goto exit;
 	}
@@ -664,7 +664,7 @@ static int dp_link_parse_link_training_params(struct dp_link_private *link)
 	data &= 0x1F;
 
 	if (!is_lane_count_valid(data)) {
-		pr_err("invalid lane count = 0x%x\n", data);
+		pr_debug("invalid lane count = 0x%x\n", data);
 		ret = -EINVAL;
 		goto exit;
 	}
@@ -709,7 +709,7 @@ static int dp_link_parse_phy_test_params(struct dp_link_private *link)
 	rlen = drm_dp_dpcd_read(link->aux->drm_aux, DP_TEST_PHY_PATTERN,
 			&bp, param_len);
 	if (rlen < param_len) {
-		pr_err("failed to read phy link pattern\n");
+		pr_debug("failed to read phy link pattern\n");
 		ret = -EINVAL;
 		goto end;
 	}
@@ -784,7 +784,7 @@ static int dp_link_parse_request(struct dp_link_private *link)
 	rlen = drm_dp_dpcd_read(link->aux->drm_aux,
 		DP_DEVICE_SERVICE_IRQ_VECTOR, &bp, param_len);
 	if (rlen < param_len) {
-		pr_err("aux read failed\n");
+		pr_debug("aux read failed\n");
 		ret = -EINVAL;
 		goto end;
 	}
@@ -807,7 +807,7 @@ static int dp_link_parse_request(struct dp_link_private *link)
 	rlen = drm_dp_dpcd_read(link->aux->drm_aux, DP_TEST_REQUEST,
 			&bp, param_len);
 	if (rlen < param_len) {
-		pr_err("aux read failed\n");
+		pr_debug("aux read failed\n");
 		ret = -EINVAL;
 		goto end;
 	}
@@ -875,7 +875,7 @@ static int dp_link_parse_sink_count(struct dp_link *dp_link)
 	rlen = drm_dp_dpcd_read(link->aux->drm_aux, DP_SINK_COUNT,
 			&link->dp_link.sink_count.count, param_len);
 	if (rlen < param_len) {
-		pr_err("failed to read sink count\n");
+		pr_debug("failed to read sink count\n");
 		return -EINVAL;
 	}
 
@@ -901,7 +901,7 @@ static void dp_link_parse_sink_status_field(struct dp_link_private *link)
 	len = drm_dp_dpcd_read_link_status(link->aux->drm_aux,
 		link->link_status);
 	if (len < DP_LINK_STATUS_SIZE)
-		pr_err("DP link status read failed\n");
+		pr_debug("DP link status read failed\n");
 	dp_link_parse_request(link);
 }
 
@@ -943,7 +943,7 @@ static void dp_link_send_test_response(struct dp_link *dp_link)
 	u32 const response_len = 0x1;
 
 	if (!dp_link) {
-		pr_err("invalid input\n");
+		pr_debug("invalid input\n");
 		return;
 	}
 
@@ -960,7 +960,7 @@ static int dp_link_psm_config(struct dp_link *dp_link,
 	int ret = 0;
 
 	if (!dp_link) {
-		pr_err("invalid params\n");
+		pr_debug("invalid params\n");
 		return -EINVAL;
 	}
 
@@ -978,7 +978,7 @@ static int dp_link_psm_config(struct dp_link *dp_link,
 		ret = drm_dp_link_power_up(link->aux->drm_aux, link_info);
 
 	if (ret)
-		pr_err("Failed to %s low power mode\n",
+		pr_debug("Failed to %s low power mode\n",
 			(enable ? "enter" : "exit"));
 
 	return ret;
@@ -990,7 +990,7 @@ static void dp_link_send_edid_checksum(struct dp_link *dp_link, u8 checksum)
 	u32 const response_len = 0x1;
 
 	if (!dp_link) {
-		pr_err("invalid input\n");
+		pr_debug("invalid input\n");
 		return;
 	}
 
@@ -1014,7 +1014,7 @@ static int dp_link_parse_vx_px(struct dp_link_private *link)
 	rlen = drm_dp_dpcd_read(link->aux->drm_aux, DP_ADJUST_REQUEST_LANE0_1,
 			&bp, param_len);
 	if (rlen < param_len) {
-		pr_err("failed reading lanes 0/1\n");
+		pr_debug("failed reading lanes 0/1\n");
 		ret = -EINVAL;
 		goto end;
 	}
@@ -1036,7 +1036,7 @@ static int dp_link_parse_vx_px(struct dp_link_private *link)
 	rlen = drm_dp_dpcd_read(link->aux->drm_aux, DP_ADJUST_REQUEST_LANE2_3,
 			&bp, param_len);
 	if (rlen < param_len) {
-		pr_err("failed reading lanes 2/3\n");
+		pr_debug("failed reading lanes 2/3\n");
 		ret = -EINVAL;
 		goto end;
 	}
@@ -1097,18 +1097,18 @@ static int dp_link_process_phy_test_pattern_request(
 
 	if (!is_link_rate_valid(test_link_rate) ||
 		!is_lane_count_valid(test_lane_count)) {
-		pr_err("Invalid params: link rate = 0x%x, lane count = 0x%x\n",
+		pr_debug("Invalid params: link rate = 0x%x, lane count = 0x%x\n",
 				test_link_rate, test_lane_count);
 		return -EINVAL;
 	}
 
 	pr_debug("start\n");
 
-	pr_info("Current: bw_code = 0x%x, lane count = 0x%x\n",
+	pr_debug("Current: bw_code = 0x%x, lane count = 0x%x\n",
 			link->dp_link.link_params.bw_code,
 			link->dp_link.link_params.lane_count);
 
-	pr_info("Requested: bw_code = 0x%x, lane count = 0x%x\n",
+	pr_debug("Requested: bw_code = 0x%x, lane count = 0x%x\n",
 			test_link_rate, test_lane_count);
 
 	link->dp_link.link_params.lane_count = link->request.test_lane_count;
@@ -1291,7 +1291,7 @@ static int dp_link_process_request(struct dp_link *dp_link)
 	struct dp_link_private *link;
 
 	if (!dp_link) {
-		pr_err("invalid input\n");
+		pr_debug("invalid input\n");
 		return -EINVAL;
 	}
 
@@ -1356,7 +1356,7 @@ static int dp_link_get_colorimetry_config(struct dp_link *dp_link)
 	struct dp_link_private *link;
 
 	if (!dp_link) {
-		pr_err("invalid input\n");
+		pr_debug("invalid input\n");
 		return -EINVAL;
 	}
 
@@ -1389,7 +1389,7 @@ static int dp_link_adjust_levels(struct dp_link *dp_link, u8 *link_status)
 	struct dp_link_private *link;
 
 	if (!dp_link) {
-		pr_err("invalid input\n");
+		pr_debug("invalid input\n");
 		return -EINVAL;
 	}
 
@@ -1451,7 +1451,7 @@ static int dp_link_send_psm_request(struct dp_link *dp_link, bool req)
 	struct dp_link_private *link;
 
 	if (!dp_link) {
-		pr_err("invalid input\n");
+		pr_debug("invalid input\n");
 		return -EINVAL;
 	}
 
@@ -1497,7 +1497,7 @@ struct dp_link *dp_link_get(struct device *dev, struct dp_aux *aux)
 	struct dp_link *dp_link;
 
 	if (!dev || !aux) {
-		pr_err("invalid input\n");
+		pr_debug("invalid input\n");
 		rc = -EINVAL;
 		goto error;
 	}

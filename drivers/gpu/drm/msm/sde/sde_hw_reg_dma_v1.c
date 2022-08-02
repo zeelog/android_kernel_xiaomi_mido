@@ -528,7 +528,7 @@ int init_v1(struct sde_hw_reg_dma *cfg)
 				 * This will allow reg dma to fall back to
 				 * AHB domain
 				 */
-				pr_info("Failed to allocate reg dma, ret:%lu\n",
+				pr_debug("Failed to allocate reg dma, ret:%lu\n",
 						PTR_ERR(last_cmd_buf[i]));
 				return 0;
 			}

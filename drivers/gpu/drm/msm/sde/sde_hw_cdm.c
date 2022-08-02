@@ -156,7 +156,7 @@ static int sde_hw_cdm_setup_cdwn(struct sde_hw_cdm *ctx,
 				offsite_h_coeff[2]);
 		break;
 	default:
-		pr_err("%s invalid horz down sampling type\n", __func__);
+		pr_debug("%s invalid horz down sampling type\n", __func__);
 		return -EINVAL;
 	}
 

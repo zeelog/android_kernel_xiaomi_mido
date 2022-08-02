@@ -58,7 +58,7 @@ int dsi_ctrl_hw_20_wait_for_lane_idle(struct dsi_ctrl_hw *ctrl,
 	rc = readl_poll_timeout(ctrl->base + DSI_FIFO_STATUS, val,
 			(val & fifo_empty_mask), sleep_us, timeout_us);
 	if (rc) {
-		pr_err("%s: fifo not empty, FIFO_STATUS=0x%08x\n",
+		pr_debug("%s: fifo not empty, FIFO_STATUS=0x%08x\n",
 				__func__, val);
 		goto error;
 	}
@@ -229,6 +229,6 @@ ssize_t dsi_ctrl_hw_20_reg_dump_to_buffer(struct dsi_ctrl_hw *ctrl,
 	len += snprintf((buf + len), (size - len),
 			DUMP_REG_VALUE(DSI_VERSION));
 
-	pr_err("LLENGTH = %d\n", len);
+	pr_debug("LLENGTH = %d\n", len);
 	return len;
 }

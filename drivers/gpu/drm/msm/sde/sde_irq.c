@@ -91,7 +91,7 @@ void sde_irq_preinstall(struct msm_kms *kms)
 	struct sde_kms *sde_kms = to_sde_kms(kms);
 
 	if (!sde_kms->dev || !sde_kms->dev->dev) {
-		pr_err("invalid device handles\n");
+		pr_debug("invalid device handles\n");
 		return;
 	}
 

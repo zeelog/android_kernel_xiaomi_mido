@@ -188,7 +188,7 @@ static enum drm_connector_status dsi_mgr_connector_detect(
 				kms->funcs->set_split_display(kms, encoder,
 							slave_enc, cmd_mode);
 			else
-				pr_err("mdp does not support dual DSI\n");
+				pr_debug("mdp does not support dual DSI\n");
 		}
 	}
 
@@ -247,7 +247,7 @@ static int dsi_dual_connector_tile_init(
 		connector->tile_group = drm_mode_create_tile_group(
 					connector->dev, topo_id);
 	if (!connector->tile_group) {
-		pr_err("%s: failed to create tile group\n", __func__);
+		pr_debug("%s: failed to create tile group\n", __func__);
 		return -ENOMEM;
 	}
 
@@ -297,7 +297,7 @@ static int dsi_mgr_connector_get_modes(struct drm_connector *connector)
 			return ret;
 		ret = drm_mode_connector_set_tile_property(connector);
 		if (ret) {
-			pr_err("%s: set tile property failed, %d\n",
+			pr_debug("%s: set tile property failed, %d\n",
 					__func__, ret);
 			return ret;
 		}
@@ -354,14 +354,14 @@ static void dsi_mgr_bridge_pre_enable(struct drm_bridge *bridge)
 
 	ret = msm_dsi_host_power_on(host);
 	if (ret) {
-		pr_err("%s: power on host %d failed, %d\n", __func__, id, ret);
+		pr_debug("%s: power on host %d failed, %d\n", __func__, id, ret);
 		goto host_on_fail;
 	}
 
 	if (is_dual_dsi && msm_dsi1) {
 		ret = msm_dsi_host_power_on(msm_dsi1->host);
 		if (ret) {
-			pr_err("%s: power on host1 failed, %d\n",
+			pr_debug("%s: power on host1 failed, %d\n",
 							__func__, ret);
 			goto host1_on_fail;
 		}
@@ -373,7 +373,7 @@ static void dsi_mgr_bridge_pre_enable(struct drm_bridge *bridge)
 	if (panel) {
 		ret = drm_panel_prepare(panel);
 		if (ret) {
-			pr_err("%s: prepare panel %d failed, %d\n", __func__,
+			pr_debug("%s: prepare panel %d failed, %d\n", __func__,
 								id, ret);
 			goto panel_prep_fail;
 		}
@@ -381,14 +381,14 @@ static void dsi_mgr_bridge_pre_enable(struct drm_bridge *bridge)
 
 	ret = msm_dsi_host_enable(host);
 	if (ret) {
-		pr_err("%s: enable host %d failed, %d\n", __func__, id, ret);
+		pr_debug("%s: enable host %d failed, %d\n", __func__, id, ret);
 		goto host_en_fail;
 	}
 
 	if (is_dual_dsi && msm_dsi1) {
 		ret = msm_dsi_host_enable(msm_dsi1->host);
 		if (ret) {
-			pr_err("%s: enable host1 failed, %d\n", __func__, ret);
+			pr_debug("%s: enable host1 failed, %d\n", __func__, ret);
 			goto host1_en_fail;
 		}
 	}
@@ -396,7 +396,7 @@ static void dsi_mgr_bridge_pre_enable(struct drm_bridge *bridge)
 	if (panel) {
 		ret = drm_panel_enable(panel);
 		if (ret) {
-			pr_err("%s: enable panel %d failed, %d\n", __func__, id,
+			pr_debug("%s: enable panel %d failed, %d\n", __func__, id,
 									ret);
 			goto panel_en_fail;
 		}
@@ -451,24 +451,24 @@ static void dsi_mgr_bridge_post_disable(struct drm_bridge *bridge)
 	if (panel) {
 		ret = drm_panel_disable(panel);
 		if (ret)
-			pr_err("%s: Panel %d OFF failed, %d\n", __func__, id,
+			pr_debug("%s: Panel %d OFF failed, %d\n", __func__, id,
 									ret);
 	}
 
 	ret = msm_dsi_host_disable(host);
 	if (ret)
-		pr_err("%s: host %d disable failed, %d\n", __func__, id, ret);
+		pr_debug("%s: host %d disable failed, %d\n", __func__, id, ret);
 
 	if (is_dual_dsi && msm_dsi1) {
 		ret = msm_dsi_host_disable(msm_dsi1->host);
 		if (ret)
-			pr_err("%s: host1 disable failed, %d\n", __func__, ret);
+			pr_debug("%s: host1 disable failed, %d\n", __func__, ret);
 	}
 
 	if (panel) {
 		ret = drm_panel_unprepare(panel);
 		if (ret)
-			pr_err("%s: Panel %d unprepare failed,%d\n", __func__,
+			pr_debug("%s: Panel %d unprepare failed,%d\n", __func__,
 								id, ret);
 	}
 
@@ -478,12 +478,12 @@ static void dsi_mgr_bridge_post_disable(struct drm_bridge *bridge)
 
 	ret = msm_dsi_host_power_off(host);
 	if (ret)
-		pr_err("%s: host %d power off failed,%d\n", __func__, id, ret);
+		pr_debug("%s: host %d power off failed,%d\n", __func__, id, ret);
 
 	if (is_dual_dsi && msm_dsi1) {
 		ret = msm_dsi_host_power_off(msm_dsi1->host);
 		if (ret)
-			pr_err("%s: host1 power off failed, %d\n",
+			pr_debug("%s: host1 power off failed, %d\n",
 								__func__, ret);
 	}
 }
@@ -747,14 +747,14 @@ int msm_dsi_manager_cmd_xfer(int id, const struct mipi_dsi_msg *msg)
 	if (need_sync && msm_dsi0) {
 		ret = msm_dsi_host_xfer_prepare(msm_dsi0->host, msg);
 		if (ret) {
-			pr_err("%s: failed to prepare non-trigger host, %d\n",
+			pr_debug("%s: failed to prepare non-trigger host, %d\n",
 				__func__, ret);
 			return ret;
 		}
 	}
 	ret = msm_dsi_host_xfer_prepare(host, msg);
 	if (ret) {
-		pr_err("%s: failed to prepare host, %d\n", __func__, ret);
+		pr_debug("%s: failed to prepare host, %d\n", __func__, ret);
 		goto restore_host0;
 	}
 
@@ -794,12 +794,12 @@ int msm_dsi_manager_register(struct msm_dsi *msm_dsi)
 	int ret;
 
 	if (id > DSI_MAX) {
-		pr_err("%s: invalid id %d\n", __func__, id);
+		pr_debug("%s: invalid id %d\n", __func__, id);
 		return -EINVAL;
 	}
 
 	if (msm_dsim->dsi[id]) {
-		pr_err("%s: dsi%d already registered\n", __func__, id);
+		pr_debug("%s: dsi%d already registered\n", __func__, id);
 		return -EBUSY;
 	}
 
@@ -807,13 +807,13 @@ int msm_dsi_manager_register(struct msm_dsi *msm_dsi)
 
 	ret = dsi_mgr_parse_dual_dsi(msm_dsi->pdev->dev.of_node, id);
 	if (ret) {
-		pr_err("%s: failed to parse dual DSI info\n", __func__);
+		pr_debug("%s: failed to parse dual DSI info\n", __func__);
 		goto fail;
 	}
 
 	ret = dsi_mgr_host_register(id);
 	if (ret) {
-		pr_err("%s: failed to register mipi dsi host for DSI %d\n",
+		pr_debug("%s: failed to register mipi dsi host for DSI %d\n",
 			__func__, id);
 		goto fail;
 	}

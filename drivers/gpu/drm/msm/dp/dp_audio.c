@@ -378,19 +378,19 @@ static struct dp_audio_private *dp_audio_get_data(struct platform_device *pdev)
 	struct dp_audio *dp_audio;
 
 	if (!pdev) {
-		pr_err("invalid input\n");
+		pr_debug("invalid input\n");
 		return ERR_PTR(-ENODEV);
 	}
 
 	ext_data = platform_get_drvdata(pdev);
 	if (!ext_data) {
-		pr_err("invalid ext disp data\n");
+		pr_debug("invalid ext disp data\n");
 		return ERR_PTR(-EINVAL);
 	}
 
 	dp_audio = ext_data->intf_data;
 	if (!ext_data) {
-		pr_err("invalid intf data\n");
+		pr_debug("invalid intf data\n");
 		return ERR_PTR(-EINVAL);
 	}
 
@@ -437,7 +437,7 @@ static int dp_audio_get_edid_blk(struct platform_device *pdev,
 	}
 
 	if (!audio->panel || !audio->panel->edid_ctrl) {
-		pr_err("invalid panel data\n");
+		pr_debug("invalid panel data\n");
 		rc = -EINVAL;
 		goto end;
 	}
@@ -542,7 +542,7 @@ static int dp_audio_codec_ready(struct platform_device *pdev)
 
 	audio = dp_audio_get_data(pdev);
 	if (IS_ERR(audio)) {
-		pr_err("invalid input\n");
+		pr_debug("invalid input\n");
 		rc = PTR_ERR(audio);
 		goto end;
 	}
@@ -577,28 +577,28 @@ static int dp_audio_init_ext_disp(struct dp_audio_private *audio)
 	ops->ready              = dp_audio_codec_ready;
 
 	if (!audio->pdev->dev.of_node) {
-		pr_err("cannot find audio dev.of_node\n");
+		pr_debug("cannot find audio dev.of_node\n");
 		rc = -ENODEV;
 		goto end;
 	}
 
 	pd = of_parse_phandle(audio->pdev->dev.of_node, phandle, 0);
 	if (!pd) {
-		pr_err("cannot parse %s handle\n", phandle);
+		pr_debug("cannot parse %s handle\n", phandle);
 		rc = -ENODEV;
 		goto end;
 	}
 
 	audio->ext_pdev = of_find_device_by_node(pd);
 	if (!audio->ext_pdev) {
-		pr_err("cannot find %s pdev\n", phandle);
+		pr_debug("cannot find %s pdev\n", phandle);
 		rc = -ENODEV;
 		goto end;
 	}
 
 	rc = msm_ext_disp_register_intf(audio->ext_pdev, ext);
 	if (rc)
-		pr_err("failed to register disp\n");
+		pr_debug("failed to register disp\n");
 end:
 	if (pd)
 		of_node_put(pd);
@@ -614,14 +614,14 @@ static int dp_audio_notify(struct dp_audio_private *audio, u32 state)
 	rc = ext->intf_ops.audio_notify(audio->ext_pdev,
 			EXT_DISPLAY_TYPE_DP, state);
 	if (rc) {
-		pr_err("failed to notify audio. state=%d err=%d\n", state, rc);
+		pr_debug("failed to notify audio. state=%d err=%d\n", state, rc);
 		goto end;
 	}
 
 	reinit_completion(&audio->hpd_comp);
 	rc = wait_for_completion_timeout(&audio->hpd_comp, HZ * 5);
 	if (!rc) {
-		pr_err("timeout. state=%d err=%d\n", state, rc);
+		pr_debug("timeout. state=%d err=%d\n", state, rc);
 		rc = -ETIMEDOUT;
 		goto end;
 	}
@@ -638,13 +638,13 @@ static int dp_audio_on(struct dp_audio *dp_audio)
 	struct msm_ext_disp_init_data *ext;
 
 	if (!dp_audio) {
-		pr_err("invalid input\n");
+		pr_debug("invalid input\n");
 		return -EINVAL;
 	}
 
 	audio = container_of(dp_audio, struct dp_audio_private, dp_audio);
 	if (IS_ERR(audio)) {
-		pr_err("invalid input\n");
+		pr_debug("invalid input\n");
 		return -EINVAL;
 	}
 
@@ -677,7 +677,7 @@ static int dp_audio_off(struct dp_audio *dp_audio)
 	bool work_pending = false;
 
 	if (!dp_audio) {
-		pr_err("invalid input\n");
+		pr_debug("invalid input\n");
 		return -EINVAL;
 	}
 
@@ -720,7 +720,7 @@ static int dp_audio_create_notify_workqueue(struct dp_audio_private *audio)
 {
 	audio->notify_workqueue = create_workqueue("sdm_dp_audio_notify");
 	if (IS_ERR_OR_NULL(audio->notify_workqueue)) {
-		pr_err("Error creating notify_workqueue\n");
+		pr_debug("Error creating notify_workqueue\n");
 		return -EPERM;
 	}
 
@@ -744,7 +744,7 @@ struct dp_audio *dp_audio_get(struct platform_device *pdev,
 	struct dp_audio *dp_audio;
 
 	if (!pdev || !panel || !catalog) {
-		pr_err("invalid input\n");
+		pr_debug("invalid input\n");
 		rc = -EINVAL;
 		goto error;
 	}

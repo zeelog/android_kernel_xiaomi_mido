@@ -38,7 +38,7 @@ static int dp_parser_reg(struct dp_parser *parser)
 
 	reg_count = of_property_count_strings(dev->of_node, "reg-names");
 	if (reg_count <= 0) {
-		pr_err("no reg defined\n");
+		pr_debug("no reg defined\n");
 		return -EINVAL;
 	}
 
@@ -54,7 +54,7 @@ static int dp_parser_reg(struct dp_parser *parser)
 		rc = msm_dss_ioremap_byname(pdev, &io->data[i].io,
 			io->data[i].name);
 		if (rc) {
-			pr_err("unable to remap %s resources\n",
+			pr_debug("unable to remap %s resources\n",
 				io->data[i].name);
 			goto err;
 		}
@@ -114,14 +114,14 @@ static int dp_parser_aux(struct dp_parser *parser)
 
 		data = of_get_property(of_node, property, &len);
 		if (!data) {
-			pr_err("Unable to read %s\n", property);
+			pr_debug("Unable to read %s\n", property);
 			goto error;
 		}
 
 		config_count = len - 1;
 		if ((config_count < minimum_config_count) ||
 			(config_count > DP_AUX_CFG_MAX_VALUE_CNT)) {
-			pr_err("Invalid config count (%d) configs for %s\n",
+			pr_debug("Invalid config count (%d) configs for %s\n",
 					config_count, property);
 			goto error;
 		}
@@ -286,7 +286,7 @@ static int dp_parser_get_vreg(struct dp_parser *parser,
 	pm_supply_name = dp_parser_supply_node_name(module);
 	supply_root_node = of_get_child_by_name(of_node, pm_supply_name);
 	if (!supply_root_node) {
-		pr_err("no supply entry present: %s\n", pm_supply_name);
+		pr_debug("no supply entry present: %s\n", pm_supply_name);
 		goto novreg;
 	}
 
@@ -312,7 +312,7 @@ static int dp_parser_get_vreg(struct dp_parser *parser,
 		rc = of_property_read_string(supply_node,
 			"qcom,supply-name", &st);
 		if (rc) {
-			pr_err("error reading name. rc=%d\n",
+			pr_debug("error reading name. rc=%d\n",
 				 rc);
 			goto error;
 		}
@@ -322,7 +322,7 @@ static int dp_parser_get_vreg(struct dp_parser *parser,
 		rc = of_property_read_u32(supply_node,
 			"qcom,supply-min-voltage", &tmp);
 		if (rc) {
-			pr_err("error reading min volt. rc=%d\n",
+			pr_debug("error reading min volt. rc=%d\n",
 				rc);
 			goto error;
 		}
@@ -332,7 +332,7 @@ static int dp_parser_get_vreg(struct dp_parser *parser,
 		rc = of_property_read_u32(supply_node,
 			"qcom,supply-max-voltage", &tmp);
 		if (rc) {
-			pr_err("error reading max volt. rc=%d\n",
+			pr_debug("error reading max volt. rc=%d\n",
 				rc);
 			goto error;
 		}
@@ -342,7 +342,7 @@ static int dp_parser_get_vreg(struct dp_parser *parser,
 		rc = of_property_read_u32(supply_node,
 			"qcom,supply-enable-load", &tmp);
 		if (rc) {
-			pr_err("error reading enable load. rc=%d\n",
+			pr_debug("error reading enable load. rc=%d\n",
 				rc);
 			goto error;
 		}
@@ -352,7 +352,7 @@ static int dp_parser_get_vreg(struct dp_parser *parser,
 		rc = of_property_read_u32(supply_node,
 			"qcom,supply-disable-load", &tmp);
 		if (rc) {
-			pr_err("error reading disable load. rc=%d\n",
+			pr_debug("error reading disable load. rc=%d\n",
 				rc);
 			goto error;
 		}
@@ -405,7 +405,7 @@ static int dp_parser_regulator(struct dp_parser *parser)
 	for (i = DP_CORE_PM; i < DP_MAX_PM; i++) {
 		rc = dp_parser_get_vreg(parser, i);
 		if (rc) {
-			pr_err("get_dt_vreg_data failed for %s. rc=%d\n",
+			pr_debug("get_dt_vreg_data failed for %s. rc=%d\n",
 				dp_parser_pm_name(i), rc);
 			i--;
 			for (; i >= DP_CORE_PM; i--)
@@ -468,7 +468,7 @@ static int dp_parser_init_clk_data(struct dp_parser *parser)
 
 	num_clk = of_property_count_strings(dev->of_node, "clock-names");
 	if (num_clk <= 0) {
-		pr_err("no clocks are defined\n");
+		pr_debug("no clocks are defined\n");
 		rc = -EINVAL;
 		goto exit;
 	}
@@ -486,7 +486,7 @@ static int dp_parser_init_clk_data(struct dp_parser *parser)
 
 	/* Initialize the CORE power module */
 	if (core_clk_count <= 0) {
-		pr_err("no core clocks are defined\n");
+		pr_debug("no core clocks are defined\n");
 		rc = -EINVAL;
 		goto exit;
 	}
@@ -502,7 +502,7 @@ static int dp_parser_init_clk_data(struct dp_parser *parser)
 
 	/* Initialize the CTRL power module */
 	if (ctrl_clk_count <= 0) {
-		pr_err("no ctrl clocks are defined\n");
+		pr_debug("no ctrl clocks are defined\n");
 		rc = -EINVAL;
 		goto ctrl_clock_error;
 	}
@@ -543,7 +543,7 @@ static int dp_parser_clock(struct dp_parser *parser)
 
 	rc =  dp_parser_init_clk_data(parser);
 	if (rc) {
-		pr_err("failed to initialize power data\n");
+		pr_debug("failed to initialize power data\n");
 		rc = -EINVAL;
 		goto exit;
 	}
@@ -590,7 +590,7 @@ static int dp_parser_parse(struct dp_parser *parser)
 	int rc = 0;
 
 	if (!parser) {
-		pr_err("invalid input\n");
+		pr_debug("invalid input\n");
 		rc = -EINVAL;
 		goto err;
 	}
@@ -635,7 +635,7 @@ static struct dp_io_data *dp_parser_get_io(struct dp_parser *dp_parser,
 	struct dp_io *io;
 
 	if (!dp_parser) {
-		pr_err("invalid input\n");
+		pr_debug("invalid input\n");
 		goto err;
 	}
 
@@ -657,7 +657,7 @@ static void dp_parser_get_io_buf(struct dp_parser *dp_parser, char *name)
 	struct dp_io *io;
 
 	if (!dp_parser) {
-		pr_err("invalid input\n");
+		pr_debug("invalid input\n");
 		return;
 	}
 
@@ -680,7 +680,7 @@ static void dp_parser_clear_io_buf(struct dp_parser *dp_parser)
 	struct dp_io *io;
 
 	if (!dp_parser) {
-		pr_err("invalid input\n");
+		pr_debug("invalid input\n");
 		return;
 	}
 
@@ -719,7 +719,7 @@ void dp_parser_put(struct dp_parser *parser)
 	struct dss_module_power *power = NULL;
 
 	if (!parser) {
-		pr_err("invalid parser module\n");
+		pr_debug("invalid parser module\n");
 		return;
 	}
 

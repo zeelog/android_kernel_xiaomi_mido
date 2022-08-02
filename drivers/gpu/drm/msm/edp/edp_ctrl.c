@@ -156,7 +156,7 @@ static int edp_clk_init(struct edp_ctrl *ctrl)
 	ctrl->aux_clk = devm_clk_get(dev, "core_clk");
 	if (IS_ERR(ctrl->aux_clk)) {
 		ret = PTR_ERR(ctrl->aux_clk);
-		pr_err("%s: Can't find aux_clk, %d\n", __func__, ret);
+		pr_debug("%s: Can't find aux_clk, %d\n", __func__, ret);
 		ctrl->aux_clk = NULL;
 		return ret;
 	}
@@ -164,7 +164,7 @@ static int edp_clk_init(struct edp_ctrl *ctrl)
 	ctrl->pixel_clk = devm_clk_get(dev, "pixel_clk");
 	if (IS_ERR(ctrl->pixel_clk)) {
 		ret = PTR_ERR(ctrl->pixel_clk);
-		pr_err("%s: Can't find pixel_clk, %d\n", __func__, ret);
+		pr_debug("%s: Can't find pixel_clk, %d\n", __func__, ret);
 		ctrl->pixel_clk = NULL;
 		return ret;
 	}
@@ -172,7 +172,7 @@ static int edp_clk_init(struct edp_ctrl *ctrl)
 	ctrl->ahb_clk = devm_clk_get(dev, "iface_clk");
 	if (IS_ERR(ctrl->ahb_clk)) {
 		ret = PTR_ERR(ctrl->ahb_clk);
-		pr_err("%s: Can't find ahb_clk, %d\n", __func__, ret);
+		pr_debug("%s: Can't find ahb_clk, %d\n", __func__, ret);
 		ctrl->ahb_clk = NULL;
 		return ret;
 	}
@@ -180,7 +180,7 @@ static int edp_clk_init(struct edp_ctrl *ctrl)
 	ctrl->link_clk = devm_clk_get(dev, "link_clk");
 	if (IS_ERR(ctrl->link_clk)) {
 		ret = PTR_ERR(ctrl->link_clk);
-		pr_err("%s: Can't find link_clk, %d\n", __func__, ret);
+		pr_debug("%s: Can't find link_clk, %d\n", __func__, ret);
 		ctrl->link_clk = NULL;
 		return ret;
 	}
@@ -189,7 +189,7 @@ static int edp_clk_init(struct edp_ctrl *ctrl)
 	ctrl->mdp_core_clk = devm_clk_get(dev, "mdp_core_clk");
 	if (IS_ERR(ctrl->mdp_core_clk)) {
 		ret = PTR_ERR(ctrl->mdp_core_clk);
-		pr_err("%s: Can't find mdp_core_clk, %d\n", __func__, ret);
+		pr_debug("%s: Can't find mdp_core_clk, %d\n", __func__, ret);
 		ctrl->mdp_core_clk = NULL;
 		return ret;
 	}
@@ -206,19 +206,19 @@ static int edp_clk_enable(struct edp_ctrl *ctrl, u32 clk_mask)
 	if (clk_mask & EDP_CLK_MASK_AHB) {
 		ret = clk_prepare_enable(ctrl->ahb_clk);
 		if (ret) {
-			pr_err("%s: Failed to enable ahb clk\n", __func__);
+			pr_debug("%s: Failed to enable ahb clk\n", __func__);
 			goto f0;
 		}
 	}
 	if (clk_mask & EDP_CLK_MASK_AUX) {
 		ret = clk_set_rate(ctrl->aux_clk, 19200000);
 		if (ret) {
-			pr_err("%s: Failed to set rate aux clk\n", __func__);
+			pr_debug("%s: Failed to set rate aux clk\n", __func__);
 			goto f1;
 		}
 		ret = clk_prepare_enable(ctrl->aux_clk);
 		if (ret) {
-			pr_err("%s: Failed to enable aux clk\n", __func__);
+			pr_debug("%s: Failed to enable aux clk\n", __func__);
 			goto f1;
 		}
 	}
@@ -229,14 +229,14 @@ static int edp_clk_enable(struct edp_ctrl *ctrl, u32 clk_mask)
 		ret = clk_set_rate(ctrl->link_clk,
 				(unsigned long)ctrl->link_rate * 27000000);
 		if (ret) {
-			pr_err("%s: Failed to set rate to link clk\n",
+			pr_debug("%s: Failed to set rate to link clk\n",
 				__func__);
 			goto f2;
 		}
 
 		ret = clk_prepare_enable(ctrl->link_clk);
 		if (ret) {
-			pr_err("%s: Failed to enable link clk\n", __func__);
+			pr_debug("%s: Failed to enable link clk\n", __func__);
 			goto f2;
 		}
 	}
@@ -246,21 +246,21 @@ static int edp_clk_enable(struct edp_ctrl *ctrl, u32 clk_mask)
 		ret = clk_set_rate(ctrl->pixel_clk,
 				(unsigned long)ctrl->pixel_rate * 1000);
 		if (ret) {
-			pr_err("%s: Failed to set rate to pixel clk\n",
+			pr_debug("%s: Failed to set rate to pixel clk\n",
 				__func__);
 			goto f3;
 		}
 
 		ret = clk_prepare_enable(ctrl->pixel_clk);
 		if (ret) {
-			pr_err("%s: Failed to enable pixel clk\n", __func__);
+			pr_debug("%s: Failed to enable pixel clk\n", __func__);
 			goto f3;
 		}
 	}
 	if (clk_mask & EDP_CLK_MASK_MDP_CORE) {
 		ret = clk_prepare_enable(ctrl->mdp_core_clk);
 		if (ret) {
-			pr_err("%s: Failed to enable mdp core clk\n", __func__);
+			pr_debug("%s: Failed to enable mdp core clk\n", __func__);
 			goto f4;
 		}
 	}
@@ -306,7 +306,7 @@ static int edp_regulator_init(struct edp_ctrl *ctrl)
 	ctrl->vdda_vreg = devm_regulator_get(dev, "vdda");
 	ret = PTR_ERR_OR_ZERO(ctrl->vdda_vreg);
 	if (ret) {
-		pr_err("%s: Could not get vdda reg, ret = %d\n", __func__,
+		pr_debug("%s: Could not get vdda reg, ret = %d\n", __func__,
 				ret);
 		ctrl->vdda_vreg = NULL;
 		return ret;
@@ -314,7 +314,7 @@ static int edp_regulator_init(struct edp_ctrl *ctrl)
 	ctrl->lvl_vreg = devm_regulator_get(dev, "lvl-vdd");
 	ret = PTR_ERR_OR_ZERO(ctrl->lvl_vreg);
 	if (ret) {
-		pr_err("%s: Could not get lvl-vdd reg, ret = %d\n", __func__,
+		pr_debug("%s: Could not get lvl-vdd reg, ret = %d\n", __func__,
 				ret);
 		ctrl->lvl_vreg = NULL;
 		return ret;
@@ -329,19 +329,19 @@ static int edp_regulator_enable(struct edp_ctrl *ctrl)
 
 	ret = regulator_set_load(ctrl->vdda_vreg, VDDA_UA_ON_LOAD);
 	if (ret < 0) {
-		pr_err("%s: vdda_vreg set regulator mode failed.\n", __func__);
+		pr_debug("%s: vdda_vreg set regulator mode failed.\n", __func__);
 		goto vdda_set_fail;
 	}
 
 	ret = regulator_enable(ctrl->vdda_vreg);
 	if (ret) {
-		pr_err("%s: Failed to enable vdda_vreg regulator.\n", __func__);
+		pr_debug("%s: Failed to enable vdda_vreg regulator.\n", __func__);
 		goto vdda_enable_fail;
 	}
 
 	ret = regulator_enable(ctrl->lvl_vreg);
 	if (ret) {
-		pr_err("Failed to enable lvl-vdd reg regulator, %d", ret);
+		pr_debug("Failed to enable lvl-vdd reg regulator, %d", ret);
 		goto lvl_enable_fail;
 	}
 
@@ -372,7 +372,7 @@ static int edp_gpio_config(struct edp_ctrl *ctrl)
 	if (IS_ERR(ctrl->panel_hpd_gpio)) {
 		ret = PTR_ERR(ctrl->panel_hpd_gpio);
 		ctrl->panel_hpd_gpio = NULL;
-		pr_err("%s: cannot get panel-hpd-gpios, %d\n", __func__, ret);
+		pr_debug("%s: cannot get panel-hpd-gpios, %d\n", __func__, ret);
 		return ret;
 	}
 
@@ -380,7 +380,7 @@ static int edp_gpio_config(struct edp_ctrl *ctrl)
 	if (IS_ERR(ctrl->panel_en_gpio)) {
 		ret = PTR_ERR(ctrl->panel_en_gpio);
 		ctrl->panel_en_gpio = NULL;
-		pr_err("%s: cannot get panel-en-gpios, %d\n", __func__, ret);
+		pr_debug("%s: cannot get panel-en-gpios, %d\n", __func__, ret);
 		return ret;
 	}
 
@@ -491,7 +491,7 @@ static int edp_lane_set_write(struct edp_ctrl *ctrl,
 
 	DBG("%s: p|v=0x%x", __func__, voltage_level | pre_emphasis_level);
 	if (drm_dp_dpcd_write(ctrl->drm_aux, 0x103, buf, 4) < 4) {
-		pr_err("%s: Set sw/pe to panel failed\n", __func__);
+		pr_debug("%s: Set sw/pe to panel failed\n", __func__);
 		return -ENOLINK;
 	}
 
@@ -505,7 +505,7 @@ static int edp_train_pattern_set_write(struct edp_ctrl *ctrl, u8 pattern)
 	DBG("pattern=%x", p);
 	if (drm_dp_dpcd_write(ctrl->drm_aux,
 				DP_TRAINING_PATTERN_SET, &p, 1) < 1) {
-		pr_err("%s: Set training pattern to panel failed\n", __func__);
+		pr_debug("%s: Set training pattern to panel failed\n", __func__);
 		return -ENOLINK;
 	}
 
@@ -558,7 +558,7 @@ static void edp_host_train_set(struct edp_ctrl *ctrl, u32 train)
 	}
 
 	if (cnt == 0)
-		pr_err("%s: set link_train=%d failed\n", __func__, train);
+		pr_debug("%s: set link_train=%d failed\n", __func__, train);
 }
 
 static const u8 vm_pre_emphasis[4][4] = {
@@ -621,7 +621,7 @@ static int edp_start_link_train_1(struct edp_ctrl *ctrl)
 
 		rlen = drm_dp_dpcd_read_link_status(ctrl->drm_aux, link_status);
 		if (rlen < DP_LINK_STATUS_SIZE) {
-			pr_err("%s: read link status failed\n", __func__);
+			pr_debug("%s: read link status failed\n", __func__);
 			return -ENOLINK;
 		}
 		if (drm_dp_clock_recovery_ok(link_status, ctrl->lane_cnt)) {
@@ -678,7 +678,7 @@ static int edp_start_link_train_2(struct edp_ctrl *ctrl)
 
 		rlen = drm_dp_dpcd_read_link_status(ctrl->drm_aux, link_status);
 		if (rlen < DP_LINK_STATUS_SIZE) {
-			pr_err("%s: read link status failed\n", __func__);
+			pr_debug("%s: read link status failed\n", __func__);
 			return -ENOLINK;
 		}
 		if (drm_dp_channel_eq_ok(link_status, ctrl->lane_cnt)) {
@@ -787,7 +787,7 @@ static int edp_do_link_train(struct edp_ctrl *ctrl)
 			ret = EDP_TRAIN_RECONFIG;
 			goto clear;
 		} else {
-			pr_err("%s: Training 1 failed", __func__);
+			pr_debug("%s: Training 1 failed", __func__);
 			ret = EDP_TRAIN_FAIL;
 			goto clear;
 		}
@@ -805,7 +805,7 @@ static int edp_do_link_train(struct edp_ctrl *ctrl)
 			ret = EDP_TRAIN_RECONFIG;
 			goto clear;
 		} else {
-			pr_err("%s: Training 2 failed", __func__);
+			pr_debug("%s: Training 2 failed", __func__);
 			ret = EDP_TRAIN_FAIL;
 			goto clear;
 		}
@@ -856,7 +856,7 @@ static int edp_sw_mvid_nvid(struct edp_ctrl *ctrl, u32 m, u32 n)
 	} else if (ctrl->link_rate == DP_LINK_BW_2_7) {
 		n_multi = 2;
 	} else {
-		pr_err("%s: Invalid link rate, %d\n", __func__,
+		pr_debug("%s: Invalid link rate, %d\n", __func__,
 			ctrl->link_rate);
 		return -EINVAL;
 	}
@@ -1094,7 +1094,7 @@ int msm_edp_ctrl_init(struct msm_edp *edp)
 	int ret;
 
 	if (!edp) {
-		pr_err("%s: edp is NULL!\n", __func__);
+		pr_debug("%s: edp is NULL!\n", __func__);
 		return -EINVAL;
 	}
 
@@ -1113,30 +1113,30 @@ int msm_edp_ctrl_init(struct msm_edp *edp)
 	/* Get regulator, clock, gpio, pwm */
 	ret = edp_regulator_init(ctrl);
 	if (ret) {
-		pr_err("%s:regulator init fail\n", __func__);
+		pr_debug("%s:regulator init fail\n", __func__);
 		return ret;
 	}
 	ret = edp_clk_init(ctrl);
 	if (ret) {
-		pr_err("%s:clk init fail\n", __func__);
+		pr_debug("%s:clk init fail\n", __func__);
 		return ret;
 	}
 	ret = edp_gpio_config(ctrl);
 	if (ret) {
-		pr_err("%s:failed to configure GPIOs: %d", __func__, ret);
+		pr_debug("%s:failed to configure GPIOs: %d", __func__, ret);
 		return ret;
 	}
 
 	/* Init aux and phy */
 	ctrl->aux = msm_edp_aux_init(dev, ctrl->base, &ctrl->drm_aux);
 	if (!ctrl->aux || !ctrl->drm_aux) {
-		pr_err("%s:failed to init aux\n", __func__);
+		pr_debug("%s:failed to init aux\n", __func__);
 		return -ENOMEM;
 	}
 
 	ctrl->phy = msm_edp_phy_init(dev, ctrl->base);
 	if (!ctrl->phy) {
-		pr_err("%s:failed to init phy\n", __func__);
+		pr_debug("%s:failed to init phy\n", __func__);
 		ret = -ENOMEM;
 		goto err_destory_aux;
 	}
@@ -1196,7 +1196,7 @@ bool msm_edp_ctrl_panel_connected(struct edp_ctrl *ctrl)
 
 	if (drm_dp_dpcd_read(ctrl->drm_aux, DP_DPCD_REV, ctrl->dpcd,
 				DP_RECEIVER_CAP_SIZE) < DP_RECEIVER_CAP_SIZE) {
-		pr_err("%s: AUX channel is NOT ready\n", __func__);
+		pr_debug("%s: AUX channel is NOT ready\n", __func__);
 		memset(ctrl->dpcd, 0, DP_RECEIVER_CAP_SIZE);
 	} else {
 		ctrl->edp_connected = true;
@@ -1236,7 +1236,7 @@ int msm_edp_ctrl_get_panel_info(struct edp_ctrl *ctrl,
 
 	ret = drm_dp_link_probe(ctrl->drm_aux, &ctrl->dp_link);
 	if (ret) {
-		pr_err("%s: read dpcd cap failed, %d\n", __func__, ret);
+		pr_debug("%s: read dpcd cap failed, %d\n", __func__, ret);
 		goto disable_ret;
 	}
 
@@ -1245,7 +1245,7 @@ int msm_edp_ctrl_get_panel_info(struct edp_ctrl *ctrl,
 
 	ctrl->edid = drm_get_edid(connector, &ctrl->drm_aux->ddc);
 	if (!ctrl->edid) {
-		pr_err("%s: edid read fail\n", __func__);
+		pr_debug("%s: edid read fail\n", __func__);
 		goto disable_ret;
 	}
 
@@ -1283,7 +1283,7 @@ int msm_edp_ctrl_timing_cfg(struct edp_ctrl *ctrl,
 	edp_fill_link_cfg(ctrl);
 
 	if (edp_clk_enable(ctrl, EDP_CLK_MASK_AHB)) {
-		pr_err("%s, fail to prepare enable ahb clk\n", __func__);
+		pr_debug("%s, fail to prepare enable ahb clk\n", __func__);
 		ret = -EINVAL;
 		goto unlock_ret;
 	}
@@ -1334,7 +1334,7 @@ bool msm_edp_ctrl_pixel_clock_valid(struct edp_ctrl *ctrl,
 	} else if (ctrl->link_rate == DP_LINK_BW_2_7) {
 		divs = clk_divs[1];
 	} else {
-		pr_err("%s: Invalid link rate,%d\n", __func__, ctrl->link_rate);
+		pr_debug("%s: Invalid link rate,%d\n", __func__, ctrl->link_rate);
 		return false;
 	}
 

@@ -624,7 +624,7 @@ int sde_core_irq_domain_add(struct sde_kms *sde_kms)
 	struct irq_domain *domain;
 
 	if (!sde_kms->dev || !sde_kms->dev->dev) {
-		pr_err("invalid device handles\n");
+		pr_debug("invalid device handles\n");
 		return -EINVAL;
 	}
 
@@ -633,7 +633,7 @@ int sde_core_irq_domain_add(struct sde_kms *sde_kms)
 	domain = irq_domain_add_linear(dev->of_node, 32,
 			&sde_core_irqdomain_ops, sde_kms);
 	if (!domain) {
-		pr_err("failed to add irq_domain\n");
+		pr_debug("failed to add irq_domain\n");
 		return -EINVAL;
 	}
 

@@ -199,7 +199,7 @@ u32 msm_readl(const void __iomem *addr)
 	u32 val = readl(addr);
 
 	if (reglog)
-		pr_err("IO:R %pK %08x\n", addr, val);
+		pr_debug("IO:R %pK %08x\n", addr, val);
 	return val;
 }
 
@@ -500,13 +500,13 @@ static int msm_drm_init(struct device *dev, struct drm_driver *drv)
 
 	ret = sde_power_resource_init(pdev, &priv->phandle);
 	if (ret) {
-		pr_err("sde power resource init failed\n");
+		pr_debug("sde power resource init failed\n");
 		goto power_init_fail;
 	}
 
 	priv->pclient = sde_power_client_create(&priv->phandle, "sde");
 	if (IS_ERR_OR_NULL(priv->pclient)) {
-		pr_err("sde power client create failed\n");
+		pr_debug("sde power client create failed\n");
 		ret = -EINVAL;
 		goto power_client_fail;
 	}
@@ -729,7 +729,7 @@ static int msm_drm_init(struct device *dev, struct drm_driver *drv)
 	if (kms && kms->funcs && kms->funcs->postinit) {
 		ret = kms->funcs->postinit(kms);
 		if (ret) {
-			pr_err("kms post init failed: %d\n", ret);
+			pr_debug("kms post init failed: %d\n", ret);
 			goto fail;
 		}
 	}

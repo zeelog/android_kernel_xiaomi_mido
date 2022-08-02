@@ -36,7 +36,7 @@ int sde_hw_blk_init(struct sde_hw_blk *hw_blk, u32 type, int id,
 		struct sde_hw_blk_ops *ops)
 {
 	if (!hw_blk) {
-		pr_err("invalid parameters\n");
+		pr_debug("invalid parameters\n");
 		return -EINVAL;
 	}
 
@@ -63,12 +63,12 @@ int sde_hw_blk_init(struct sde_hw_blk *hw_blk, u32 type, int id,
 void sde_hw_blk_destroy(struct sde_hw_blk *hw_blk)
 {
 	if (!hw_blk) {
-		pr_err("invalid parameters\n");
+		pr_debug("invalid parameters\n");
 		return;
 	}
 
 	if (atomic_read(&hw_blk->refcount))
-		pr_err("hw_blk:%d.%d invalid refcount\n", hw_blk->type,
+		pr_debug("hw_blk:%d.%d invalid refcount\n", hw_blk->type,
 				hw_blk->id);
 
 	mutex_lock(&sde_hw_blk_lock);
@@ -113,7 +113,7 @@ struct sde_hw_blk *sde_hw_blk_get(struct sde_hw_blk *hw_blk, u32 type, int id)
 	if (refcount == 1 && hw_blk->ops.start) {
 		rc = hw_blk->ops.start(hw_blk);
 		if (rc) {
-			pr_err("failed to start  hw_blk:%d rc:%d\n", type, rc);
+			pr_debug("failed to start  hw_blk:%d rc:%d\n", type, rc);
 			goto error_start;
 		}
 	}
@@ -135,7 +135,7 @@ error_start:
 void sde_hw_blk_put(struct sde_hw_blk *hw_blk)
 {
 	if (!hw_blk) {
-		pr_err("invalid parameters\n");
+		pr_debug("invalid parameters\n");
 		return;
 	}
 
@@ -143,7 +143,7 @@ void sde_hw_blk_put(struct sde_hw_blk *hw_blk)
 			atomic_read(&hw_blk->refcount));
 
 	if (!atomic_read(&hw_blk->refcount)) {
-		pr_err("hw_blk:%d.%d invalid put\n", hw_blk->type, hw_blk->id);
+		pr_debug("hw_blk:%d.%d invalid put\n", hw_blk->type, hw_blk->id);
 		return;
 	}
 

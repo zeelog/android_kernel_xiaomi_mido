@@ -34,7 +34,7 @@ bool msm_edp_phy_ready(struct edp_phy *phy)
 	}
 
 	if (cnt == 0) {
-		pr_err("%s: PHY NOT ready\n", __func__);
+		pr_debug("%s: PHY NOT ready\n", __func__);
 		return false;
 	} else {
 		return true;

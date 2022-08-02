@@ -881,7 +881,7 @@ static int _sde_encoder_phys_vid_wait_for_vblank(
 	u32 event = 0;
 
 	if (!phys_enc) {
-		pr_err("invalid encoder\n");
+		pr_debug("invalid encoder\n");
 		return -EINVAL;
 	}
 

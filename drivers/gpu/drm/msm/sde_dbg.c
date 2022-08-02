@@ -2151,14 +2151,14 @@ static void _sde_dump_reg(const char *dump_name, u32 reg_dump_flag,
 				(unsigned long)(addr - base_addr));
 		} else {
 			in_mem = 0;
-			pr_err("dump_mem: kzalloc fails!\n");
+			pr_debug("dump_mem: kzalloc fails!\n");
 		}
 	}
 
 	if (!from_isr) {
 		rc = _sde_dbg_enable_power(true);
 		if (rc) {
-			pr_err("failed to enable power %d\n", rc);
+			pr_debug("failed to enable power %d\n", rc);
 			return;
 		}
 	}
@@ -2240,7 +2240,7 @@ static void _sde_dump_reg_by_ranges(struct sde_dbg_reg_base *dbg,
 	struct sde_dbg_reg_range *range_node;
 
 	if (!dbg || !(dbg->base || dbg->cb)) {
-		pr_err("dbg base is null!\n");
+		pr_debug("dbg base is null!\n");
 		return;
 	}
 
@@ -2358,7 +2358,7 @@ static void _sde_dbg_dump_sde_dbg_bus(struct sde_dbg_sde_debug_bus *bus)
 			mem_base = reg_base->base + bus->top_blk_off;
 
 	if (!mem_base) {
-		pr_err("unable to find mem_base for %s\n", bus->cmn.name);
+		pr_debug("unable to find mem_base for %s\n", bus->cmn.name);
 		return;
 	}
 
@@ -2388,13 +2388,13 @@ static void _sde_dbg_dump_sde_dbg_bus(struct sde_dbg_sde_debug_bus *bus)
 				__func__, dump_addr, list_size);
 		} else {
 			in_mem = false;
-			pr_err("dump_mem: allocation fails\n");
+			pr_debug("dump_mem: allocation fails\n");
 		}
 	}
 
 	rc = _sde_dbg_enable_power(true);
 	if (rc) {
-		pr_err("failed to enable power %d\n", rc);
+		pr_debug("failed to enable power %d\n", rc);
 		return;
 	}
 
@@ -2503,7 +2503,7 @@ static void _sde_dbg_dump_vbif_dbg_bus(struct sde_dbg_vbif_debug_bus *bus)
 			mem_base = reg_base->base;
 
 	if (!mem_base) {
-		pr_err("unable to find mem_base for %s\n", bus->cmn.name);
+		pr_debug("unable to find mem_base for %s\n", bus->cmn.name);
 		return;
 	}
 
@@ -2545,13 +2545,13 @@ static void _sde_dbg_dump_vbif_dbg_bus(struct sde_dbg_vbif_debug_bus *bus)
 				__func__, dump_addr, list_size);
 		} else {
 			in_mem = false;
-			pr_err("dump_mem: allocation fails\n");
+			pr_debug("dump_mem: allocation fails\n");
 		}
 	}
 
 	rc = _sde_dbg_enable_power(true);
 	if (rc) {
-		pr_err("failed to enable power %d\n", rc);
+		pr_debug("failed to enable power %d\n", rc);
 		return;
 	}
 
@@ -2700,7 +2700,7 @@ void sde_dbg_dump(bool queue_work, const char *name, ...)
 	i = 0;
 	while ((blk_name = va_arg(args, char*))) {
 		if (i++ >= SDE_EVTLOG_MAX_DATA) {
-			pr_err("could not parse all dump arguments\n");
+			pr_debug("could not parse all dump arguments\n");
 			break;
 		}
 		if (IS_ERR_OR_NULL(blk_name))
@@ -2712,7 +2712,7 @@ void sde_dbg_dump(bool queue_work, const char *name, ...)
 				blk_arr[index] = blk_base;
 				index++;
 			} else {
-				pr_err("insufficient space to to dump %s\n",
+				pr_debug("insufficient space to to dump %s\n",
 						blk_name);
 			}
 		}
@@ -2763,7 +2763,7 @@ void sde_dbg_ctrl(const char *name, ...)
 
 	while ((blk_name = va_arg(args, char*))) {
 		if (i++ >= SDE_EVTLOG_MAX_DATA) {
-			pr_err("could not parse all dbg arguments\n");
+			pr_debug("could not parse all dbg arguments\n");
 			break;
 		}
 
@@ -2831,7 +2831,7 @@ static ssize_t sde_evtlog_dump_read(struct file *file, char __user *buff,
 	len = sde_evtlog_dump_to_buffer(sde_dbg_base.evtlog, evtlog_buf,
 			SDE_EVTLOG_BUF_MAX, true);
 	if (len < 0 || len > count) {
-		pr_err("len is more than user buffer size");
+		pr_debug("len is more than user buffer size");
 		return 0;
 	}
 
@@ -2888,7 +2888,7 @@ static ssize_t sde_dbg_ctrl_read(struct file *file, char __user *buff,
 		__func__, sde_dbg_base.debugfs_ctrl, len);
 
 	if ((count < sizeof(buf)) || copy_to_user(buff, buf, len)) {
-		pr_err("error copying the buffer! count:0x%zx\n", count);
+		pr_debug("error copying the buffer! count:0x%zx\n", count);
 		return -EFAULT;
 	}
 
@@ -2910,7 +2910,7 @@ static ssize_t sde_dbg_ctrl_write(struct file *file,
 	char buf[24];
 
 	if (!file) {
-		pr_err("DbgDbg: %s: error no file --\n", __func__);
+		pr_debug("DbgDbg: %s: error no file --\n", __func__);
 		return -EINVAL;
 	}
 
@@ -2924,7 +2924,7 @@ static ssize_t sde_dbg_ctrl_write(struct file *file,
 	buf[count] = 0; /* end of string */
 
 	if (kstrtouint(buf, 0, &dbg_ctrl)) {
-		pr_err("%s: error in the number of bytes\n", __func__);
+		pr_debug("%s: error in the number of bytes\n", __func__);
 		return -EFAULT;
 	}
 
@@ -3075,7 +3075,7 @@ static bool sde_dbg_reg_base_is_valid_range(u32 off, u32 cnt)
 		}
 	}
 
-	pr_err("invalid range requested\n");
+	pr_debug("invalid range requested\n");
 	return false;
 }
 
@@ -3235,7 +3235,7 @@ static ssize_t sde_dbg_reg_base_reg_write(struct file *file,
 	rc = _sde_dbg_enable_power(true);
 	if (rc) {
 		mutex_unlock(&sde_dbg_base.mutex);
-		pr_err("failed to enable power %d\n", rc);
+		pr_debug("failed to enable power %d\n", rc);
 		return rc;
 	}
 
@@ -3269,7 +3269,7 @@ static ssize_t sde_dbg_reg_base_reg_read(struct file *file,
 
 	dbg = file->private_data;
 	if (!dbg) {
-		pr_err("invalid handle\n");
+		pr_debug("invalid handle\n");
 		return -ENODEV;
 	}
 
@@ -3302,7 +3302,7 @@ static ssize_t sde_dbg_reg_base_reg_read(struct file *file,
 		rc = _sde_dbg_enable_power(true);
 		if (rc) {
 			mutex_unlock(&sde_dbg_base.mutex);
-			pr_err("failed to enable power %d\n", rc);
+			pr_debug("failed to enable power %d\n", rc);
 			return rc;
 		}
 
@@ -3335,7 +3335,7 @@ static ssize_t sde_dbg_reg_base_reg_read(struct file *file,
 	len = min(count, dbg->buf_len - (size_t) *ppos);
 	if (copy_to_user(user_buf, dbg->buf + *ppos, len)) {
 		mutex_unlock(&sde_dbg_base.mutex);
-		pr_err("failed to copy to user\n");
+		pr_debug("failed to copy to user\n");
 		return -EFAULT;
 	}
 
@@ -3449,14 +3449,14 @@ void sde_dbg_init_dbg_buses(u32 hwversion)
 		dbg->dbgbus_dsi.entries = dsi_dbg_bus_sdm845;
 		dbg->dbgbus_dsi.size = ARRAY_SIZE(dsi_dbg_bus_sdm845);
 	} else {
-		pr_err("unsupported chipset id %X\n", hwversion);
+		pr_debug("unsupported chipset id %X\n", hwversion);
 	}
 }
 
 int sde_dbg_init(struct device *dev, struct sde_dbg_power_ctrl *power_ctrl)
 {
 	if (!dev || !power_ctrl) {
-		pr_err("invalid params\n");
+		pr_debug("invalid params\n");
 		return -EINVAL;
 	}
 
@@ -3476,7 +3476,7 @@ int sde_dbg_init(struct device *dev, struct sde_dbg_power_ctrl *power_ctrl)
 	sde_dbg_base.panic_on_err = DEFAULT_PANIC;
 	sde_dbg_base.enable_reg_dump = DEFAULT_REGDUMP;
 
-	pr_info("evtlog_status: enable:%d, panic:%d, dump:%d\n",
+	pr_debug("evtlog_status: enable:%d, panic:%d, dump:%d\n",
 		sde_dbg_base.evtlog->enable, sde_dbg_base.panic_on_err,
 		sde_dbg_base.enable_reg_dump);
 
@@ -3523,7 +3523,7 @@ int sde_dbg_reg_register_base(const char *name, void __iomem *base,
 	struct sde_dbg_reg_base *reg_base;
 
 	if (!name || !strlen(name)) {
-		pr_err("no debug name provided\n");
+		pr_debug("no debug name provided\n");
 		return -EINVAL;
 	}
 
@@ -3555,7 +3555,7 @@ int sde_dbg_reg_register_cb(const char *name, void (*cb)(void *), void *ptr)
 	struct sde_dbg_reg_base *reg_base;
 
 	if (!name || !strlen(name)) {
-		pr_err("no debug name provided\n");
+		pr_debug("no debug name provided\n");
 		return -EINVAL;
 	}
 
@@ -3612,13 +3612,13 @@ void sde_dbg_reg_register_dump_range(const char *base_name,
 
 	reg_base = _sde_dump_get_blk_addr(base_name);
 	if (!reg_base) {
-		pr_err("error: for range %s unable to locate base %s\n",
+		pr_debug("error: for range %s unable to locate base %s\n",
 				range_name, base_name);
 		return;
 	}
 
 	if (!range_name || strlen(range_name) == 0) {
-		pr_err("%pS: bad range name, base_name %s, offset_start 0x%X, end 0x%X\n",
+		pr_debug("%pS: bad range name, base_name %s, offset_start 0x%X, end 0x%X\n",
 				__builtin_return_address(0), base_name,
 				offset_start, offset_end);
 		return;
@@ -3626,7 +3626,7 @@ void sde_dbg_reg_register_dump_range(const char *base_name,
 
 	if (offset_end - offset_start < REG_DUMP_ALIGN ||
 			offset_start > offset_end) {
-		pr_err("%pS: bad range, base_name %s, range_name %s, offset_start 0x%X, end 0x%X\n",
+		pr_debug("%pS: bad range, base_name %s, range_name %s, offset_start 0x%X, end 0x%X\n",
 				__builtin_return_address(0), base_name,
 				range_name, offset_start, offset_end);
 		return;

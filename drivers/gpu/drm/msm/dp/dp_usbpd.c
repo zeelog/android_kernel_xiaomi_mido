@@ -240,7 +240,7 @@ static void dp_usbpd_send_event(struct dp_usbpd_private *pd,
 			SVDM_CMD_TYPE_INITIATOR, 0x1, &config, 0x1);
 		break;
 	default:
-		pr_err("unknown event:%d\n", event);
+		pr_debug("unknown event:%d\n", event);
 	}
 }
 
@@ -250,7 +250,7 @@ static void dp_usbpd_connect_cb(struct usbpd_svid_handler *hdlr)
 
 	pd = container_of(hdlr, struct dp_usbpd_private, svid_handler);
 	if (!pd) {
-		pr_err("get_usbpd phandle failed\n");
+		pr_debug("get_usbpd phandle failed\n");
 		return;
 	}
 
@@ -264,7 +264,7 @@ static void dp_usbpd_disconnect_cb(struct usbpd_svid_handler *hdlr)
 
 	pd = container_of(hdlr, struct dp_usbpd_private, svid_handler);
 	if (!pd) {
-		pr_err("get_usbpd phandle failed\n");
+		pr_debug("get_usbpd phandle failed\n");
 		return;
 	}
 
@@ -282,32 +282,32 @@ static int dp_usbpd_validate_callback(u8 cmd,
 	int ret = 0;
 
 	if (cmd_type == SVDM_CMD_TYPE_RESP_NAK) {
-		pr_err("error: NACK\n");
+		pr_debug("error: NACK\n");
 		ret = -EINVAL;
 		goto end;
 	}
 
 	if (cmd_type == SVDM_CMD_TYPE_RESP_BUSY) {
-		pr_err("error: BUSY\n");
+		pr_debug("error: BUSY\n");
 		ret = -EBUSY;
 		goto end;
 	}
 
 	if (cmd == USBPD_SVDM_ATTENTION) {
 		if (cmd_type != SVDM_CMD_TYPE_INITIATOR) {
-			pr_err("error: invalid cmd type for attention\n");
+			pr_debug("error: invalid cmd type for attention\n");
 			ret = -EINVAL;
 			goto end;
 		}
 
 		if (!num_vdos) {
-			pr_err("error: no vdo provided\n");
+			pr_debug("error: no vdo provided\n");
 			ret = -EINVAL;
 			goto end;
 		}
 	} else {
 		if (cmd_type != SVDM_CMD_TYPE_RESP_ACK) {
-			pr_err("error: invalid cmd type\n");
+			pr_debug("error: invalid cmd type\n");
 			ret = -EINVAL;
 		}
 	}
@@ -416,7 +416,7 @@ static void dp_usbpd_response_cb(struct usbpd_svid_handler *hdlr, u8 cmd,
 
 		rc = dp_usbpd_get_ss_lanes(pd);
 		if (rc) {
-			pr_err("failed to get SuperSpeed lanes\n");
+			pr_debug("failed to get SuperSpeed lanes\n");
 			break;
 		}
 
@@ -424,7 +424,7 @@ static void dp_usbpd_response_cb(struct usbpd_svid_handler *hdlr, u8 cmd,
 			pd->dp_cb->configure(pd->dev);
 		break;
 	default:
-		pr_err("unknown cmd: %d\n", cmd);
+		pr_debug("unknown cmd: %d\n", cmd);
 		break;
 	}
 }
@@ -435,7 +435,7 @@ static int dp_usbpd_simulate_connect(struct dp_usbpd *dp_usbpd, bool hpd)
 	struct dp_usbpd_private *pd;
 
 	if (!dp_usbpd) {
-		pr_err("invalid input\n");
+		pr_debug("invalid input\n");
 		rc = -EINVAL;
 		goto error;
 	}
@@ -460,7 +460,7 @@ static int dp_usbpd_simulate_attention(struct dp_usbpd *dp_usbpd, int vdo)
 	struct dp_usbpd_private *pd;
 
 	if (!dp_usbpd) {
-		pr_err("invalid input\n");
+		pr_debug("invalid input\n");
 		rc = -EINVAL;
 		goto error;
 	}
@@ -492,7 +492,7 @@ struct dp_usbpd *dp_usbpd_get(struct device *dev, struct dp_usbpd_cb *cb)
 	};
 
 	if (!cb) {
-		pr_err("invalid cb data\n");
+		pr_debug("invalid cb data\n");
 		rc = -EINVAL;
 		goto error;
 	}

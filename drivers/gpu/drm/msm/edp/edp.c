@@ -44,7 +44,7 @@ static struct msm_edp *edp_init(struct platform_device *pdev)
 	int ret;
 
 	if (!pdev) {
-		pr_err("no eDP device\n");
+		pr_debug("no eDP device\n");
 		ret = -ENXIO;
 		goto fail;
 	}

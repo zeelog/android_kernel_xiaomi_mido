@@ -35,13 +35,13 @@ static void dsi_display_test_work(struct work_struct *work)
 	display = test->display;
 	rc = dsi_display_get_mode_count(display, &count);
 	if (rc) {
-		pr_err("failed to get modes count, rc=%d\n", rc);
+		pr_debug("failed to get modes count, rc=%d\n", rc);
 		goto test_fail;
 	}
 
 	rc = dsi_display_get_modes(display, &modes);
 	if (rc) {
-		pr_err("failed to get modes, rc=%d\n", rc);
+		pr_debug("failed to get modes, rc=%d\n", rc);
 		goto test_fail_free_modes;
 	}
 
@@ -49,26 +49,26 @@ static void dsi_display_test_work(struct work_struct *work)
 
 	rc = dsi_display_set_mode(display, &modes[0], 0x0);
 	if (rc) {
-		pr_err("failed to set mode, rc=%d\n", rc);
+		pr_debug("failed to set mode, rc=%d\n", rc);
 		goto test_fail_free_modes;
 	}
 
 	rc = dsi_display_prepare(display);
 	if (rc) {
-		pr_err("failed to prepare display, rc=%d\n", rc);
+		pr_debug("failed to prepare display, rc=%d\n", rc);
 		goto test_fail_free_modes;
 	}
 
 	rc = dsi_display_enable(display);
 	if (rc) {
-		pr_err("failed to enable display, rc=%d\n", rc);
+		pr_debug("failed to enable display, rc=%d\n", rc);
 		goto test_fail_unprep_disp;
 	}
 	return;
 
 test_fail_unprep_disp:
 	if (rc) {
-		pr_err("failed to unprep display, rc=%d\n", rc);
+		pr_debug("failed to unprep display, rc=%d\n", rc);
 		goto test_fail_free_modes;
 	}
 
@@ -89,7 +89,7 @@ int dsi_display_test_init(struct dsi_display *display)
 
 	done = 1;
 	if (!display) {
-		pr_err("Invalid params\n");
+		pr_debug("Invalid params\n");
 		return -EINVAL;
 	}
 

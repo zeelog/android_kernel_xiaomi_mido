@@ -134,7 +134,7 @@ static ssize_t edp_aux_transfer(struct drm_dp_aux *drm_aux,
 	/* msg sanity check */
 	if ((native && (msg->size > AUX_CMD_NATIVE_MAX)) ||
 		(msg->size > AUX_CMD_I2C_MAX)) {
-		pr_err("%s: invalid msg: size(%zu), request(%x)\n",
+		pr_debug("%s: invalid msg: size(%zu), request(%x)\n",
 			__func__, msg->size, msg->request);
 		return -EINVAL;
 	}
@@ -158,7 +158,7 @@ static ssize_t edp_aux_transfer(struct drm_dp_aux *drm_aux,
 		 */
 		edp_write(aux->base + REG_EDP_AUX_TRANS_CTRL, 0);
 		msm_edp_aux_ctrl(aux, 1);
-		pr_err("%s: aux timeout,\n", __func__);
+		pr_debug("%s: aux timeout,\n", __func__);
 		ret = -ETIMEDOUT;
 		goto unlock_exit;
 	}
@@ -212,7 +212,7 @@ void *msm_edp_aux_init(struct device *dev, void __iomem *regbase,
 	aux->drm_aux.transfer = edp_aux_transfer;
 	ret = drm_dp_aux_register(&aux->drm_aux);
 	if (ret) {
-		pr_err("%s: failed to register drm aux: %d\n", __func__, ret);
+		pr_debug("%s: failed to register drm aux: %d\n", __func__, ret);
 		mutex_destroy(&aux->msg_mutex);
 	}
 

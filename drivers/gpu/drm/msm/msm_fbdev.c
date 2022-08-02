@@ -66,7 +66,7 @@ static int msm_fbdev_mmap(struct fb_info *info, struct vm_area_struct *vma)
 
 	ret = drm_gem_mmap_obj(drm_obj, drm_obj->size, vma);
 	if (ret) {
-		pr_err("%s:drm_gem_mmap_obj fail\n", __func__);
+		pr_debug("%s:drm_gem_mmap_obj fail\n", __func__);
 		return ret;
 	}
 
