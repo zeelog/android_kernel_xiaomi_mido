@@ -853,8 +853,8 @@ const sHalNv nvDefaults =
                     {NV_CHANNEL_ENABLE, 23},           //RF_CHAN_9,
                     {NV_CHANNEL_ENABLE, 22},           //RF_CHAN_10,
                     {NV_CHANNEL_ENABLE, 22},           //RF_CHAN_11,
-                    {NV_CHANNEL_DISABLE, 30},           //RF_CHAN_12,
-                    {NV_CHANNEL_DISABLE, 30},           //RF_CHAN_13,
+                    {NV_CHANNEL_ENABLE, 30},           //RF_CHAN_12,
+                    {NV_CHANNEL_ENABLE, 30},           //RF_CHAN_13,
                     {NV_CHANNEL_DISABLE, 30},           //RF_CHAN_14,
 
                     //4.9GHz Band, none CB

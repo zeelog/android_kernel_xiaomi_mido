@@ -1534,6 +1534,8 @@ sapconvertToCsrProfile(tsap_Config_t *pconfig_params, eCsrRoamBssType bssType, t
     profile->MFPRequired = pconfig_params->mfpRequired ? 1 : 0;
 #endif
 
+    profile->require_h2e = pconfig_params->require_h2e;
+
     return eSAP_STATUS_SUCCESS; /* Success.  */
 }
 
