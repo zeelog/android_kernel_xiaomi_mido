@@ -1112,6 +1112,7 @@ typedef struct sAniSirGlobal
    uint32_t sta_auth_retries_for_code17;
    uint32_t sta_sap_scc_on_dfs_chan;
    bool force_scc_with_ecsa;
+   bool require_h2e;
 } tAniSirGlobal;
 
 #ifdef FEATURE_WLAN_TDLS

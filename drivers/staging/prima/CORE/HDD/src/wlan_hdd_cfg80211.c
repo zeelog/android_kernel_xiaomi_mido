@@ -2056,6 +2056,7 @@ static v_BOOL_t put_wifi_iface_stats(hdd_adapter_t *pAdapter,
     hdd_station_ctx_t *pHddStaCtx = WLAN_HDD_GET_STATION_CTX_PTR(pAdapter);
     WLANTL_InterfaceStatsType *pWifiIfaceStatTL = NULL;
     tSirWifiWmmAcStat accessclassStats;
+    v_S7_t rssi_value;
 
     if (FALSE == put_wifi_interface_info(
                                 &pWifiIfaceStat->info,
@@ -2175,6 +2176,18 @@ static v_BOOL_t put_wifi_iface_stats(hdd_adapter_t *pAdapter,
                FL("QCA_WLAN_VENDOR_ATTR put fail"));
                vos_mem_free(pWifiIfaceStatTL);
         return FALSE;
+    }
+
+    if (pWifiIfaceStat->info.state == WIFI_DISCONNECTED)
+    {
+   /* we are not connected or our SSID is too long
+      so we can report an disconnected rssi */
+        wlan_hdd_get_rssi(pAdapter, &rssi_value);
+        nla_put_s32(vendor_event,
+                    QCA_WLAN_VENDOR_ATTR_LL_STATS_IFACE_RSSI_MGMT,
+                    rssi_value);
+        hddLog(VOS_TRACE_LEVEL_INFO,
+               FL("Rssi value on disconnect %d "), rssi_value);
     }
 
 #ifdef FEATURE_EXT_LL_STAT
@@ -10031,6 +10044,20 @@ static void wlan_hdd_check_11gmode(u8 *pIe, u8* require_ht,
     return;
 }
 
+/* check SAE/H2E require flag from support rate sets */
+static void wlan_hdd_check_h2e(u8 *pIe, tsap_Config_t *pConfig, u8 num_rates)
+{
+    u8 i;
+
+    for ( i = 0; i < (num_rates + 1) ; i++)
+    {
+      if((BASIC_RATE_MASK | SIR_BSS_MEMBERSHIP_SELECTOR_SAE_H2E) == pIe[i])
+      {
+         pConfig->require_h2e = TRUE;
+      }
+    }
+}
+
 static void wlan_hdd_set_sapHwmode(hdd_adapter_t *pHostapdAdapter)
 {
     tsap_Config_t *pConfig = &pHostapdAdapter->sessionCtx.ap.sapConfig;
@@ -10039,6 +10066,7 @@ static void wlan_hdd_set_sapHwmode(hdd_adapter_t *pHostapdAdapter)
     u8 checkRatesfor11g = TRUE;
     u8 require_ht = FALSE;
     u8 *pIe=NULL;
+    u8 num_rates;
 
     pConfig->SapHw_mode= eSAP_DOT11_MODE_11b;
 
@@ -10047,8 +10075,10 @@ static void wlan_hdd_set_sapHwmode(hdd_adapter_t *pHostapdAdapter)
     if (pIe != NULL)
     {
         pIe += 1;
+        num_rates = pIe[0];
         wlan_hdd_check_11gmode(pIe, &require_ht, &checkRatesfor11g,
                                &pConfig->SapHw_mode);
+        wlan_hdd_check_h2e(pIe, pConfig, num_rates);
     }
 
     pIe = wlan_hdd_cfg80211_get_ie_ptr(pBeacon->tail, pBeacon->tail_len,
@@ -10057,8 +10087,10 @@ static void wlan_hdd_set_sapHwmode(hdd_adapter_t *pHostapdAdapter)
     {
 
         pIe += 1;
+        num_rates = pIe[0];
         wlan_hdd_check_11gmode(pIe, &require_ht, &checkRatesfor11g,
                                &pConfig->SapHw_mode);
+        wlan_hdd_check_h2e(pIe, pConfig, num_rates);
     }
 
     if( pConfig->channel > 14 )
@@ -10102,6 +10134,55 @@ static int wlan_hdd_add_ie(hdd_adapter_t* pHostapdAdapter, v_U8_t *genie,
         *total_ielen += ielen;
     }
     return 0;
+}
+
+/**
+ * wlan_hdd_add_extra_ie() - add extra ies in beacon
+ * @adapter: Pointer to hostapd adapter
+ * @genie: Pointer to extra ie
+ * @total_ielen: Pointer to store total ie length
+ * @temp_ie_id: ID of extra ie
+ *
+ * Return: none
+ */
+static void wlan_hdd_add_extra_ie(hdd_adapter_t* pHostapdAdapter,
+                                  v_U8_t *genie, v_U8_t *total_ielen,
+                                  v_U8_t temp_ie_id)
+{
+    v_U16_t ielen = 0;
+    beacon_data_t *pBeacon = pHostapdAdapter->sessionCtx.ap.beacon;
+    v_U32_t left = pBeacon->tail_len;
+    v_U8_t *ptr = pBeacon->tail;
+    v_U8_t elem_id, elem_len;
+
+    if (NULL == ptr || 0 == left)
+         return;
+
+    while (left >= 2) {
+         elem_id = ptr[0];
+         elem_len = ptr[1];
+         left -= 2;
+         if (elem_len > left) {
+             hddLog( VOS_TRACE_LEVEL_ERROR, "**Invalid IEs***");
+             return;
+         }
+
+         if (temp_ie_id == elem_id)
+         {
+             ielen = ptr[1] + 2;
+             if ((*total_ielen + ielen) <= MAX_GENIE_LEN)
+             {
+                 vos_mem_copy(&genie[*total_ielen], ptr, ielen);
+                 *total_ielen += ielen;
+             }
+             else
+             {
+                  hddLog( VOS_TRACE_LEVEL_ERROR, "**Ie Length is too big***");
+             }
+         }
+         left -= elem_len;
+         ptr += (elem_len + 2);
+    }
 }
 
 static void wlan_hdd_add_hostapd_conf_vsie(hdd_adapter_t* pHostapdAdapter,
@@ -10181,6 +10262,9 @@ int wlan_hdd_cfg80211_update_apies(hdd_adapter_t *pHostapdAdapter)
     }
 
     pBeacon = pHostapdAdapter->sessionCtx.ap.beacon;
+
+    wlan_hdd_add_extra_ie(pHostapdAdapter, genie, &total_ielen, WLAN_ELEMID_RSNXE);
+
     if (0 != wlan_hdd_add_ie(pHostapdAdapter, genie,
                               &total_ielen, WPS_OUI_TYPE, WPS_OUI_TYPE_SIZE))
     {
@@ -11612,6 +11696,7 @@ static int wlan_hdd_cfg80211_start_bss(hdd_adapter_t *pHostapdAdapter,
     }
 
     wlan_hdd_set_sapHwmode(pHostapdAdapter);
+    pConfig->require_h2e = pHostapdAdapter->sessionCtx.ap.sapConfig.require_h2e;
 
 #ifdef WLAN_FEATURE_11AC
     /* Overwrite the hostapd setting for HW mode only for 11ac.

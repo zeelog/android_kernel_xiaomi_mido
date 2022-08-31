@@ -6783,6 +6783,8 @@ eHalStatus csrRoamCopyProfile(tpAniSirGlobal pMac, tCsrRoamProfile *pDstProfile,
         pDstProfile->force_rsne_override = pSrcProfile->force_rsne_override;
         vos_mem_copy(&pDstProfile->Keys, &pSrcProfile->Keys,
                      sizeof(pDstProfile->Keys));
+        pDstProfile->require_h2e = pSrcProfile->require_h2e;
+
 #ifdef WLAN_FEATURE_VOWIFI_11R
         if (pSrcProfile->MDID.mdiePresent)
         {
@@ -12651,6 +12653,13 @@ static void csrRoamGetBssStartParms( tpAniSirGlobal pMac, tCsrRoamProfile *pProf
             {
                 channel = operationChannel;
             }
+
+            if (pProfile->require_h2e)
+            {
+                pParam->extendedRateSet.numRates = 1;
+                pParam->extendedRateSet.rate[0] =
+                    SIR_BSS_MEMBERSHIP_SELECTOR_SAE_H2E | SIR_RATE_MASK;
+            }
             break;
             
         case eSIR_11B_NW_TYPE:
@@ -12668,6 +12677,12 @@ static void csrRoamGetBssStartParms( tpAniSirGlobal pMac, tCsrRoamProfile *pProf
                 channel = operationChannel;
             }
             
+            if (pProfile->require_h2e)
+            {
+                pParam->extendedRateSet.numRates = 1;
+                pParam->extendedRateSet.rate[0] =
+                    SIR_BSS_MEMBERSHIP_SELECTOR_SAE_H2E | SIR_RATE_MASK;
+            }
             break;     
         case eSIR_11G_NW_TYPE:
             /* For P2P Client and P2P GO, disable 11b rates */ 
@@ -12693,9 +12708,13 @@ static void csrRoamGetBssStartParms( tpAniSirGlobal pMac, tCsrRoamProfile *pProf
             pParam->operationalRateSet.rate[1] = SIR_MAC_RATE_2 | CSR_DOT11_BASIC_RATE_MASK;
             pParam->operationalRateSet.rate[2] = SIR_MAC_RATE_5_5 | CSR_DOT11_BASIC_RATE_MASK;
             pParam->operationalRateSet.rate[3] = SIR_MAC_RATE_11 | CSR_DOT11_BASIC_RATE_MASK;
-               
-            pParam->extendedRateSet.numRates = 8;
-                        pParam->extendedRateSet.rate[0] = SIR_MAC_RATE_6;
+
+            if (pProfile->require_h2e)
+                 pParam->extendedRateSet.numRates = 9;
+            else
+                 pParam->extendedRateSet.numRates = 8;
+
+            pParam->extendedRateSet.rate[0] = SIR_MAC_RATE_6;
             pParam->extendedRateSet.rate[1] = SIR_MAC_RATE_9;
             pParam->extendedRateSet.rate[2] = SIR_MAC_RATE_12;
             pParam->extendedRateSet.rate[3] = SIR_MAC_RATE_18;
@@ -12703,6 +12722,9 @@ static void csrRoamGetBssStartParms( tpAniSirGlobal pMac, tCsrRoamProfile *pProf
             pParam->extendedRateSet.rate[5] = SIR_MAC_RATE_36;
             pParam->extendedRateSet.rate[6] = SIR_MAC_RATE_48;
             pParam->extendedRateSet.rate[7] = SIR_MAC_RATE_54;
+            if (pProfile->require_h2e)
+                pParam->extendedRateSet.rate[8] =
+                SIR_BSS_MEMBERSHIP_SELECTOR_SAE_H2E | SIR_RATE_MASK;
             }
             
             if ( eCSR_OPERATING_CHANNEL_ANY == operationChannel ) 
@@ -12723,7 +12745,6 @@ static void csrRoamGetBssStartParms( tpAniSirGlobal pMac, tCsrRoamProfile *pProf
 static void csrRoamGetBssStartParmsFromBssDesc( tpAniSirGlobal pMac, tSirBssDescription *pBssDesc, 
                                                  tDot11fBeaconIEs *pIes, tCsrRoamStartBssParams *pParam )
 {
-    
     if( pParam )
     {
         pParam->sirNwType = pBssDesc->nwType;

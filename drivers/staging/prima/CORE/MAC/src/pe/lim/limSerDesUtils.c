@@ -754,6 +754,8 @@ limStartBssReqSerDes(tpAniSirGlobal pMac, tpSirSmeStartBssReq pStartBssReq, tANI
 
     // Extract extendedRateSet
     if ((pStartBssReq->nwType == eSIR_11G_NW_TYPE) ||
+        (pStartBssReq->nwType == eSIR_11A_NW_TYPE) ||
+        (pStartBssReq->nwType == eSIR_11B_NW_TYPE) ||
         (pStartBssReq->nwType == eSIR_11N_NW_TYPE ))
     {
         pStartBssReq->extendedRateSet.numRates = *pBuf++;
