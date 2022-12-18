@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0+ OR BSD-3-Clause */
 /*
  * Copyright (c) Yann Collet, Facebook, Inc.
  * All rights reserved.
@@ -451,7 +452,7 @@ MEM_STATIC void ZSTD_cwksp_clean_tables(ZSTD_cwksp* ws) {
     assert(ws->tableValidEnd >= ws->objectEnd);
     assert(ws->tableValidEnd <= ws->allocStart);
     if (ws->tableValidEnd < ws->tableEnd) {
-        ZSTD_memset(ws->tableValidEnd, 0, (BYTE*)ws->tableEnd - (BYTE*)ws->tableValidEnd);
+        ZSTD_memset(ws->tableValidEnd, 0, (size_t)((BYTE*)ws->tableEnd - (BYTE*)ws->tableValidEnd));
     }
     ZSTD_cwksp_mark_tables_clean(ws);
 }
