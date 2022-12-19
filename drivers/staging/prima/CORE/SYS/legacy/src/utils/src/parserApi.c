@@ -5476,7 +5476,7 @@ tSirRetStatus PopulateDot11fRRMIe( tpAniSirGlobal pMac, tDot11fIERRMEnabledCap *
 
 #if defined WLAN_FEATURE_VOWIFI_11R
 void PopulateMDIE( tpAniSirGlobal        pMac,
-                   tDot11fIEMobilityDomain *pDot11f, tANI_U8 mdie[SIR_MDIE_SIZE] )
+                   tDot11fIEMobilityDomain *pDot11f, tANI_U8 mdie[] )
 {
    pDot11f->present = 1;
    pDot11f->MDID = (tANI_U16)((mdie[1] << 8) | (mdie[0]));
