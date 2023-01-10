@@ -22,7 +22,7 @@
 #include <linux/zstd.h>
 
 
-#define ZSTD_DEF_LEVEL	1
+#define ZSTD_DEF_LEVEL	5
 
 struct zstd_ctx {
 	zstd_cctx *cctx;
