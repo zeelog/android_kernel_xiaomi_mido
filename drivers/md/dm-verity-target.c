@@ -1266,7 +1266,6 @@ retry_dev2:
 		goto bad;
 	}
 
-	/* WQ_UNBOUND greatly improves performance when running on ramdisk */
 	/*
 	 * Using WQ_HIGHPRI improves throughput and completion latency by
 	 * reducing wait times when reading from a dm-verity device.
@@ -1276,7 +1275,7 @@ retry_dev2:
 	 * will fall-back to using it for error handling (or if the bufio cache
 	 * doesn't have required hashes).
 	 */
-	v->verify_wq = alloc_workqueue("kverityd", WQ_CPU_INTENSIVE | WQ_MEM_RECLAIM | WQ_UNBOUND | WQ_HIGHPRI, num_online_cpus());
+	v->verify_wq = alloc_workqueue("kverityd", WQ_CPU_INTENSIVE | WQ_MEM_RECLAIM | WQ_HIGHPRI, num_online_cpus());
 	if (!v->verify_wq) {
 		ti->error = "Cannot allocate workqueue";
 		r = -ENOMEM;
