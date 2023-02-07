@@ -92,7 +92,7 @@ module_param_named(sleep_disabled, sleep_disabled, bool, 0664);
  */
 inline s32 msm_cpuidle_get_deep_idle_latency(void)
 {
-	return 100;
+	return 10;
 }
 EXPORT_SYMBOL(msm_cpuidle_get_deep_idle_latency);
 
