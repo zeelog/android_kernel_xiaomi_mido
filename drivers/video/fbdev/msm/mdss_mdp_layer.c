@@ -219,7 +219,7 @@ static int __layer_param_check(struct msm_fb_data_type *mfd,
 	    layer->src_rect.h < min_src_size ||
 	    CHECK_LAYER_BOUNDS(layer->src_rect.x, layer->src_rect.w, width) ||
 	    CHECK_LAYER_BOUNDS(layer->src_rect.y, layer->src_rect.h, height)) {
-		pr_err("invalid source image img flag=%d wh=%dx%d rect=%d,%d,%d,%d\n",
+		pr_debug("invalid source image img flag=%d wh=%dx%d rect=%d,%d,%d,%d\n",
 		       layer->flags, width, height,
 		       layer->src_rect.x, layer->src_rect.y,
 		       layer->src_rect.w, layer->src_rect.h);
@@ -1867,7 +1867,7 @@ static int __validate_layers(struct msm_fb_data_type *mfd,
 		ret = __validate_single_layer(mfd, &validate_info_list[i],
 				mixer_mux);
 		if (ret) {
-			pr_err("layer:%d validation failed ret=%d\n", i, ret);
+			pr_debug("layer:%d validation failed ret=%d\n", i, ret);
 			layer->error_code = ret;
 			goto validate_exit;
 		}

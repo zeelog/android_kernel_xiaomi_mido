@@ -393,7 +393,7 @@ static int __compat_atomic_commit(struct fb_info *info, unsigned int cmd,
 
 	ret = mdss_fb_atomic_commit(info, &commit, file);
 	if (ret)
-		pr_err("atomic commit failed ret:%d\n", ret);
+		pr_debug("atomic commit failed ret:%d\n", ret);
 
 	if (layer_count)
 		__copy_to_user_atomic_commit(&commit, &commit32, layer_list32,
