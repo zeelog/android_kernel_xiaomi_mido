@@ -810,10 +810,6 @@ void __noreturn do_exit(long code)
 	sched_exit(tsk);
 	schedtune_exit_task(tsk);
 
-	if (tsk->flags & PF_SU) {
-		su_exit();
-	}
-
 	/* sync mm's RSS info before statistics gathering */
 	if (tsk->mm)
 		sync_mm_rss(tsk->mm);
