@@ -39,10 +39,9 @@
 #include <linux/qpnp/qpnp-adc.h>
 #include <linux/batterydata-lib.h>
 #include <linux/of_batterydata.h>
+#include <linux/msm_bcl.h>
 #if IS_ENABLED(CONFIG_MSM_BCL_PERIPHERAL_CTL_LEGACY)
 #include <linux/msm_bcl_legacy.h>
-#else
-#include <linux/msm_bcl.h>
 #endif
 #include <linux/ktime.h>
 #include <linux/extcon.h>
@@ -3067,20 +3066,23 @@ static int smbchg_calc_max_flash_current(struct smbchg_chip *chip)
 	}
 
 #if IS_ENABLED(CONFIG_MSM_BCL_PERIPHERAL_CTL_LEGACY)
-	rc = msm_bcl_read(BCL_HIGH_IBAT, &ibat_now);
-	if (rc) {
-		pr_smb(PR_STATUS, "BCL ibat read failed: %d\n", rc);
-		return 0;
-	} else {
-		ibat_now = ibat_now * 1000;
-	}
-#else
-	rc = msm_bcl_read(BCL_PARAM_CURRENT, &ibat_now);
-	if (rc) {
-		pr_smb(PR_STATUS, "BCL current read failed: %d\n", rc);
-		return 0;
-	}
+	if (msm_bcl_is_legacy()) {
+		rc = msm_bcl_legacy_read(BCL_LEGACY_HIGH_IBAT, &ibat_now);
+		if (rc) {
+			pr_smb(PR_STATUS, "BCL legacy ibat read failed: %d\n", rc);
+			return 0;
+		} else {
+			ibat_now = ibat_now * 1000;
+		}
+	} else
 #endif
+	{
+		rc = msm_bcl_read(BCL_PARAM_CURRENT, &ibat_now);
+		if (rc) {
+			pr_smb(PR_STATUS, "BCL current read failed: %d\n", rc);
+			return 0;
+		}
+	}
 
 	rbatt_uohm = esr_uohm + chip->rpara_uohm + chip->rslow_uohm;
 	/*
