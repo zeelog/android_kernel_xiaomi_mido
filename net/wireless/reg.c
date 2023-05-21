@@ -589,7 +589,7 @@ static int call_crda(const char *alpha2)
 	if (ret)
 		return ret;
 
-	queue_delayed_work(system_power_efficient_wq,
+	queue_delayed_work(system_wq,
 			   &crda_timeout, msecs_to_jiffies(3142));
 	return 0;
 }
@@ -1670,7 +1670,7 @@ static void reg_check_channels(void)
 	 * Give usermode a chance to do something nicer (move to another
 	 * channel, orderly disconnection), before forcing a disconnection.
 	 */
-	mod_delayed_work(system_power_efficient_wq,
+	mod_delayed_work(system_wq,
 			 &reg_check_chans,
 			 msecs_to_jiffies(REG_ENFORCE_GRACE_MS));
 }

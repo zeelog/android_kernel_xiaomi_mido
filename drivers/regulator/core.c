@@ -2468,7 +2468,7 @@ int regulator_disable_deferred(struct regulator *regulator, int ms)
 
 	mutex_lock(&rdev->mutex);
 	rdev->deferred_disables++;
-	mod_delayed_work(system_power_efficient_wq, &rdev->disable_work,
+	mod_delayed_work(system_wq, &rdev->disable_work,
 			 msecs_to_jiffies(ms));
 	mutex_unlock(&rdev->mutex);
 

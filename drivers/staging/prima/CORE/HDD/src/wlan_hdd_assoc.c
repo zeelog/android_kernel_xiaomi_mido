@@ -1697,8 +1697,7 @@ static void hdd_check_and_move_if_sap_is_on_dfs_chan(hdd_context_t *hdd_ctx,
         }
 
         hddLog(LOG1, "Schedule workqueue to move the SAP to non DFS channel");
-        queue_delayed_work(system_freezable_power_efficient_wq,
-                            &hdd_ctx->ecsa_chan_change_work,
+        schedule_delayed_work(&hdd_ctx->ecsa_chan_change_work,
                             msecs_to_jiffies(ECSA_DFS_CHAN_CHANGE_DEFER_TIME));
     }
 }
@@ -2339,8 +2338,7 @@ hdd_schedule_ecsa_chan_change_work(hdd_context_t *hdd_ctx,
        time_diff = ECSA_SCC_CHAN_CHANGE_DEFER_INTERVAL - time_diff;
 
    hddLog(LOG1, FL("schedule ecsa_chan_change_work after %d ms"), time_diff);
-   queue_delayed_work(system_freezable_power_efficient_wq,
-                          &hdd_ctx->ecsa_chan_change_work,
+   schedule_delayed_work(&hdd_ctx->ecsa_chan_change_work,
                           msecs_to_jiffies(time_diff));
 }
 
@@ -4468,8 +4466,7 @@ eHalStatus hdd_smeRoamCallback( void *pContext, tCsrRoamInfo *pRoamInfo, tANI_U3
                          (pHostapdAdapter->sessionCtx.ap.operatingChannel !=
                           pRoamInfo->chan_info.chan_id))
                  {
-                     queue_delayed_work(system_freezable_power_efficient_wq,
-                                         &pHddCtx->ecsa_chan_change_work, 0);
+                     schedule_delayed_work(&pHddCtx->ecsa_chan_change_work, 0);
                  }
                  else
                      hddLog(LOG1, FL("SAP restart not required"));

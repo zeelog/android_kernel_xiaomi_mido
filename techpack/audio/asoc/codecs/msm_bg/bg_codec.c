@@ -971,14 +971,14 @@ static void bg_cdc_pktzr_init(struct work_struct *work)
 		dev_err(bg_cdc->dev, "%s: failed in pktzr_init\n", __func__);
 		return;
 	}
-	queue_delayed_work(system_power_efficient_wq,&bg_cdc->bg_cdc_cal_init_work,
+	schedule_delayed_work(&bg_cdc->bg_cdc_cal_init_work,
 			      msecs_to_jiffies(bg_cdc->bg_cal_init_delay));
 	bg_cdc->bg_cal_init_delay = 0;
 }
 
 static int bg_cdc_bg_device_up(struct bg_cdc_priv *bg_cdc)
 {
-	queue_delayed_work(system_power_efficient_wq,&bg_cdc->bg_cdc_pktzr_init_work,
+	schedule_delayed_work(&bg_cdc->bg_cdc_pktzr_init_work,
 			msecs_to_jiffies(0));
 	return 0;
 }
@@ -1088,7 +1088,7 @@ static int bg_cdc_pm_suspend(struct bg_cdc_priv *bg_cdc)
 
 static int bg_cdc_pm_resume(struct bg_cdc_priv *bg_cdc)
 {
-	queue_delayed_work(system_power_efficient_wq,&bg_cdc->bg_cdc_cal_init_work,
+	schedule_delayed_work(&bg_cdc->bg_cdc_cal_init_work,
 				msecs_to_jiffies(bg_cdc->bg_cal_init_delay));
 	return 0;
 }
@@ -1116,7 +1116,7 @@ static int bg_cdc_codec_probe(struct snd_soc_codec *codec)
 	const char *subsys_name = NULL;
 	int ret;
 
-	queue_delayed_work(system_power_efficient_wq,&bg_cdc->bg_cdc_pktzr_init_work,
+	schedule_delayed_work(&bg_cdc->bg_cdc_pktzr_init_work,
 				msecs_to_jiffies(400));
 
 	bg_cdc->fw_data = devm_kzalloc(codec->dev,

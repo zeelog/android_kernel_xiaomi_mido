@@ -111,7 +111,7 @@ static void radeon_fence_schedule_check(struct radeon_device *rdev, int ring)
 	 * Do not reset the timer here with mod_delayed_work,
 	 * this can livelock in an interaction with TTM delayed destroy.
 	 */
-	queue_delayed_work(system_power_efficient_wq,
+	queue_delayed_work(system_wq,
 			   &rdev->fence_drv[ring].lockup_work,
 			   RADEON_FENCE_JIFFIES_TIMEOUT);
 }

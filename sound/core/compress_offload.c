@@ -772,7 +772,7 @@ int snd_compr_stop_error(struct snd_compr_stream *stream,
 
 	pr_debug("Changing state to: %d\n", state);
 
-	queue_delayed_work(system_power_efficient_wq, &stream->error_work, 0);
+	queue_delayed_work(system_wq, &stream->error_work, 0);
 
 	return 0;
 }

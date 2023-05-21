@@ -359,21 +359,6 @@ extern struct workqueue_struct *system_freezable_wq;
 extern struct workqueue_struct *system_power_efficient_wq;
 extern struct workqueue_struct *system_freezable_power_efficient_wq;
 
-static inline struct workqueue_struct * __deprecated __system_nrt_wq(void)
-{
-	return system_wq;
-}
-
-static inline struct workqueue_struct * __deprecated __system_nrt_freezable_wq(void)
-{
-	return system_freezable_wq;
-}
-
-/* equivlalent to system_wq and system_freezable_wq, deprecated */
-#define system_nrt_wq			__system_nrt_wq()
-#define system_nrt_freezable_wq		__system_nrt_freezable_wq()
-
-
 extern bool wq_online;
 
 extern struct workqueue_struct *
@@ -593,7 +578,7 @@ static inline void flush_scheduled_work(void)
 static inline bool schedule_delayed_work_on(int cpu, struct delayed_work *dwork,
 					    unsigned long delay)
 {
-	return queue_delayed_work_on(cpu, system_power_efficient_wq, dwork, delay);
+	return queue_delayed_work_on(cpu, system_wq, dwork, delay);
 }
 
 /**
@@ -607,7 +592,7 @@ static inline bool schedule_delayed_work_on(int cpu, struct delayed_work *dwork,
 static inline bool schedule_delayed_work(struct delayed_work *dwork,
 					 unsigned long delay)
 {
-	return queue_delayed_work(system_power_efficient_wq, dwork, delay);
+	return queue_delayed_work(system_wq, dwork, delay);
 }
 
 /**
