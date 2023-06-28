@@ -55,15 +55,3 @@ ccflags-$(CONFIG_ZINC_ARCH_ARM64) += -DCONFIG_ZINC_ARCH_ARM64
 ccflags-$(CONFIG_ZINC_ARCH_MIPS) += -DCONFIG_ZINC_ARCH_MIPS
 ccflags-$(CONFIG_ZINC_ARCH_MIPS64) += -DCONFIG_ZINC_ARCH_MIPS64
 ccflags-$(CONFIG_WIREGUARD_DEBUG) += -DCONFIG_ZINC_SELFTEST
-
-ifeq ($(cc-name),gcc)
-ifneq ($(filter -mcpu=%, $(MACH_CFLAGS)),)
-# Includes crypto extension by default for Clang
-ccflags-y += $(filter -mcpu=%, $(MACH_CFLAGS))+crypto
-endif
-endif
-
-ifneq ($(filter -Wa$(comma)-mcpu=%, $(MACH_AFLAGS)),)
-ccflags-y += $(filter -Wa$(comma)-mcpu=%, $(MACH_AFLAGS))+crypto
-asflags-y += $(filter -Wa$(comma)-mcpu=%, $(MACH_AFLAGS))+crypto
-endif

@@ -154,26 +154,6 @@ else
 TEXT_OFFSET := 0x00080000
 endif
 
-ifdef CONFIG_ARCH_MSM8953
-ifeq ($(call gcc-ifversion, -ge, 0800, y),y)
-MACH_CFLAGS := -mcpu=cortex-a53 -mtune=cortex-a53
-else ifeq ($(call gcc-ifversion, -ge, 0700, y),y)
-MACH_CFLAGS := -mcpu=cortex-a53 -mtune=cortex-a53
-else ifeq ($(call clang-ifversion, -ge, 0600, y),y)
-# big.LITTLE / DynamIQ optimizations are not supported
-MACH_CFLAGS := -mcpu=cortex-a53 -mtune=cortex-a53
-else
-MACH_CFLAGS := -mcpu=cortex-a53 -mtune=cortex-a53
-endif
-# Assembler doesn't like big.LITTLE / DynamIQ setup so we optimize assembly codes for LITTLE CPU
-MACH_AFLAGS := $(call as-option, -Wa$(comma)-mcpu=cortex-a53, -Wa$(comma)-mcpu=cortex-a53)
-# Append result to CFLAGS and AFLAGS
-KBUILD_CFLAGS += $(strip $(MACH_CFLAGS) $(MACH_AFLAGS))
-KBUILD_AFLAGS += $(strip $(MACH_AFLAGS))
-# Export to be picked up by drivers that need them
-export MACH_CFLAGS MACH_AFLAGS
-endif
-
 ifeq ($(cc-name),clang)
 KBUILD_CFLAGS += $(call cc-disable-warning, asm-operand-widths)
 endif
