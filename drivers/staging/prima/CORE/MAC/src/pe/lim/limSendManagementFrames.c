@@ -7347,7 +7347,7 @@ static void lim_tx_mgmt_frame(tpAniSirGlobal mac_ctx,
                               struct sir_mgmt_msg *mb_msg, uint32_t msg_len,
                               void *packet, uint8_t *frame)
 {
-    tpSirMacFrameCtl fc = (tpSirMacFrameCtl)mb_msg->data;
+    tpSirMacFrameCtl __maybe_unused fc = (tpSirMacFrameCtl)mb_msg->data;
     eHalStatus hal_status;
     uint8_t sme_session_id = 0;
     tpPESession session;
