@@ -520,18 +520,6 @@ config ARCH_SUPPORTS_LTO_CLANG
 	  - compiling inline assembly with clang's integrated assembler,
 	  - and linking with either lld or GNU gold w/ LLVMgold.
 
-config ARCH_SUPPORTS_THINLTO
-	bool
-	help
-	  An architecture should select this if it supports clang's ThinLTO.
-
-config THINLTO
-	bool "Use clang ThinLTO (EXPERIMENTAL)"
-	depends on LTO_CLANG && ARCH_SUPPORTS_THINLTO
-	default y
-	help
-	  Use ThinLTO to speed up Link Time Optimization.
-
 choice
 	prompt "Link-Time Optimization (LTO) (EXPERIMENTAL)"
 	default LTO_NONE
@@ -874,19 +862,5 @@ config VMAP_STACK
 	  This is presently incompatible with KASAN because KASAN expects
 	  the stack to map directly to the KASAN shadow map using a formula
 	  that is incorrect if the stack is in vmalloc space.
-
-# Select if the architecture has support for applying RELR relocations.
-config ARCH_HAS_RELR
-	bool
-
-config RELR
-	bool "Use RELR relocation packing"
-	depends on ARCH_HAS_RELR && TOOLS_SUPPORT_RELR
-	default y
-	help
-	  Store the kernel's dynamic relocations in the RELR relocation packing
-	  format. Requires a compatible linker (LLD supports this feature), as
-	  well as compatible NM and OBJCOPY utilities (llvm-nm and llvm-objcopy
-	  are compatible).
 
 source "kernel/gcov/Kconfig"
